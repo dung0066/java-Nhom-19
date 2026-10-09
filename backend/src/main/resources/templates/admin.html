@@ -1,0 +1,1763 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Trị Toàn Diện - Ways Station Badminton</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --primary-light: #e0f2fe;
+            --accent-orange: #ea580c;
+            --dark: #0f172a;
+            --gray-700: #334155;
+            --gray-500: #64748b;
+            --gray-200: #e2e8f0;
+            --gray-100: #f8fafc;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --purple: #8b5cf6;
+            --radius: 12px;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06);
+            --transition: all 0.25s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 1. TOP HEADER NAVBAR */
+        .admin-nav {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            padding: 14px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 16px rgba(2, 132, 199, 0.25);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .nav-logo-icon {
+            width: 42px;
+            height: 42px;
+            background: #ffffff;
+            color: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .nav-title-group h1 {
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .nav-title-group span {
+            font-size: 11.5px;
+            opacity: 0.9;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-nav {
+            background: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .btn-nav:hover {
+            background: #ffffff;
+            color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .btn-nav-primary {
+            background: #ea580c;
+            border-color: #ea580c;
+        }
+
+        .btn-nav-primary:hover {
+            background: #c2410c;
+            color: #fff;
+        }
+
+        /* 2. ADMIN LAYOUT & TABS */
+        .admin-main-container {
+            max-width: 1440px;
+            width: 100%;
+            margin: 24px auto;
+            padding: 0 24px;
+            flex: 1;
+        }
+
+        .tab-menu-bar {
+            display: flex;
+            gap: 10px;
+            background: #ffffff;
+            padding: 8px 12px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--gray-500);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+
+        /* 3. STATS CARDS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            border-left: 5px solid var(--primary);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        .stat-card.green { border-left-color: var(--success); }
+        .stat-card.purple { border-left-color: var(--purple); }
+        .stat-card.orange { border-left-color: var(--accent-orange); }
+
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .stat-card.green .stat-icon { background: #dcfce7; color: var(--success); }
+        .stat-card.purple .stat-icon { background: #f3e8ff; color: var(--purple); }
+        .stat-card.orange .stat-icon { background: #ffedd5; color: var(--accent-orange); }
+
+        .stat-meta h4 {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-meta .stat-val {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--dark);
+            margin-top: 2px;
+        }
+
+        /* 4. CONTENT CARDS */
+        .admin-content-card {
+            background: #ffffff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .card-header-flex h3 {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-tools-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input-search-box {
+            position: relative;
+            min-width: 260px;
+        }
+
+        .input-search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-500);
+        }
+
+        .input-search-box input {
+            width: 100%;
+            padding: 10px 14px 10px 38px;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .input-search-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+
+        .select-filter {
+            padding: 10px 14px;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--dark);
+            outline: none;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .btn-action-add {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+            transition: var(--transition);
+        }
+
+        .btn-action-add:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        .btn-action-orange {
+            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+        }
+
+        /* 5. DATA TABLES */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13.5px;
+        }
+
+        .admin-table th {
+            background: #f8fafc;
+            color: var(--gray-700);
+            font-weight: 800;
+            padding: 14px 16px;
+            border-bottom: 2px solid var(--gray-200);
+            white-space: nowrap;
+        }
+
+        .admin-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--gray-200);
+            vertical-align: middle;
+        }
+
+        .admin-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Badges */
+        .badge-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .badge-paid { background: #dcfce7; color: #166534; }
+        .badge-pending { background: #fef9c3; color: #854d0e; }
+        .badge-cancelled { background: #fee2e2; color: #991b1b; }
+        .badge-pass { background: #f3e8ff; color: #6b21a8; }
+        .badge-active { background: #e0f2fe; color: #0369a1; }
+        .badge-maint { background: #fee2e2; color: #dc2626; }
+
+        /* Action Buttons in Table */
+        .action-btn-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn-tbl {
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: var(--transition);
+        }
+
+        .btn-tbl-view { background: #e0f2fe; color: var(--primary); }
+        .btn-tbl-view:hover { background: var(--primary); color: #fff; }
+        
+        .btn-tbl-edit { background: #fef3c7; color: #b45309; }
+        .btn-tbl-edit:hover { background: #f59e0b; color: #fff; }
+
+        .btn-tbl-delete { background: #fee2e2; color: var(--danger); }
+        .btn-tbl-delete:hover { background: var(--danger); color: #fff; }
+
+        .btn-tbl-success { background: #dcfce7; color: var(--success); }
+        .btn-tbl-success:hover { background: var(--success); color: #fff; }
+
+        /* 6. PRODUCTS GRID CARDS IN ADMIN */
+        .products-admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 16px;
+        }
+
+        .p-admin-card {
+            background: #ffffff;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .p-admin-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .p-admin-thumb-wrap {
+            height: 180px;
+            background: #f8fafc;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .p-admin-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .p-admin-card:hover .p-admin-thumb {
+            transform: scale(1.05);
+        }
+
+        .p-admin-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #ea580c;
+            color: #fff;
+            font-size: 10.5px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .p-admin-cat {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(15, 23, 42, 0.75);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+        }
+
+        .p-admin-body {
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .p-admin-brand {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        .p-admin-name {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--dark);
+            margin: 4px 0 8px 0;
+            line-height: 1.3;
+        }
+
+        .p-admin-specs {
+            font-size: 12px;
+            color: var(--gray-500);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .p-admin-specs span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .p-admin-price-row {
+            margin-top: auto;
+            padding-top: 12px;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .p-admin-price {
+            font-size: 17px;
+            font-weight: 900;
+            color: #ea580c;
+        }
+
+        .p-admin-unit {
+            font-size: 11.5px;
+            color: var(--gray-500);
+            font-weight: 600;
+        }
+
+        .p-admin-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .p-admin-actions button {
+            flex: 1;
+            padding: 7px 0;
+        }
+
+        /* 7. MODALS */
+        .admin-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .admin-modal-backdrop.show {
+            display: flex;
+        }
+
+        .admin-modal-box {
+            background: #ffffff;
+            border-radius: var(--radius);
+            max-width: 650px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: modalFadeIn 0.25s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .admin-modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+        }
+
+        .admin-modal-header h3 {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .btn-modal-close {
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            color: var(--gray-500);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .btn-modal-close:hover {
+            color: var(--danger);
+            background: #fee2e2;
+        }
+
+        .admin-modal-body {
+            padding: 24px;
+        }
+
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gray-700);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .image-preview-box {
+            width: 100%;
+            height: 140px;
+            border: 2px dashed var(--gray-200);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #f8fafc;
+            margin-top: 8px;
+        }
+
+        .image-preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .admin-modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            background: #f8fafc;
+        }
+
+        .btn-modal-cancel {
+            background: #e2e8f0;
+            color: var(--gray-700);
+            border: none;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-modal-submit {
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            padding: 9px 22px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+        }
+
+        .btn-modal-submit:hover {
+            background: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. TOP NAVBAR -->
+    <header class="admin-nav">
+        <div class="nav-brand">
+            <div class="nav-logo-icon">
+                <i class="fa-solid fa-feather"></i>
+            </div>
+            <div class="nav-title-group">
+                <h1>WAYS STATION BADMINTON - ADMIN PANEL</h1>
+                <span>HỆ THỐNG QUẢN TRỊ TOÀN DIỆN: SÂN ĐẤU, ĐƠN HÀNG, GIÁ VÀ DỤNG CỤ CHO THUÊ</span>
+            </div>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="btn-nav" target="_blank"><i class="fa-solid fa-globe"></i> Xem Trang Chủ</a>
+            <a href="/dat-san" class="btn-nav btn-nav-primary" target="_blank"><i class="fa-solid fa-calendar-check"></i> Xem Sơ Đồ Đặt Sân</a>
+        </div>
+    </header>
+
+    <!-- 2. MAIN CONTAINER -->
+    <main class="admin-main-container">
+
+        <!-- TAB NAVIGATION -->
+        <nav class="tab-menu-bar">
+            <button class="tab-btn active" onclick="switchAdminTab('bookingsTab', this)">
+                <i class="fa-solid fa-calendar-days"></i> Quản Lý Đơn Đặt Sân
+            </button>
+            <button class="tab-btn" onclick="switchAdminTab('productsTab', this)">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Quản Lý Dụng Cụ, Vợt & Giày
+            </button>
+            <button class="tab-btn" onclick="switchAdminTab('branchesTab', this)">
+                <i class="fa-solid fa-building"></i> Quản Lý 4 Chi Nhánh & Sân Đấu
+            </button>
+            <button class="tab-btn" onclick="switchAdminTab('pricingTab', this)">
+                <i class="fa-solid fa-tags"></i> Cấu Hình Bảng Giá & Giờ Chơi
+            </button>
+        </nav>
+
+        <!-- ================= TAB 1: QUẢN LÝ ĐẶT SÂN ================= -->
+        <section id="bookingsTab" class="tab-pane">
+            <!-- STATS CARDS -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-receipt"></i></div>
+                    <div class="stat-meta">
+                        <h4>Tổng Đơn Đặt Sân</h4>
+                        <div class="stat-val" id="statTotalBookings">0</div>
+                    </div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+                    <div class="stat-meta">
+                        <h4>Doanh Thu Đặt Sân</h4>
+                        <div class="stat-val" id="statTotalRevenue">0 đ</div>
+                    </div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+                    <div class="stat-meta">
+                        <h4>Tổng Giờ Đã Đặt</h4>
+                        <div class="stat-val" id="statTotalHours">0h</div>
+                    </div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-icon"><i class="fa-solid fa-share-nodes"></i></div>
+                    <div class="stat-meta">
+                        <h4>Yêu Cầu Cần Pass</h4>
+                        <div class="stat-val" id="statPassWanted">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLE CARD -->
+            <div class="admin-content-card">
+                <div class="card-header-flex">
+                    <h3><i class="fa-solid fa-list-check"></i> Danh Sách Khách Đặt Sân Trực Tuyến</h3>
+                    <div class="filter-tools-row">
+                        <div class="input-search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="bookingSearchInput" placeholder="Tìm theo Mã đơn, Tên KH, Số ĐT..." oninput="filterBookings()">
+                        </div>
+                        <select id="bookingBranchFilter" class="select-filter" onchange="filterBookings()">
+                            <option value="">Tất cả chi nhánh</option>
+                            <option value="NVL">Ways Station NVL</option>
+                            <option value="DQII">Ways Station DQII</option>
+                            <option value="NQA">Ways Station NQA</option>
+                            <option value="HB">Ways Station HB</option>
+                        </select>
+                        <select id="bookingStatusFilter" class="select-filter" onchange="filterBookings()">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="PAID">Đã thanh toán (PAID)</option>
+                            <option value="PENDING">Chờ xác nhận (PENDING)</option>
+                            <option value="CANCELLED">Đã hủy (CANCELLED)</option>
+                        </select>
+                        <button class="btn-action-add" onclick="loadBookings()"><i class="fa-solid fa-rotate"></i> Làm mới</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Đơn</th>
+                                <th>Khách Hàng</th>
+                                <th>Số Điện Thoại</th>
+                                <th>Chi Nhánh</th>
+                                <th>Ngày Đặt</th>
+                                <th>Khung Giờ & Sân</th>
+                                <th>Tổng Tiền</th>
+                                <th>Trạng Thái</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingsTableBody">
+                            <tr>
+                                <td colspan="9" style="text-align:center; padding:30px; color:#64748b;">
+                                    <i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu đơn đặt sân...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: QUẢN LÝ DỤNG CỤ, VỢT & GIÀY ================= -->
+        <section id="productsTab" class="tab-pane" style="display:none;">
+            <div class="admin-content-card">
+                <div class="card-header-flex">
+                    <div>
+                        <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Quản Lý Kho Dụng Cụ, Vợt & Giày Cho Thuê</h3>
+                        <p style="font-size: 13px; color: var(--gray-500); margin-top: 4px;">
+                            Thay đổi hình ảnh, giá thuê, thông số kỹ thuật và trạng thái hiển thị trực tiếp lên Trang Chủ
+                        </p>
+                    </div>
+                    <div class="filter-tools-row">
+                        <select id="productCatFilter" class="select-filter" onchange="filterProducts()">
+                            <option value="">Tất cả danh mục</option>
+                            <option value="RACQUET">Vợt Cầu Lông</option>
+                            <option value="SHOES">Giày Thi Đấu</option>
+                            <option value="ACCESSORY">Phụ Kiện & Căn Tin</option>
+                        </select>
+                        <button class="btn-action-add" onclick="openProductModal()"><i class="fa-solid fa-plus"></i> Thêm Sản Phẩm Mới</button>
+                    </div>
+                </div>
+
+                <!-- Products Grid Display -->
+                <div class="products-admin-grid" id="productsAdminContainer">
+                    <!-- Dynamic rendering by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: QUẢN LÝ CHI NHÁNH & SÂN ĐẤU (FULL CRUD) ================= -->
+        <section id="branchesTab" class="tab-pane" style="display:none;">
+            <!-- 3.1: QUẢN LÝ CHI NHÁNH -->
+            <div class="admin-content-card">
+                <div class="card-header-flex">
+                    <div>
+                        <h3><i class="fa-solid fa-building"></i> Danh Sách Chi Nhánh Hệ Thống</h3>
+                        <p style="font-size: 13px; color: var(--gray-500); margin-top: 4px;">Thêm mới, sửa địa chỉ/hotline hoặc xóa chi nhánh</p>
+                    </div>
+                    <button class="btn-action-add" onclick="openBranchModal()"><i class="fa-solid fa-plus"></i> Thêm Chi Nhánh Mới</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Mã CN</th>
+                                <th>Tên Chi Nhánh</th>
+                                <th>Địa Chỉ Cơ Sở</th>
+                                <th>Hotline</th>
+                                <th>Số Sân</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="branchesTableBody">
+                            <!-- Dynamic rendering -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3.2: QUẢN LÝ SÂN ĐẤU THEO CHI NHÁNH -->
+            <div class="admin-content-card">
+                <div class="card-header-flex">
+                    <div>
+                        <h3><i class="fa-solid fa-table-cells"></i> Quản Lý Danh Sách Sân Đấu Từng Cơ Sở</h3>
+                        <p style="font-size: 13px; color: var(--gray-500); margin-top: 4px;">Thêm sân mới, chỉnh sửa cụm sân, bật/tắt chế độ bảo trì sân</p>
+                    </div>
+                    <div class="filter-tools-row">
+                        <select id="courtBranchSelect" class="select-filter" onchange="loadCourtsByBranch()">
+                            <!-- Populated dynamically -->
+                        </select>
+                        <button class="btn-action-add btn-action-orange" onclick="openCourtModal()"><i class="fa-solid fa-plus"></i> Thêm Sân Mới</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Sân</th>
+                                <th>Tên Sân</th>
+                                <th>Số Thứ Tự</th>
+                                <th>Cụm Sân (Group)</th>
+                                <th>Chi Nhánh</th>
+                                <th>Trạng Thái Hoạt Động</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="courtsTableBody">
+                            <!-- Dynamic rendering -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 4: CẤU HÌNH BẢNG GIÁ ================= -->
+        <section id="pricingTab" class="tab-pane" style="display:none;">
+            <div class="admin-content-card">
+                <div class="card-header-flex">
+                    <h3><i class="fa-solid fa-tags"></i> Cấu Hình Khung Giờ & Bảng Giá Thi Đấu</h3>
+                </div>
+
+                <div class="stats-grid" style="margin-top: 10px;">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-sun"></i></div>
+                        <div class="stat-meta">
+                            <h4>Khung Giờ Thường (Off-Peak)</h4>
+                            <div class="stat-val" style="color:#0284c7;">70.000 đ / giờ</div>
+                            <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Áp dụng từ 00:00 - 17:00 các ngày trong tuần</p>
+                        </div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-icon"><i class="fa-solid fa-fire"></i></div>
+                        <div class="stat-meta">
+                            <h4>Khung Giờ Vàng (Peak Hours)</h4>
+                            <div class="stat-val" style="color:#ea580c;">120.000 đ / giờ</div>
+                            <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Áp dụng từ 17:00 - 22:00 (giờ cao điểm sôi động)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 style="margin: 24px 0 12px 0; font-size: 15px; font-weight: 800;">Danh Sách 20 Khung Giờ Mở Cửa 24/7</h4>
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Khung Giờ</th>
+                                <th>Thời Lượng</th>
+                                <th>Loại Giờ</th>
+                                <th>Giá Thuê / Sân</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>0:15 - 1:15</td><td>60 phút</td><td>Giờ đêm (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>2</td><td>1:20 - 2:20</td><td>60 phút</td><td>Giờ đêm (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>3</td><td>2:25 - 3:25</td><td>60 phút</td><td>Giờ đêm (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>4</td><td>3:30 - 4:30</td><td>60 phút</td><td>Giờ đêm (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>5</td><td>4:35 - 5:35</td><td>60 phút</td><td>Giờ đêm (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>6</td><td>5:40 - 6:40</td><td>60 phút</td><td>Giờ sáng (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>7</td><td>6:45 - 7:45</td><td>60 phút</td><td>Giờ sáng (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>8</td><td>8:00 - 9:00</td><td>60 phút</td><td>Giờ sáng (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>9</td><td>9:05 - 10:05</td><td>60 phút</td><td>Giờ sáng (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>10</td><td>10:10 - 11:10</td><td>60 phút</td><td>Giờ sáng (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>11</td><td>11:15 - 12:15</td><td>60 phút</td><td>Giờ trưa (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>12</td><td>12:20 - 13:20</td><td>60 phút</td><td>Giờ trưa (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>13</td><td>13:25 - 14:25</td><td>60 phút</td><td>Giờ chiều (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>14</td><td>14:30 - 15:30</td><td>60 phút</td><td>Giờ chiều (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>15</td><td>15:35 - 16:35</td><td>60 phút</td><td>Giờ chiều (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr><td>16</td><td>16:40 - 17:40</td><td>60 phút</td><td>Giờ chiều (Off-Peak)</td><td><strong>70.000 đ</strong></td></tr>
+                            <tr style="background:#fff7ed;"><td>17</td><td>17:45 - 18:45</td><td>60 phút</td><td><span style="color:#ea580c; font-weight:700;">★ Giờ Vàng (Peak)</span></td><td><strong style="color:#ea580c;">120.000 đ</strong></td></tr>
+                            <tr style="background:#fff7ed;"><td>18</td><td>18:50 - 19:50</td><td>60 phút</td><td><span style="color:#ea580c; font-weight:700;">★ Giờ Vàng (Peak)</span></td><td><strong style="color:#ea580c;">120.000 đ</strong></td></tr>
+                            <tr style="background:#fff7ed;"><td>19</td><td>19:55 - 20:55</td><td>60 phút</td><td><span style="color:#ea580c; font-weight:700;">★ Giờ Vàng (Peak)</span></td><td><strong style="color:#ea580c;">120.000 đ</strong></td></tr>
+                            <tr style="background:#fff7ed;"><td>20</td><td>21:00 - 22:00</td><td>60 phút</td><td><span style="color:#ea580c; font-weight:700;">★ Giờ Vàng (Peak)</span></td><td><strong style="color:#ea580c;">120.000 đ</strong></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= MODAL 1: THÊM / SỬA SẢN PHẨM ================= -->
+    <div class="admin-modal-backdrop" id="productModal">
+        <div class="admin-modal-box">
+            <div class="admin-modal-header">
+                <h3 id="productModalTitle"><i class="fa-solid fa-plus-circle"></i> Thêm Sản Phẩm Mới</h3>
+                <button class="btn-modal-close" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="productForm" onsubmit="saveProduct(event)">
+                <div class="admin-modal-body">
+                    <input type="hidden" id="pId">
+                    
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Tên Sản Phẩm (*):</label>
+                            <input type="text" id="pName" class="form-control" placeholder="VD: Yonex Astrox 100ZZ" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Danh Mục (*):</label>
+                            <select id="pCategory" class="form-control" required>
+                                <option value="RACQUET">Vợt Cầu Lông</option>
+                                <option value="SHOES">Giày Thi Đấu</option>
+                                <option value="ACCESSORY">Phụ Kiện & Căn Tin</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Hãng / Thương Hiệu:</label>
+                            <input type="text" id="pBrand" class="form-control" placeholder="VD: YONEX JAPAN">
+                        </div>
+                        <div class="form-group">
+                            <label>Huy Hiệu (Badge):</label>
+                            <input type="text" id="pBadge" class="form-control" placeholder="VD: HOT NHẤT, VIP, BÁN CHẠY">
+                        </div>
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Giá Thuê / Bán (VNĐ) (*):</label>
+                            <input type="number" id="pPrice" class="form-control" placeholder="VD: 30000" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Đơn Vị Tính:</label>
+                            <input type="text" id="pPriceUnit" class="form-control" placeholder="VD: / buổi chơi, / ống, / cái">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Đường Dẫn Ảnh (Image URL):</label>
+                        <input type="url" id="pImageUrl" class="form-control" placeholder="https://..." oninput="updateImagePreview(this.value)">
+                        <div class="image-preview-box" id="pImgPreviewBox">
+                            <span style="font-size:12px; color:#94a3b8;"><i class="fa-solid fa-image"></i> Xem trước hình ảnh sản phẩm</span>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Thông Số 1:</label>
+                            <input type="text" id="pSpec1" class="form-control" placeholder="VD: Trọng lượng: 4U/G5 hoặc Size: 38-44">
+                        </div>
+                        <div class="form-group">
+                            <label>Thông Số 2:</label>
+                            <input type="text" id="pSpec2" class="form-control" placeholder="VD: Lực căng: 11kg hoặc Khử khuẩn UV">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mô Tả Sản Phẩm:</label>
+                        <textarea id="pDesc" class="form-control" placeholder="Mô tả công nghệ, đặc tính..."></textarea>
+                    </div>
+
+                    <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" id="pActive" checked style="width:18px; height:18px;">
+                        <label for="pActive" style="margin-bottom:0; cursor:pointer;">Hiển thị sản phẩm lên Trang Chủ</label>
+                    </div>
+                </div>
+
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeProductModal()">Hủy</button>
+                    <button type="submit" class="btn-modal-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu Sản Phẩm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL 2: THÊM / SỬA CHI NHÁNH ================= -->
+    <div class="admin-modal-backdrop" id="branchModal">
+        <div class="admin-modal-box">
+            <div class="admin-modal-header">
+                <h3 id="branchModalTitle"><i class="fa-solid fa-building"></i> Thêm Chi Nhánh Mới</h3>
+                <button class="btn-modal-close" onclick="closeBranchModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="branchForm" onsubmit="saveBranch(event)">
+                <div class="admin-modal-body">
+                    <input type="hidden" id="brId">
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Mã Chi Nhánh (*) (VD: NVL, DQH...):</label>
+                            <input type="text" id="brCode" class="form-control" placeholder="VD: Q7, GV..." required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tên Chi Nhánh (*):</label>
+                            <input type="text" id="brName" class="form-control" placeholder="VD: Ways Station Quận 7" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Địa Chỉ Chi Nhánh (*):</label>
+                        <input type="text" id="brAddress" class="form-control" placeholder="VD: 123 Nguyễn Thị Thập, P. Tân Hưng, Quận 7" required>
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Số Điện Thoại Hotline:</label>
+                            <input type="text" id="brPhone" class="form-control" placeholder="0889555559">
+                        </div>
+                        <div class="form-group">
+                            <label>Số Lượng Sân Khởi Tạo:</label>
+                            <input type="number" id="brCourts" class="form-control" placeholder="4" min="1" value="4">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeBranchModal()">Hủy</button>
+                    <button type="submit" class="btn-modal-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu Chi Nhánh</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL 3: THÊM / SỬA SÂN ĐẤU ================= -->
+    <div class="admin-modal-backdrop" id="courtModal">
+        <div class="admin-modal-box">
+            <div class="admin-modal-header">
+                <h3 id="courtModalTitle"><i class="fa-solid fa-table-cells"></i> Thêm Sân Mới</h3>
+                <button class="btn-modal-close" onclick="closeCourtModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="courtForm" onsubmit="saveCourt(event)">
+                <div class="admin-modal-body">
+                    <input type="hidden" id="cId">
+
+                    <div class="form-group">
+                        <label>Chi Nhánh Quản Lý (*):</label>
+                        <select id="cBranchId" class="form-control" required>
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Tên Sân (*) (VD: Sân 1, Sân VIP...):</label>
+                            <input type="text" id="cName" class="form-control" placeholder="VD: Sân 1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Số Thứ Tự Sân (1, 2, 3...):</label>
+                            <input type="number" id="cNumber" class="form-control" placeholder="1" min="1" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Cụm Nhóm Sân (Hiển thị khối bảng lịch):</label>
+                        <input type="text" id="cGroup" class="form-control" placeholder="VD: Cụm 1 (Sân 1+2)">
+                    </div>
+
+                    <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" id="cActive" checked style="width:18px; height:18px;">
+                        <label for="cActive" style="margin-bottom:0; cursor:pointer;">Sân đang hoạt động (Bỏ tick nếu đang bảo trì)</label>
+                    </div>
+                </div>
+
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeCourtModal()">Hủy</button>
+                    <button type="submit" class="btn-modal-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu Sân Đấu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        let allBookingsData = [];
+        let allProductsData = [];
+        let allBranchesData = [];
+        let allCourtsData = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadBookings();
+            loadProducts();
+            loadBranches();
+        });
+
+        // Tab Switching
+        function switchAdminTab(tabId, btn) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(tabId).style.display = 'block';
+            btn.classList.add('active');
+
+            if (tabId === 'branchesTab') {
+                loadBranches();
+            }
+        }
+
+        // ================= 1. BOOKINGS LOGIC =================
+        async function loadBookings() {
+            try {
+                const res = await fetch('/api/bookings');
+                allBookingsData = await res.json();
+                renderBookingsTable(allBookingsData);
+                updateStats(allBookingsData);
+            } catch (err) {
+                console.error(err);
+                document.getElementById('bookingsTableBody').innerHTML = `
+                    <tr><td colspan="9" style="text-align:center; color:#ef4444; padding:20px;">Lỗi khi tải danh sách đơn: ${err.message}</td></tr>
+                `;
+            }
+        }
+
+        function renderBookingsTable(bookings) {
+            const tbody = document.getElementById('bookingsTableBody');
+            if (!bookings || bookings.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:#64748b;">Chưa có đơn đặt sân nào.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = bookings.map(b => {
+                let badgeClass = 'badge-paid';
+                let statusText = 'Đã thanh toán';
+                if (b.status === 'PENDING') { badgeClass = 'badge-pending'; statusText = 'Chờ xác nhận'; }
+                else if (b.status === 'CANCELLED') { badgeClass = 'badge-cancelled'; statusText = 'Đã hủy'; }
+
+                const slotsStr = (b.details || []).map(d => `${d.court ? d.court.name : 'Sân'} (${d.timeSlot ? d.timeSlot.displayLabel : ''})`).join('<br>');
+
+                return `
+                    <tr>
+                        <td><strong>#${b.id || ''}</strong><br><small style="color:#64748b;">${b.bookingCode || ''}</small></td>
+                        <td><strong>${b.customerName || 'Khách Vãng Lai'}</strong></td>
+                        <td>${b.customerPhone || '---'}</td>
+                        <td><span class="badge-status badge-active">${b.branch ? b.branch.code : 'NVL'}</span></td>
+                        <td>${b.bookingDate || '---'}</td>
+                        <td style="font-size:12px; line-height:1.4;">${slotsStr || '---'}</td>
+                        <td><strong style="color:#ea580c;">${(b.totalAmount || 0).toLocaleString('vi-VN')} đ</strong></td>
+                        <td><span class="badge-status ${badgeClass}">${statusText}</span></td>
+                        <td>
+                            <div class="action-btn-group">
+                                ${b.status !== 'PAID' ? `
+                                    <button class="btn-tbl btn-tbl-success" title="Xác nhận thanh toán" onclick="confirmPayment(${b.id})">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                ` : ''}
+                                ${b.status !== 'CANCELLED' ? `
+                                    <button class="btn-tbl btn-tbl-delete" title="Hủy đơn đặt sân" onclick="cancelBooking(${b.id})">
+                                        <i class="fa-solid fa-ban"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateStats(bookings) {
+            let totalRevenue = 0;
+            let totalHours = 0;
+            let totalBookings = bookings.length;
+
+            bookings.forEach(b => {
+                if (b.status !== 'CANCELLED') {
+                    totalRevenue += (b.totalAmount || 0);
+                    totalHours += (b.details ? b.details.length : 0);
+                }
+            });
+
+            document.getElementById('statTotalBookings').textContent = totalBookings;
+            document.getElementById('statTotalRevenue').textContent = totalRevenue.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('statTotalHours').textContent = totalHours + 'h';
+            document.getElementById('statPassWanted').textContent = '1';
+        }
+
+        function filterBookings() {
+            const query = (document.getElementById('bookingSearchInput').value || '').toLowerCase();
+            const branch = document.getElementById('bookingBranchFilter').value;
+            const status = document.getElementById('bookingStatusFilter').value;
+
+            const filtered = allBookingsData.filter(b => {
+                const matchQuery = !query || 
+                    (b.bookingCode && b.bookingCode.toLowerCase().includes(query)) ||
+                    (b.customerName && b.customerName.toLowerCase().includes(query)) ||
+                    (b.customerPhone && b.customerPhone.toLowerCase().includes(query));
+                
+                const matchBranch = !branch || (b.branch && b.branch.code === branch);
+                const matchStatus = !status || (b.status === status);
+
+                return matchQuery && matchBranch && matchStatus;
+            });
+
+            renderBookingsTable(filtered);
+        }
+
+        async function confirmPayment(bookingId) {
+            if (!confirm('Xác nhận khách hàng đã chuyển khoản thành công cho đơn #' + bookingId + '?')) return;
+            try {
+                const res = await fetch(`/api/bookings/${bookingId}/status?status=PAID`, { method: 'PATCH' });
+                if (res.ok) {
+                    alert('Đã xác nhận đơn hàng #' + bookingId + ' thành công!');
+                    loadBookings();
+                } else {
+                    alert('Lỗi cập nhật!');
+                }
+            } catch (e) {
+                alert('Lỗi kết nối: ' + e.message);
+            }
+        }
+
+        async function cancelBooking(bookingId) {
+            if (!confirm('Bạn có chắc chắn muốn hủy đơn đặt sân #' + bookingId + ' này?')) return;
+            try {
+                const res = await fetch(`/api/bookings/${bookingId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert('Đã hủy đơn #' + bookingId + ' thành công!');
+                    loadBookings();
+                } else {
+                    alert('Lỗi khi hủy đơn!');
+                }
+            } catch (e) {
+                alert('Lỗi kết nối: ' + e.message);
+            }
+        }
+
+        // ================= 2. PRODUCTS CRUD LOGIC =================
+        async function loadProducts() {
+            try {
+                const res = await fetch('/api/products?all=true');
+                allProductsData = await res.json();
+                renderProductsGrid(allProductsData);
+            } catch (e) {
+                console.error('Lỗi tải sản phẩm:', e);
+            }
+        }
+
+        function renderProductsGrid(products) {
+            const container = document.getElementById('productsAdminContainer');
+            if (!products || products.length === 0) {
+                container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; padding:30px; color:#64748b;">Chưa có sản phẩm nào trong kho.</p>`;
+                return;
+            }
+
+            container.innerHTML = products.map(p => {
+                let catLabel = 'Vợt Cầu Lông';
+                if (p.category === 'SHOES') catLabel = 'Giày Thi Đấu';
+                else if (p.category === 'ACCESSORY') catLabel = 'Phụ Kiện';
+
+                return `
+                    <div class="p-admin-card ${p.active ? '' : 'style="opacity:0.6;"'}">
+                        <div class="p-admin-thumb-wrap">
+                            <img src="${p.imageUrl || 'https://images.unsplash.com/photo-1613918108466-292b78a8ef95?q=80&w=600&auto=format&fit=crop'}" alt="${p.name}" class="p-admin-thumb">
+                            ${p.badge ? `<span class="p-admin-badge">${p.badge}</span>` : ''}
+                            <span class="p-admin-cat">${catLabel}</span>
+                        </div>
+                        <div class="p-admin-body">
+                            <span class="p-admin-brand">${p.brand || 'CHÍNH HÃNG'}</span>
+                            <h4 class="p-admin-name">${p.name}</h4>
+                            <div class="p-admin-specs">
+                                ${p.spec1 ? `<span><i class="fa-solid fa-check"></i> ${p.spec1}</span>` : ''}
+                                ${p.spec2 ? `<span><i class="fa-solid fa-shield-halved"></i> ${p.spec2}</span>` : ''}
+                            </div>
+                            <div class="p-admin-price-row">
+                                <span class="p-admin-price">${(p.price || 0).toLocaleString('vi-VN')} đ</span>
+                                <span class="p-admin-unit">${p.priceUnit || '/ buổi'}</span>
+                            </div>
+                            <div class="p-admin-actions">
+                                <button class="btn-tbl btn-tbl-edit" onclick="editProduct(${p.id})"><i class="fa-solid fa-pen-to-square"></i> Sửa</button>
+                                <button class="btn-tbl ${p.active ? 'btn-tbl-view' : 'btn-tbl-success'}" onclick="toggleProductActive(${p.id})">
+                                    <i class="fa-solid fa-eye"></i> ${p.active ? 'Ẩn' : 'Hiện'}
+                                </button>
+                                <button class="btn-tbl btn-tbl-delete" onclick="deleteProduct(${p.id})"><i class="fa-solid fa-trash"></i> Xóa</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterProducts() {
+            const cat = document.getElementById('productCatFilter').value;
+            const filtered = cat ? allProductsData.filter(p => p.category === cat) : allProductsData;
+            renderProductsGrid(filtered);
+        }
+
+        function updateImagePreview(url) {
+            const box = document.getElementById('pImgPreviewBox');
+            if (url && url.startsWith('http')) {
+                box.innerHTML = `<img src="${url}" alt="Preview" onerror="this.parentElement.innerHTML='<span style=\\'color:#ef4444; font-size:12px;\\'>Link ảnh không hợp lệ</span>'">`;
+            } else {
+                box.innerHTML = `<span style="font-size:12px; color:#94a3b8;"><i class="fa-solid fa-image"></i> Xem trước hình ảnh sản phẩm</span>`;
+            }
+        }
+
+        function openProductModal(isEdit = false) {
+            document.getElementById('productForm').reset();
+            document.getElementById('pId').value = '';
+            document.getElementById('productModalTitle').innerHTML = isEdit 
+                ? `<i class="fa-solid fa-pen-to-square"></i> Cập Nhật Sản Phẩm`
+                : `<i class="fa-solid fa-plus-circle"></i> Thêm Sản Phẩm Mới`;
+            updateImagePreview('');
+            document.getElementById('productModal').classList.add('show');
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').classList.remove('show');
+        }
+
+        function editProduct(id) {
+            const p = allProductsData.find(item => item.id === id);
+            if (!p) return;
+            openProductModal(true);
+            document.getElementById('pId').value = p.id;
+            document.getElementById('pName').value = p.name || '';
+            document.getElementById('pCategory').value = p.category || 'RACQUET';
+            document.getElementById('pBrand').value = p.brand || '';
+            document.getElementById('pBadge').value = p.badge || '';
+            document.getElementById('pPrice').value = p.price || '';
+            document.getElementById('pPriceUnit').value = p.priceUnit || '';
+            document.getElementById('pImageUrl').value = p.imageUrl || '';
+            document.getElementById('pSpec1').value = p.spec1 || '';
+            document.getElementById('pSpec2').value = p.spec2 || '';
+            document.getElementById('pDesc').value = p.description || '';
+            document.getElementById('pActive').checked = Boolean(p.active);
+            updateImagePreview(p.imageUrl);
+        }
+
+        async function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('pId').value;
+            const payload = {
+                name: document.getElementById('pName').value,
+                category: document.getElementById('pCategory').value,
+                brand: document.getElementById('pBrand').value,
+                badge: document.getElementById('pBadge').value,
+                price: parseFloat(document.getElementById('pPrice').value) || 0,
+                priceUnit: document.getElementById('pPriceUnit').value || '/ buổi chơi',
+                imageUrl: document.getElementById('pImageUrl').value,
+                spec1: document.getElementById('pSpec1').value,
+                spec2: document.getElementById('pSpec2').value,
+                description: document.getElementById('pDesc').value,
+                active: document.getElementById('pActive').checked
+            };
+
+            try {
+                const url = id ? `/api/products/${id}` : '/api/products';
+                const method = id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert(id ? 'Cập nhật sản phẩm thành công!' : 'Thêm sản phẩm mới thành công!');
+                    closeProductModal();
+                    loadProducts();
+                } else {
+                    alert('Lỗi lưu sản phẩm!');
+                }
+            } catch (err) {
+                alert('Lỗi kết nối: ' + err.message);
+            }
+        }
+
+        async function toggleProductActive(id) {
+            try {
+                const res = await fetch(`/api/products/${id}/toggle`, { method: 'PATCH' });
+                if (res.ok) {
+                    loadProducts();
+                }
+            } catch (e) {
+                alert('Lỗi: ' + e.message);
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống?')) return;
+            try {
+                const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert('Đã xóa sản phẩm thành công!');
+                    loadProducts();
+                } else {
+                    alert('Lỗi: ' + e.message);
+                }
+            } catch (e) {
+                alert('Lỗi kết nối: ' + e.message);
+            }
+        }
+
+        // ================= 3. BRANCHES & COURTS CRUD LOGIC =================
+        async function loadBranches() {
+            try {
+                const res = await fetch('/api/branches');
+                allBranchesData = await res.json();
+                renderBranchesTable(allBranchesData);
+                populateBranchSelects(allBranchesData);
+                loadCourtsByBranch();
+            } catch (e) {
+                console.error('Lỗi tải chi nhánh:', e);
+            }
+        }
+
+        function renderBranchesTable(branches) {
+            const tbody = document.getElementById('branchesTableBody');
+            if (!branches || branches.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Chưa có chi nhánh nào.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = branches.map(b => `
+                <tr>
+                    <td><strong style="color:var(--primary);">${b.code}</strong></td>
+                    <td><strong>${b.name}</strong></td>
+                    <td>${b.address}</td>
+                    <td>${b.phone || '0889555559'}</td>
+                    <td><strong>${b.totalCourts || 0} Sân</strong></td>
+                    <td>
+                        <div class="action-btn-group">
+                            <button class="btn-tbl btn-tbl-edit" onclick="editBranch(${b.id})"><i class="fa-solid fa-pen-to-square"></i> Sửa</button>
+                            <button class="btn-tbl btn-tbl-delete" onclick="deleteBranch(${b.id})"><i class="fa-solid fa-trash"></i> Xóa</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function populateBranchSelects(branches) {
+            const select = document.getElementById('courtBranchSelect');
+            const modalSelect = document.getElementById('cBranchId');
+            
+            const optionsHtml = branches.map(b => `<option value="${b.id}">${b.code} - ${b.name}</option>`).join('');
+            select.innerHTML = optionsHtml;
+            modalSelect.innerHTML = optionsHtml;
+        }
+
+        function openBranchModal(isEdit = false) {
+            document.getElementById('branchForm').reset();
+            document.getElementById('brId').value = '';
+            document.getElementById('branchModalTitle').innerHTML = isEdit 
+                ? `<i class="fa-solid fa-pen-to-square"></i> Sửa Chi Nhánh` 
+                : `<i class="fa-solid fa-building"></i> Thêm Chi Nhánh Mới`;
+            document.getElementById('branchModal').classList.add('show');
+        }
+
+        function closeBranchModal() {
+            document.getElementById('branchModal').classList.remove('show');
+        }
+
+        function editBranch(id) {
+            const b = allBranchesData.find(item => item.id === id);
+            if (!b) return;
+            openBranchModal(true);
+            document.getElementById('brId').value = b.id;
+            document.getElementById('brCode').value = b.code;
+            document.getElementById('brName').value = b.name;
+            document.getElementById('brAddress').value = b.address;
+            document.getElementById('brPhone').value = b.phone || '0889555559';
+            document.getElementById('brCourts').value = b.totalCourts || 4;
+        }
+
+        async function saveBranch(e) {
+            e.preventDefault();
+            const id = document.getElementById('brId').value;
+            const payload = {
+                code: document.getElementById('brCode').value.toUpperCase(),
+                name: document.getElementById('brName').value,
+                address: document.getElementById('brAddress').value,
+                phone: document.getElementById('brPhone').value,
+                totalCourts: parseInt(document.getElementById('brCourts').value) || 4
+            };
+
+            try {
+                const url = id ? `/api/branches/${id}` : '/api/branches';
+                const method = id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert(id ? 'Cập nhật chi nhánh thành công!' : 'Thêm chi nhánh mới thành công!');
+                    closeBranchModal();
+                    loadBranches();
+                } else {
+                    alert('Lỗi khi lưu chi nhánh!');
+                }
+            } catch (err) {
+                alert('Lỗi kết nối: ' + err.message);
+            }
+        }
+
+        async function deleteBranch(id) {
+            if (!confirm('CẢNH BÁO: Xóa chi nhánh sẽ xóa toàn bộ các sân đấu của chi nhánh này. Bạn có chắc chắn?')) return;
+            try {
+                const res = await fetch(`/api/branches/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert('Đã xóa chi nhánh thành công!');
+                    loadBranches();
+                } else {
+                    alert('Lỗi khi xóa!');
+                }
+            } catch (e) {
+                alert('Lỗi kết nối: ' + e.message);
+            }
+        }
+
+        // ================= 4. COURTS CRUD LOGIC =================
+        async function loadCourtsByBranch() {
+            const branchId = document.getElementById('courtBranchSelect').value;
+            if (!branchId) return;
+
+            try {
+                const res = await fetch(`/api/courts?branchId=${branchId}`);
+                allCourtsData = await res.json();
+                renderCourtsTable(allCourtsData);
+            } catch (e) {
+                console.error('Lỗi tải sân:', e);
+            }
+        }
+
+        function renderCourtsTable(courts) {
+            const tbody = document.getElementById('courtsTableBody');
+            if (!courts || courts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#64748b;">Chi nhánh này chưa có sân nào. Bấm '+ Thêm Sân Mới' để tạo sân.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = courts.map(c => `
+                <tr>
+                    <td><strong>#${c.id}</strong></td>
+                    <td><strong>${c.name}</strong></td>
+                    <td>${c.courtNumber || 1}</td>
+                    <td><span class="badge-status badge-active">${c.courtGroup || 'Cụm sân'}</span></td>
+                    <td>${c.branch ? c.branch.name : ''}</td>
+                    <td>
+                        ${c.active 
+                            ? `<span class="badge-status badge-paid"><i class="fa-solid fa-circle-check"></i> Hoạt động</span>` 
+                            : `<span class="badge-status badge-maint"><i class="fa-solid fa-wrench"></i> Bảo trì</span>`
+                        }
+                    </td>
+                    <td>
+                        <div class="action-btn-group">
+                            <button class="btn-tbl btn-tbl-edit" onclick="editCourt(${c.id})"><i class="fa-solid fa-pen-to-square"></i> Sửa</button>
+                            <button class="btn-tbl ${c.active ? 'btn-tbl-view' : 'btn-tbl-success'}" onclick="toggleCourtActive(${c.id})">
+                                <i class="fa-solid fa-power-off"></i> ${c.active ? 'Bảo Trì' : 'Mở Lại'}
+                            </button>
+                            <button class="btn-tbl btn-tbl-delete" onclick="deleteCourt(${c.id})"><i class="fa-solid fa-trash"></i> Xóa</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openCourtModal(isEdit = false) {
+            document.getElementById('courtForm').reset();
+            document.getElementById('cId').value = '';
+            document.getElementById('cBranchId').value = document.getElementById('courtBranchSelect').value;
+            document.getElementById('courtModalTitle').innerHTML = isEdit 
+                ? `<i class="fa-solid fa-pen-to-square"></i> Sửa Sân Đấu` 
+                : `<i class="fa-solid fa-table-cells"></i> Thêm Sân Mới`;
+            document.getElementById('courtModal').classList.add('show');
+        }
+
+        function closeCourtModal() {
+            document.getElementById('courtModal').classList.remove('show');
+        }
+
+        function editCourt(id) {
+            const c = allCourtsData.find(item => item.id === id);
+            if (!c) return;
+            openCourtModal(true);
+            document.getElementById('cId').value = c.id;
+            document.getElementById('cBranchId').value = c.branch ? c.branch.id : '';
+            document.getElementById('cName').value = c.name;
+            document.getElementById('cNumber').value = c.courtNumber || 1;
+            document.getElementById('cGroup').value = c.courtGroup || '';
+            document.getElementById('cActive').checked = Boolean(c.active);
+        }
+
+        async function saveCourt(e) {
+            e.preventDefault();
+            const id = document.getElementById('cId').value;
+            const payload = {
+                branchId: parseInt(document.getElementById('cBranchId').value),
+                name: document.getElementById('cName').value,
+                courtNumber: parseInt(document.getElementById('cNumber').value) || 1,
+                courtGroup: document.getElementById('cGroup').value,
+                active: document.getElementById('cActive').checked
+            };
+
+            try {
+                const url = id ? `/api/courts/${id}` : '/api/courts';
+                const method = id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert(id ? 'Cập nhật sân thành công!' : 'Thêm sân mới thành công!');
+                    closeCourtModal();
+                    loadCourtsByBranch();
+                    loadBranches();
+                } else {
+                    alert('Lỗi khi lưu sân!');
+                }
+            } catch (err) {
+                alert('Lỗi kết nối: ' + err.message);
+            }
+        }
+
+        async function toggleCourtActive(id) {
+            try {
+                const res = await fetch(`/api/courts/${id}/toggle`, { method: 'PATCH' });
+                if (res.ok) {
+                    loadCourtsByBranch();
+                }
+            } catch (e) {
+                alert('Lỗi: ' + e.message);
+            }
+        }
+
+        async function deleteCourt(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa sân này khỏi hệ thống?')) return;
+            try {
+                const res = await fetch(`/api/courts/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert('Đã xóa sân thành công!');
+                    loadCourtsByBranch();
+                    loadBranches();
+                } else {
+                    alert('Lỗi khi xóa!');
+                }
+            } catch (e) {
+                alert('Lỗi kết nối: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

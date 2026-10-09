@@ -32,11 +32,11 @@ public class BookingApiController {
     public ResponseEntity<MatrixResponseDto> getMatrix(
             @RequestParam(defaultValue = "NVL") String branch,
             @RequestParam(required = false) String date) {
-        
-        LocalDate bookingDate = (date != null && !date.isEmpty()) 
-                ? LocalDate.parse(date) 
+
+        LocalDate bookingDate = (date != null && !date.isEmpty())
+                ? LocalDate.parse(date)
                 : LocalDate.now();
-        
+
         MatrixResponseDto matrix = bookingService.getMatrixData(branch, bookingDate);
         return ResponseEntity.ok(matrix);
     }
