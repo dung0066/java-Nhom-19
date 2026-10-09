@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt sân theo giờ - Ways Station Badminton</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- 1. TOP BLUE STRIPE -->
+    <div class="top-blue-stripe">
+        <span><a href="/" style="color:#ffffff; text-decoration:none; margin-right:12px;"><i class="fa-solid fa-house"></i> Trang Chủ</a> | &nbsp; Để xem giờ tối: Nhấn giữ Shift và Scroll để cuộn ngang</span>
+    </div>
+
+    <!-- 2. MARQUEE RUNNING YELLOW BAR (DÒNG CHỮ CHẠY LIÊN TỤC) -->
+    <div class="top-yellow-marquee-bar">
+        <div class="marquee-track">
+            <span class="marquee-item">
+                <i class="fa-solid fa-circle-exclamation marquee-icon"></i>
+                (Sơ đồ sân HB: Sân 1+2) - (Sơ đồ sân NQA: Sân 1; Sân 2+3; Sân 4+5+6) - (Sơ đồ sân NVL: Sân 1+2; Sân 3+4; Sân 5+6+7) - (Sơ đồ sân DQII: Sân 1; Sân 2+3; Sân 4) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Quý KH thuê sân để tổ chức giải hoặc ghi hình cần liên hệ 0889555559 trước, nếu không, Ways có quyền từ chối)
+            </span>
+            <span class="marquee-item">
+                <i class="fa-solid fa-circle-exclamation marquee-icon"></i>
+                (Sơ đồ sân HB: Sân 1+2) - (Sơ đồ sân NQA: Sân 1; Sân 2+3; Sân 4+5+6) - (Sơ đồ sân NVL: Sân 1+2; Sân 3+4; Sân 5+6+7) - (Sơ đồ sân DQII: Sân 1; Sân 2+3; Sân 4) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Quý KH thuê sân để tổ chức giải hoặc ghi hình cần liên hệ 0889555559 trước, nếu không, Ways có quyền từ chối)
+            </span>
+        </div>
+    </div>
+
+    <!-- 3. MAIN HEADER -->
+    <header class="ways-header">
+        <div class="header-inner">
+            <!-- Left Brand & Date -->
+            <div class="header-col-left">
+                <h1 class="header-title">Đặt sân theo giờ</h1>
+                <h2 class="header-subtitle">Ways Station Badminton</h2>
+                
+                <div class="header-action-row">
+                    <a href="javascript:void(0)" class="link-view-price" id="btnOpenGuide">Xem giá, hướng dẫn</a>
+                    <div class="date-input-container" id="headerDateWrapper">
+                        <input type="date" id="bookingDateInput" class="custom-date-picker">
+                        <i class="fa-solid fa-calendar-days custom-cal-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Branch Selector -->
+            <div class="header-col-mid">
+                <div class="branches-list" id="branchesList">
+                    <label class="branch-item active" data-branch="NVL">
+                        <input type="radio" name="branchRadio" value="NVL" checked>
+                        <span class="dot-radio"></span>
+                        <span class="branch-label"><strong>NVL</strong> = 70 Nguyễn Văn Lượng, P. 10, Gò Vấp</span>
+                    </label>
+                    <label class="branch-item" data-branch="DQII">
+                        <input type="radio" name="branchRadio" value="DQII">
+                        <span class="dot-radio"></span>
+                        <span class="branch-label"><strong>DQH</strong> = 262 Dương Quảng Hàm, Gò Vấp</span>
+                    </label>
+                    <label class="branch-item" data-branch="NQA">
+                        <input type="radio" name="branchRadio" value="NQA">
+                        <span class="dot-radio"></span>
+                        <span class="branch-label"><strong>NQA</strong> = 86 Nguyễn Quý Anh, Tân Phú</span>
+                    </label>
+                    <label class="branch-item" data-branch="HB">
+                        <input type="radio" name="branchRadio" value="HB">
+                        <span class="dot-radio"></span>
+                        <span class="branch-label"><strong>HB</strong> = 135 Hiệp Bình, Thủ Đức</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Right Contact & Legend -->
+            <div class="header-col-right">
+                <div class="hotline-btn">
+                    <span class="hotline-txt-top">Khách đặt lịch cố định:</span>
+                    <span class="hotline-txt-bottom">Gọi 0889555559</span>
+                </div>
+
+                <div class="legend-row">
+                    <div class="legend-cell">
+                        <span class="legend-color-box box-white"></span>
+                        <span>Trống</span>
+                    </div>
+                    <div class="legend-cell">
+                        <span class="legend-color-box box-red"></span>
+                        <span>Đã đặt</span>
+                    </div>
+                    <div class="legend-cell">
+                        <span class="legend-color-box box-yellow"></span>
+                        <span>Đang chọn</span>
+                    </div>
+                    <div class="legend-cell">
+                        <span class="legend-color-box box-purple"></span>
+                        <span>Cần Pass</span>
+                    </div>
+                </div>
+
+                <div class="admin-quick-btn">
+                    <a href="/" class="btn-admin-link" style="margin-right:6px;"><i class="fa-solid fa-house"></i> Trang chủ</a>
+                    <a href="/admin" class="btn-admin-link"><i class="fa-solid fa-gear"></i> Quản trị</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 4. MAIN MATRIX SCHEDULE CONTAINER -->
+    <main class="matrix-main-wrapper">
+        <div class="matrix-scroll-container" id="matrixScrollContainer">
+            <div class="matrix-blocks-wrapper" id="matrixBlocksWrapper">
+                <!-- Javascript will dynamically render grouped blocks -->
+            </div>
+        </div>
+
+        <!-- Floating Zoom Slider -->
+        <div class="zoom-floating-pill">
+            <input type="range" id="zoomRange" min="64" max="88" value="68" class="slider-blue">
+        </div>
+    </main>
+
+    <!-- 5. STICKY BOTTOM ACTION BAR -->
+    <footer class="bottom-bar-fixed">
+        <div class="bottom-status-row">
+            <span class="bottom-selected-text" id="bottomSelectedText">Đang chọn: 0h00</span>
+            <span class="bottom-total-text" id="bottomTotalText">Tổng:0 đ</span>
+        </div>
+        <button class="btn-bottom-submit" id="btnBottomNext">
+            Tiếp theo
+        </button>
+    </footer>
+
+    <!-- POPUP MODAL MỞ ĐẦU KHI VÀO WEB (CHỌN NGÀY & CHI NHÁNH) -->
+    <div class="initial-popup-backdrop" id="initialWelcomeModal">
+        <div class="initial-popup-card">
+            <h3 class="initial-popup-title">Vui lòng chọn ngày và chi nhánh bạn muốn đặt sân!</h3>
+            
+            <div class="initial-field-group">
+                <label class="initial-field-label">Chọn ngày:</label>
+                <div class="initial-date-box">
+                    <input type="date" id="initDateInput" class="initial-date-input">
+                    <i class="fa-solid fa-calendar-days initial-calendar-icon"></i>
+                </div>
+            </div>
+
+            <div class="initial-field-group">
+                <label class="initial-field-label">Chọn chi nhánh:</label>
+                <div class="initial-branch-list">
+                    <label class="initial-branch-item">
+                        <input type="radio" name="initBranch" value="NVL" checked>
+                        <span class="init-dot-radio"></span>
+                        <span><strong>NVL</strong> = 70 Nguyễn Văn Lượng, P. 10, Gò Vấp</span>
+                    </label>
+                    <label class="initial-branch-item">
+                        <input type="radio" name="initBranch" value="DQII">
+                        <span class="init-dot-radio"></span>
+                        <span><strong>DQH</strong> = 262 Dương Quảng Hàm, Gò Vấp</span>
+                    </label>
+                    <label class="initial-branch-item">
+                        <input type="radio" name="initBranch" value="NQA">
+                        <span class="init-dot-radio"></span>
+                        <span><strong>NQA</strong> = 86 Nguyễn Quý Anh, Tân Phú</span>
+                    </label>
+                    <label class="initial-branch-item">
+                        <input type="radio" name="initBranch" value="HB">
+                        <span class="init-dot-radio"></span>
+                        <span><strong>HB</strong> = 135 Hiệp Bình, Thủ Đức</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="initial-popup-action">
+                <button type="button" class="btn-init-confirm" id="btnConfirmInitial">
+                    Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CHECKOUT & CONFIRMATION -->
+    <div class="modal-overlay" id="checkoutModal">
+        <div class="modal-box">
+            <div class="modal-head">
+                <h3><i class="fa-solid fa-receipt"></i> Xác Nhận Đặt Sân Cầu Lông</h3>
+                <button class="close-x" id="btnCloseCheckout">&times;</button>
+            </div>
+            <div class="modal-content-area">
+                <div class="booking-recap">
+                    <h4>Danh sách sân đã chọn:</h4>
+                    <div id="recapSlotsList" class="recap-list"></div>
+                    <div class="recap-total">
+                        <span>Tổng tiền (<strong id="recapHours">0h</strong>):</span>
+                        <span class="recap-price" id="recapPrice">0 đ</span>
+                    </div>
+                </div>
+
+                <form id="bookingOrderForm">
+                    <div class="form-field">
+                        <label>Họ và tên khách hàng <span class="text-danger">*</span></label>
+                        <input type="text" id="inputName" class="form-input" placeholder="Nguyễn Văn A" required>
+                    </div>
+                    <div class="form-row-2">
+                        <div class="form-field">
+                            <label>Số điện thoại <span class="text-danger">*</span></label>
+                            <input type="tel" id="inputPhone" class="form-input" placeholder="0909123456" required>
+                        </div>
+                        <div class="form-field">
+                            <label>Email nhận thông báo</label>
+                            <input type="email" id="inputEmail" class="form-input" placeholder="email@gmail.com">
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>Hình thức thanh toán</label>
+                        <div class="pay-options">
+                            <label class="pay-card active">
+                                <input type="radio" name="payType" value="VIETQR" checked>
+                                <div>
+                                    <strong><i class="fa-solid fa-qrcode"></i> Quét mã VietQR</strong>
+                                    <small>Chuyển khoản tức thì</small>
+                                </div>
+                            </label>
+                            <label class="pay-card">
+                                <input type="radio" name="payType" value="CASH">
+                                <div>
+                                    <strong><i class="fa-solid fa-money-bill-wave"></i> Tiền mặt</strong>
+                                    <small>Thanh toán tại quầy</small>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>Ghi chú đơn (Thuê vợt, giày, mua nước...)</label>
+                        <input type="text" id="inputNotes" class="form-input" placeholder="Thuê 2 vợt Yonex, 1 đôi giày size 41...">
+                    </div>
+                    <div class="form-btn-group">
+                        <button type="button" class="btn-back" id="btnCancelModal">Hủy bỏ</button>
+                        <button type="submit" class="btn-confirm-submit" id="btnConfirmBooking">Xác Nhận Đặt Sân</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VIETQR RECEIPT SUCCESS -->
+    <div class="modal-overlay" id="successReceiptModal">
+        <div class="modal-box modal-box-success">
+            <div class="success-top-banner">
+                <i class="fa-solid fa-circle-check"></i>
+                <h2>Đặt Sân Thành Công!</h2>
+                <p>Mã đặt sân: <strong id="resCode" style="color:#0284c7;">WAY-202610-001</strong></p>
+            </div>
+            <div class="modal-content-area">
+                <div class="receipt-card">
+                    <p><strong>Khách hàng:</strong> <span id="resName">...</span></p>
+                    <p><strong>Số điện thoại:</strong> <span id="resPhone">...</span></p>
+                    <p><strong>Ngày đặt:</strong> <span id="resDate">...</span></p>
+                    <p><strong>Tổng giờ chơi:</strong> <span id="resHours">...</span></p>
+                    <p><strong>Tổng thanh toán:</strong> <span class="text-orange" id="resPrice">...</span></p>
+                    
+                    <div class="vietqr-block" id="vietQrBlock">
+                        <h4>Quét mã VietQR để thanh toán</h4>
+                        <img id="qrImage" src="" alt="Mã VietQR" class="qr-img">
+                        <div class="bank-sub-info">
+                            <p>Ngân hàng: <strong>MB Bank (Quân Đội)</strong></p>
+                            <p>Số tài khoản: <strong>0889555559</strong></p>
+                            <p>Chủ TK: <strong>WAYS STATION BADMINTON</strong></p>
+                            <p>Nội dung CK: <strong id="resTransferNote">WAY...</strong></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-btn-group" style="margin-top:16px;">
+                    <button type="button" class="btn-back" onclick="window.print()"><i class="fa-solid fa-print"></i> In Hóa Đơn</button>
+                    <button type="button" class="btn-confirm-submit" id="btnDoneSuccess">Hoàn Tất</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GUIDE & PRICING -->
+    <div class="modal-overlay" id="guideModal">
+        <div class="modal-box">
+            <div class="modal-head">
+                <h3><i class="fa-solid fa-circle-question"></i> Bảng Giá & Quy Định Đặt Sân</h3>
+                <button class="close-x" id="btnCloseGuide">&times;</button>
+            </div>
+            <div class="modal-content-area guide-content">
+                <h4>1. Bảng giá theo khung giờ</h4>
+                <table class="simple-table">
+                    <thead>
+                        <tr>
+                            <th>Khung giờ</th>
+                            <th>Thời gian</th>
+                            <th>Đơn giá</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Giờ thường (Off-Peak)</td>
+                            <td>00:00 - 17:00</td>
+                            <td><strong style="color:#0284c7;">70.000 đ/giờ</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Giờ vàng (Peak)</td>
+                            <td>17:00 - 22:00</td>
+                            <td><strong style="color:#ef4444;">120.000 đ/giờ</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4 style="margin-top:16px;">2. Hướng dẫn sử dụng</h4>
+                <p>• Nhấn vào ô trắng để chọn giờ đặt sân. Ô sẽ chuyển sang màu vàng.</p>
+                <p>• Ô màu đỏ là sân đã có người đặt.</p>
+                <p>• Ô màu tím là sân khách hàng bận cần pass lại.</p>
+                <button class="btn-confirm-submit" id="btnGuideOk" style="width:100%; margin-top:16px;">Đã Hiểu</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

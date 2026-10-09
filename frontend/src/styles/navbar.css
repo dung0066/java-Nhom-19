@@ -1,0 +1,294 @@
+/* ========================================================
+   UNIFIED WAYS STATION APP NAVBAR - SLIDING GSAP SEGMENTED PILL
+   ======================================================== */
+
+.app-unified-navbar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+}
+
+.app-navbar-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* 1. Brand Logo */
+.app-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  user-select: none;
+}
+
+.app-nav-logo-icon {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.app-nav-brand:hover .app-nav-logo-icon {
+  transform: rotate(-8deg) scale(1.04);
+}
+
+.app-nav-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-nav-brand-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.app-nav-brand-sub {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #0284c7;
+  letter-spacing: 0.8px;
+}
+
+/* 2. Nav Navigation Links with Sliding Pill */
+.app-nav-links-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Animated pill background */
+.nav-sliding-pill {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  background: #ffffff;
+  border-radius: 7px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  will-change: transform, width;
+}
+
+.nav-sliding-pill.admin-pill {
+  background: #ffffff;
+  border: 1px solid rgba(234, 88, 12, 0.2);
+}
+
+.app-nav-item-btn {
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 8px 18px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+  transition: color 0.25s ease;
+  white-space: nowrap;
+}
+
+.app-nav-item-btn:hover {
+  color: #0f172a;
+}
+
+.app-nav-item-btn.active {
+  color: #0284c7;
+}
+
+.app-nav-item-admin {
+  color: #64748b;
+}
+
+.app-nav-item-admin.active {
+  color: #ea580c;
+}
+
+/* 3. Right Tools & Actions */
+.app-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.nav-backend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.nav-backend-pill.online {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.nav-backend-pill.offline {
+  background-color: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulseGlow 1.8s infinite;
+}
+
+.nav-backend-pill.online .pulse-dot {
+  background-color: #22c55e;
+}
+
+.nav-backend-pill.offline .pulse-dot {
+  background-color: #f59e0b;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.nav-hotline-quick {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  font-size: 11px;
+}
+
+.nav-hotline-quick .hl-label {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.nav-hotline-quick .hl-number {
+  color: #ea580c;
+  font-weight: 800;
+  font-size: 13.5px;
+}
+
+.btn-nav-cta-action {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+}
+
+.btn-nav-cta-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+}
+
+/* 4. Language Switcher Control */
+.nav-language-switcher {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 2px;
+  gap: 2px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.lang-option-btn {
+  background: transparent;
+  border: none;
+  border-radius: 16px;
+  padding: 3px 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lang-option-btn:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.lang-option-btn.active {
+  background: #ffffff;
+  color: #0284c7;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.lang-flag {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.lang-code {
+  font-size: 11px;
+  letter-spacing: 0.3px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .app-nav-brand-sub,
+  .nav-hotline-quick {
+    display: none;
+  }
+  .app-nav-item-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .nav-language-switcher {
+    padding: 1px;
+  }
+  .lang-option-btn {
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+}
+
