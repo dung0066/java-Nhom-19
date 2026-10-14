@@ -2,7 +2,6 @@ package com.example.Dat_san_cau_long.controller;
 
 import com.example.Dat_san_cau_long.model.Product;
 import com.example.Dat_san_cau_long.service.ProductService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,11 +10,14 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/products")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class ProductApiController {
 
     private final ProductService productService;
+
+    public ProductApiController(ProductService productService) {
+        this.productService = productService;
+    }
 
     @GetMapping
     public ResponseEntity<List<Product>> getAllProducts(@RequestParam(required = false) Boolean all) {

@@ -6,7 +6,6 @@ import com.example.Dat_san_cau_long.model.Booking;
 import com.example.Dat_san_cau_long.model.Branch;
 import com.example.Dat_san_cau_long.repository.BranchRepository;
 import com.example.Dat_san_cau_long.service.BookingService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,15 +13,18 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 @RestController
 @RequestMapping("/api/booking")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class BookingApiController {
 
     private final BookingService bookingService;
     private final BranchRepository branchRepository;
+
+    public BookingApiController(BookingService bookingService, BranchRepository branchRepository) {
+        this.bookingService = bookingService;
+        this.branchRepository = branchRepository;
+    }
 
     @GetMapping("/branches")
     public ResponseEntity<List<Branch>> getAllBranches() {

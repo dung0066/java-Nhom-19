@@ -4,7 +4,6 @@ import com.example.Dat_san_cau_long.dto.BookingRequestDto;
 import com.example.Dat_san_cau_long.dto.MatrixResponseDto;
 import com.example.Dat_san_cau_long.model.*;
 import com.example.Dat_san_cau_long.repository.*;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +13,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
-@RequiredArgsConstructor
 public class BookingService {
 
     private final BranchRepository branchRepository;
@@ -23,6 +21,15 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final BookingDetailRepository bookingDetailRepository;
     private final UserRepository userRepository;
+
+    public BookingService(BranchRepository branchRepository, CourtRepository courtRepository, TimeSlotRepository timeSlotRepository, BookingRepository bookingRepository, BookingDetailRepository bookingDetailRepository, UserRepository userRepository) {
+        this.branchRepository = branchRepository;
+        this.courtRepository = courtRepository;
+        this.timeSlotRepository = timeSlotRepository;
+        this.bookingRepository = bookingRepository;
+        this.bookingDetailRepository = bookingDetailRepository;
+        this.userRepository = userRepository;
+    }
 
     public MatrixResponseDto getMatrixData(String branchCode, LocalDate date) {
         if (branchCode == null || branchCode.isEmpty()) {

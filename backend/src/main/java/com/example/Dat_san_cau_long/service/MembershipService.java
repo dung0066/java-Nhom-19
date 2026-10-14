@@ -7,8 +7,8 @@ import com.example.Dat_san_cau_long.model.UserMembership;
 import com.example.Dat_san_cau_long.repository.MembershipPackageRepository;
 import com.example.Dat_san_cau_long.repository.UserMembershipRepository;
 import com.example.Dat_san_cau_long.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,13 +21,19 @@ import java.util.Map;
 import java.util.Random;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class MembershipService {
+
+    private static final Logger log = LoggerFactory.getLogger(MembershipService.class);
 
     private final MembershipPackageRepository packageRepository;
     private final UserMembershipRepository userMembershipRepository;
     private final UserRepository userRepository;
+
+    public MembershipService(MembershipPackageRepository packageRepository, UserMembershipRepository userMembershipRepository, UserRepository userRepository) {
+        this.packageRepository = packageRepository;
+        this.userMembershipRepository = userMembershipRepository;
+        this.userRepository = userRepository;
+    }
 
     /**
      * Lấy danh sách các gói hội viên đang mở bán

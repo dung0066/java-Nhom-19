@@ -3,8 +3,8 @@ package com.example.Dat_san_cau_long.service;
 import com.example.Dat_san_cau_long.model.*;
 import com.example.Dat_san_cau_long.repository.*;
 import com.example.Dat_san_cau_long.util.PasswordUtil;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -14,9 +14,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Component
-@RequiredArgsConstructor
-@Slf4j
 public class DataInitializer implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
 
     private final BranchRepository branchRepository;
     private final CourtRepository courtRepository;
@@ -27,6 +27,18 @@ public class DataInitializer implements CommandLineRunner {
     private final MembershipPackageRepository packageRepository;
     private final UserRepository userRepository;
     private final UserMembershipRepository userMembershipRepository;
+
+    public DataInitializer(BranchRepository branchRepository, CourtRepository courtRepository, TimeSlotRepository timeSlotRepository, BookingRepository bookingRepository, BookingDetailRepository bookingDetailRepository, ProductRepository productRepository, MembershipPackageRepository packageRepository, UserRepository userRepository, UserMembershipRepository userMembershipRepository) {
+        this.branchRepository = branchRepository;
+        this.courtRepository = courtRepository;
+        this.timeSlotRepository = timeSlotRepository;
+        this.bookingRepository = bookingRepository;
+        this.bookingDetailRepository = bookingDetailRepository;
+        this.productRepository = productRepository;
+        this.packageRepository = packageRepository;
+        this.userRepository = userRepository;
+        this.userMembershipRepository = userMembershipRepository;
+    }
 
     @Override
     public void run(String... args) {

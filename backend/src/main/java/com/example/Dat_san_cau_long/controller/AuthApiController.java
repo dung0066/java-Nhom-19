@@ -3,20 +3,21 @@ package com.example.Dat_san_cau_long.controller;
 import com.example.Dat_san_cau_long.dto.auth.*;
 import com.example.Dat_san_cau_long.model.User;
 import com.example.Dat_san_cau_long.service.AuthService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class AuthApiController {
 
     private final AuthService authService;
+
+    public AuthApiController(AuthService authService) {
+        this.authService = authService;
+    }
 
     /**
      * Đăng ký tài khoản người dùng mới

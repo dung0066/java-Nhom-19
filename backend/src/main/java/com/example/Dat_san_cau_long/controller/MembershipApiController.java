@@ -4,20 +4,21 @@ import com.example.Dat_san_cau_long.dto.membership.BuyMembershipRequest;
 import com.example.Dat_san_cau_long.model.MembershipPackage;
 import com.example.Dat_san_cau_long.model.UserMembership;
 import com.example.Dat_san_cau_long.service.MembershipService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-
 @RestController
 @RequestMapping("/api/memberships")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class MembershipApiController {
 
     private final MembershipService membershipService;
+
+    public MembershipApiController(MembershipService membershipService) {
+        this.membershipService = membershipService;
+    }
 
     /**
      * Lấy danh sách các gói hội viên đang mở bán

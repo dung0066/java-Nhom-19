@@ -1,16 +1,20 @@
 package com.example.Dat_san_cau_long.dto.auth;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class LoginRequest {
-    // Cho phép đăng nhập bằng username, số điện thoại hoặc email
     private String identifier; // username / phone / email
     private String password;
+
+    public LoginRequest() {
+    }
+
+    public LoginRequest(String identifier, String password) {
+        this.identifier = identifier;
+        this.password = password;
+    }
+
+    public String getIdentifier() { return identifier; }
+    public void setIdentifier(String identifier) { this.identifier = identifier; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 }
