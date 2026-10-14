@@ -2,6 +2,7 @@ package com.example.Dat_san_cau_long.service;
 
 import com.example.Dat_san_cau_long.model.*;
 import com.example.Dat_san_cau_long.repository.*;
+import com.example.Dat_san_cau_long.util.PasswordUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -23,6 +24,9 @@ public class DataInitializer implements CommandLineRunner {
     private final BookingRepository bookingRepository;
     private final BookingDetailRepository bookingDetailRepository;
     private final ProductRepository productRepository;
+    private final MembershipPackageRepository packageRepository;
+    private final UserRepository userRepository;
+    private final UserMembershipRepository userMembershipRepository;
 
     @Override
     public void run(String... args) {
@@ -138,12 +142,8 @@ public class DataInitializer implements CommandLineRunner {
             productRepository.saveAll(defaultProducts);
         }
 
-        if (branchRepository.count() > 0) {
-            log.info("Dữ liệu chi nhánh và sân đã có sẵn.");
-            return;
-        }
-
-        log.info("Khởi tạo dữ liệu hệ thống đặt sân Ways Station Badminton...");
+        if (branchRepository.count() == 0) {
+            log.info("Khởi tạo dữ liệu hệ thống đặt sân Ways Station Badminton...");
 
         // 1. Khởi tạo 4 Chi nhánh
         Branch nvl = branchRepository.save(Branch.builder()
@@ -298,6 +298,132 @@ public class DataInitializer implements CommandLineRunner {
                 }
             }
             bookingDetailRepository.saveAll(details);
+        }
+        } else {
+            log.info("Dữ liệu chi nhánh và sân đã có sẵn.");
+        }
+
+        // Khởi tạo các gói hội viên VIP nếu chưa có
+        if (packageRepository.count() == 0) {
+            log.info("Khởi tạo danh sách các gói hội viên VIP...");
+            MembershipPackage silver = MembershipPackage.builder()
+                    .code("SILVER")
+                    .name("Hội Viên Bạc (Silver)")
+                    .price(199000.0)
+                    .durationDays(30)
+                    .discountPercent(5.0)
+                    .perks("Giảm 5% giá giờ chơi mọi khung giờ; Tặng 1 quấn cán vợt cao cấp/tháng; Đặt sân online ưu tiên giữ chỗ 15 phút")
+                    .description("Gói khởi đầu tiết kiệm dành cho người chơi thể thao hàng tuần")
+                    .badgeColor("#0284c7")
+                    .icon("fa-solid fa-medal")
+                    .active(true)
+                    .build();
+
+            MembershipPackage gold = MembershipPackage.builder()
+                    .code("GOLD")
+                    .name("Hội Viên Vàng (Gold)")
+                    .price(499000.0)
+                    .durationDays(90)
+                    .discountPercent(12.0)
+                    .perks("Giảm 12% giá giờ chơi; Ưu tiên đặt cố định ca giờ vàng 17:30 - 21:50; Miễn phí mượn vợt cao cấp Yonex/Victor 2 lần/tháng; Giảm 10% khi mua nước và phụ kiện")
+                    .description("Gói phổ biến nhất, tối ưu chi phí cho các cơ thủ và nhóm bạn chơi thường xuyên")
+                    .badgeColor("#f59e0b")
+                    .icon("fa-solid fa-crown")
+                    .active(true)
+                    .build();
+
+            MembershipPackage diamond = MembershipPackage.builder()
+                    .code("DIAMOND")
+                    .name("Kim Cương VIP (Diamond)")
+                    .price(1290000.0)
+                    .durationDays(365)
+                    .discountPercent(20.0)
+                    .perks("Giảm 20% trọn đời toàn bộ dịch vụ; Tặng tủ để đồ riêng tại chi nhánh NVL; Miễn phí căng cước vợt 6 lần/năm; Mời khách giao lưu được áp dụng ưu đãi chung")
+                    .description("Đặc quyền đẳng cấp nhất hệ thống Ways Station Badminton")
+                    .badgeColor("#10b981")
+                    .icon("fa-solid fa-gem")
+                    .active(true)
+                    .build();
+
+            MembershipPackage student = MembershipPackage.builder()
+                    .code("STUDENT")
+                    .name("Gói Sinh Viên Thần Tốc")
+                    .price(99000.0)
+                    .durationDays(30)
+                    .discountPercent(10.0)
+                    .perks("Giảm 10% khung giờ sáng & chiều trước 16:30; Áp dụng cho học sinh, sinh viên các trường đại học")
+                    .description("Gói tiếp sức đam mê thể thao trẻ học đường")
+                    .badgeColor("#8b5cf6")
+                    .icon("fa-solid fa-graduation-cap")
+                    .active(true)
+                    .build();
+
+            packageRepository.saveAll(List.of(silver, gold, diamond, student));
+        }
+
+        // Khởi tạo tài khoản người dùng mẫu nếu chưa có
+        if (userRepository.count() == 0) {
+            log.info("Khởi tạo tài khoản người dùng và quản trị viên mẫu (mật khẩu mặc định: 123456)...");
+            MembershipPackage goldPackage = packageRepository.findByCode("GOLD").orElse(null);
+            MembershipPackage diamondPackage = packageRepository.findByCode("DIAMOND").orElse(null);
+
+            User admin = User.builder()
+                    .username("admin")
+                    .password(PasswordUtil.hashPassword("123456"))
+                    .fullName("Quản Trị Viên Hệ Thống")
+                    .email("admin@waysstation.vn")
+                    .phone("0889555559")
+                    .role("ROLE_ADMIN")
+                    .membershipPackage(diamondPackage)
+                    .membershipExpiresAt(LocalDateTime.now().plusYears(2))
+                    .walletBalance(5000000.0)
+                    .status("ACTIVE")
+                    .build();
+
+            User memberGold = User.builder()
+                    .username("hoivien_gold")
+                    .password(PasswordUtil.hashPassword("123456"))
+                    .fullName("Nguyễn Văn Tuấn")
+                    .email("tuan.badminton@gmail.com")
+                    .phone("0909123456")
+                    .role("ROLE_USER")
+                    .membershipPackage(goldPackage)
+                    .membershipExpiresAt(LocalDateTime.now().plusDays(85))
+                    .walletBalance(850000.0)
+                    .status("ACTIVE")
+                    .build();
+
+            User normalUser = User.builder()
+                    .username("khachhang1")
+                    .password(PasswordUtil.hashPassword("123456"))
+                    .fullName("Trần Minh Đức")
+                    .email("duc.tm@gmail.com")
+                    .phone("0912345678")
+                    .role("ROLE_USER")
+                    .membershipPackage(null)
+                    .membershipExpiresAt(null)
+                    .walletBalance(0.0)
+                    .status("ACTIVE")
+                    .build();
+
+            userRepository.saveAll(List.of(admin, memberGold, normalUser));
+
+            // Tạo bản ghi UserMembership mẫu
+            if (goldPackage != null) {
+                userMembershipRepository.save(UserMembership.builder()
+                        .subscriptionCode("SUB-202610-GOLD-01")
+                        .user(memberGold)
+                        .membershipPackage(goldPackage)
+                        .pricePaid(goldPackage.getPrice())
+                        .discountApplied(0.0)
+                        .startDate(LocalDateTime.now().minusDays(5))
+                        .endDate(LocalDateTime.now().plusDays(85))
+                        .paymentMethod("VIETQR")
+                        .paymentStatus("PAID")
+                        .transactionCode("TXN-QR-889922")
+                        .notes("Kích hoạt gói Hội Viên Vàng 3 tháng")
+                        .build());
+            }
         }
 
         log.info("Khởi tạo dữ liệu mẫu hoàn tất!");

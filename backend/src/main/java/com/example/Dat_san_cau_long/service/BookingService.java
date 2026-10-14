@@ -22,6 +22,7 @@ public class BookingService {
     private final TimeSlotRepository timeSlotRepository;
     private final BookingRepository bookingRepository;
     private final BookingDetailRepository bookingDetailRepository;
+    private final UserRepository userRepository;
 
     public MatrixResponseDto getMatrixData(String branchCode, LocalDate date) {
         if (branchCode == null || branchCode.isEmpty()) {
@@ -137,11 +138,35 @@ public class BookingService {
             details.add(detail);
         }
 
+        // Kiểm tra người dùng và áp dụng ưu đãi gói hội viên
+        User user = null;
+        double discountPercent = 0.0;
+        if (req.getUserId() != null) {
+            user = userRepository.findById(req.getUserId()).orElse(null);
+            if (user != null && user.isMembershipValid()) {
+                discountPercent = user.getActiveDiscountPercent();
+            }
+        }
+
+        double originalPrice = totalPrice;
+        double discountAmount = 0.0;
+        if (discountPercent > 0) {
+            discountAmount = Math.round(originalPrice * (discountPercent / 100.0));
+            totalPrice = originalPrice - discountAmount;
+        }
+
+        booking.setUser(user);
+        booking.setOriginalPrice(originalPrice);
+        booking.setDiscountAmount(discountAmount);
         booking.setTotalPrice(totalPrice);
         booking.setTotalHours(totalHours);
         booking.setDetails(details);
 
         return bookingRepository.save(booking);
+    }
+
+    public List<Booking> getBookingsByUserId(Long userId) {
+        return bookingRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
     @Transactional

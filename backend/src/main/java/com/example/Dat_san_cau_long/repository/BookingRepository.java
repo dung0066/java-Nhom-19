@@ -13,4 +13,5 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Optional<Booking> findByBookingCode(String bookingCode);
     List<Booking> findByBookingDateOrderByCreatedAtDesc(LocalDate date);
     List<Booking> findAllByOrderByCreatedAtDesc();
+    List<Booking> findByUserIdOrderByCreatedAtDesc(Long userId);
 }
