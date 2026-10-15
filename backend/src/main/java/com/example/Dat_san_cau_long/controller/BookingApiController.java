@@ -6,7 +6,6 @@ import com.example.Dat_san_cau_long.model.Booking;
 import com.example.Dat_san_cau_long.model.Branch;
 import com.example.Dat_san_cau_long.repository.BranchRepository;
 import com.example.Dat_san_cau_long.service.BookingService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,14 +13,18 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 @RestController
 @RequestMapping("/api/booking")
-@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class BookingApiController {
 
     private final BookingService bookingService;
     private final BranchRepository branchRepository;
+
+    public BookingApiController(BookingService bookingService, BranchRepository branchRepository) {
+        this.bookingService = bookingService;
+        this.branchRepository = branchRepository;
+    }
 
     @GetMapping("/branches")
     public ResponseEntity<List<Branch>> getAllBranches() {
@@ -49,6 +52,8 @@ public class BookingApiController {
             res.put("success", true);
             res.put("message", "Đặt sân thành công!");
             res.put("bookingCode", booking.getBookingCode());
+            res.put("originalPrice", booking.getOriginalPrice());
+            res.put("discountAmount", booking.getDiscountAmount());
             res.put("totalPrice", booking.getTotalPrice());
             res.put("totalHours", booking.getTotalHours());
             res.put("customerName", booking.getCustomerName());
@@ -77,6 +82,11 @@ public class BookingApiController {
     @GetMapping("/all")
     public ResponseEntity<List<Booking>> getAllBookings() {
         return ResponseEntity.ok(bookingService.getAllBookings());
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Booking>> getBookingsByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(bookingService.getBookingsByUserId(userId));
     }
 
     @DeleteMapping("/cancel/{id}")

@@ -3,7 +3,6 @@ package com.example.Dat_san_cau_long.controller;
 import com.example.Dat_san_cau_long.model.Branch;
 import com.example.Dat_san_cau_long.repository.BranchRepository;
 import com.example.Dat_san_cau_long.repository.CourtRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,12 +11,16 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/branches")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class BranchApiController {
 
     private final BranchRepository branchRepository;
     private final CourtRepository courtRepository;
+
+    public BranchApiController(BranchRepository branchRepository, CourtRepository courtRepository) {
+        this.branchRepository = branchRepository;
+        this.courtRepository = courtRepository;
+    }
 
     @GetMapping
     public ResponseEntity<List<Branch>> getAllBranches() {

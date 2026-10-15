@@ -1,10 +1,14 @@
 -- ==========================================================
--- SCRIPT TẠO DATABASE VÀ DỮ LIỆU MẪU ĐẶT SÂN CẦU LÔNG (XAMPP / MySQL)
+-- SCRIPT TẠO DATABASE VÀ DỮ LIỆU ĐẦY ĐỦ CHO HỆ THỐNG ĐẶT SÂN CẦU LÔNG (SPRING BOOT / MYSQL)
+-- Hỗ trợ: Đặt sân, Quản lý tài khoản User, Đăng ký/Đăng nhập, Mua Gói Hội Viên (Membership VIP)
 -- ==========================================================
 
 -- 1. Tạo Database
 CREATE DATABASE IF NOT EXISTS `dat_san_cau_long` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `dat_san_cau_long`;
+
+-- Tắt kiểm tra khóa ngoại tạm thời để khởi tạo/reset an toàn nếu cần
+SET FOREIGN_KEY_CHECKS = 0;
 
 -- 2. Bảng Branches (Chi nhánh)
 CREATE TABLE IF NOT EXISTS `branches` (
@@ -13,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `branches` (
     `name` VARCHAR(100) NOT NULL,
     `address` VARCHAR(255) NOT NULL,
     `phone` VARCHAR(20),
-    `total_courts` INT
+    `total_courts` INT DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. Bảng Courts (Sân cầu lông)
@@ -39,32 +43,89 @@ CREATE TABLE IF NOT EXISTS `time_slots` (
     `sort_order` INT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 5. Bảng Bookings (Đơn đặt sân)
+-- 5. Bảng Membership Packages (Các gói hội viên)
+CREATE TABLE IF NOT EXISTS `membership_packages` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `code` VARCHAR(30) NOT NULL UNIQUE,
+    `name` VARCHAR(100) NOT NULL,
+    `price` DOUBLE NOT NULL,
+    `duration_days` INT NOT NULL,
+    `discount_percent` DOUBLE DEFAULT 0,
+    `perks` TEXT,
+    `description` VARCHAR(500),
+    `badge_color` VARCHAR(30) DEFAULT '#0284c7',
+    `icon` VARCHAR(50) DEFAULT 'fa-solid fa-crown',
+    `active` BOOLEAN DEFAULT TRUE,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 6. Bảng Users (Người dùng, Hội viên, Nhân viên, Quản trị)
+CREATE TABLE IF NOT EXISTS `users` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `username` VARCHAR(50) NOT NULL UNIQUE,
+    `password` VARCHAR(255) NOT NULL,
+    `full_name` VARCHAR(100) NOT NULL,
+    `email` VARCHAR(100) UNIQUE,
+    `phone` VARCHAR(20) NOT NULL UNIQUE,
+    `role` VARCHAR(20) DEFAULT 'ROLE_USER',
+    `membership_package_id` BIGINT DEFAULT NULL,
+    `membership_expires_at` DATETIME DEFAULT NULL,
+    `wallet_balance` DOUBLE DEFAULT 0,
+    `avatar` VARCHAR(255) DEFAULT NULL,
+    `status` VARCHAR(20) DEFAULT 'ACTIVE',
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_users_membership_package` FOREIGN KEY (`membership_package_id`) REFERENCES `membership_packages` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 7. Bảng User Memberships (Lịch sử đăng ký & mua gói hội viên)
+CREATE TABLE IF NOT EXISTS `user_memberships` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `subscription_code` VARCHAR(50) NOT NULL UNIQUE,
+    `user_id` BIGINT NOT NULL,
+    `package_id` BIGINT NOT NULL,
+    `price_paid` DOUBLE NOT NULL,
+    `discount_applied` DOUBLE DEFAULT 0,
+    `start_date` DATETIME NOT NULL,
+    `end_date` DATETIME NOT NULL,
+    `payment_method` VARCHAR(50) DEFAULT 'VIETQR',
+    `payment_status` VARCHAR(30) DEFAULT 'PAID',
+    `transaction_code` VARCHAR(100),
+    `notes` VARCHAR(500),
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_user_memberships_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_user_memberships_package` FOREIGN KEY (`package_id`) REFERENCES `membership_packages` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 8. Bảng Bookings (Đơn đặt sân)
 CREATE TABLE IF NOT EXISTS `bookings` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `booking_code` VARCHAR(30) NOT NULL UNIQUE,
+    `user_id` BIGINT DEFAULT NULL,
     `customer_name` VARCHAR(100) NOT NULL,
     `customer_phone` VARCHAR(20) NOT NULL,
     `customer_email` VARCHAR(100),
     `booking_date` DATE NOT NULL,
     `branch_id` BIGINT NOT NULL,
-    `total_price` DOUBLE,
-    `total_hours` DOUBLE,
+    `original_price` DOUBLE DEFAULT 0,
+    `discount_amount` DOUBLE DEFAULT 0,
+    `total_price` DOUBLE NOT NULL,
+    `total_hours` DOUBLE DEFAULT 1.0,
     `status` VARCHAR(30) DEFAULT 'CONFIRMED',
     `payment_method` VARCHAR(50) DEFAULT 'VIETQR',
     `notes` VARCHAR(500),
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_bookings_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`)
+    CONSTRAINT `fk_bookings_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`),
+    CONSTRAINT `fk_bookings_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 6. Bảng Booking Details (Chi tiết từng khung giờ và sân)
+-- 9. Bảng Booking Details (Chi tiết từng khung giờ và sân)
 CREATE TABLE IF NOT EXISTS `booking_details` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `booking_id` BIGINT NOT NULL,
     `court_id` BIGINT NOT NULL,
     `time_slot_id` BIGINT NOT NULL,
     `slot_date` DATE NOT NULL,
-    `price` DOUBLE,
+    `price` DOUBLE NOT NULL,
     `status` VARCHAR(30) DEFAULT 'BOOKED',
     `pass_contact` VARCHAR(100),
     CONSTRAINT `fk_details_booking` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE CASCADE,
@@ -73,17 +134,36 @@ CREATE TABLE IF NOT EXISTS `booking_details` (
     CONSTRAINT `uk_court_slot_date` UNIQUE (`court_id`, `time_slot_id`, `slot_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 10. Bảng Products (Dụng cụ cho thuê: Vợt, Giày, Phụ kiện)
+CREATE TABLE IF NOT EXISTS `products` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(150) NOT NULL,
+    `category` VARCHAR(50) NOT NULL,
+    `brand` VARCHAR(100),
+    `price` DOUBLE NOT NULL,
+    `price_unit` VARCHAR(50) DEFAULT '/ buổi chơi',
+    `image_url` VARCHAR(500),
+    `badge` VARCHAR(50),
+    `spec1` VARCHAR(150),
+    `spec2` VARCHAR(150),
+    `description` TEXT,
+    `active` BOOLEAN DEFAULT TRUE,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
 -- ==========================================================
 -- DỮ LIỆU BAN ĐẦU (SEED DATA)
 -- ==========================================================
 
 -- 1. Thêm Chi Nhánh
 INSERT INTO `branches` (`id`, `code`, `name`, `address`, `phone`, `total_courts`) VALUES
-(1, 'NVL', 'Ways Station NVL', '70 Nguyễn Văn Lượng, P. 10, Gò Vấp', '0889555559', 7),
-(2, 'DQII', 'Ways Station DQII', '262 Dương Quảng Hàm, Gò Vấp', '0889555559', 6),
-(3, 'NQA', 'Ways Station NQA', '86 Nguyễn Quý Anh, Tân Phú', '0889555559', 6),
-(4, 'HB', 'Ways Station HB', '135 Hiệp Bình, Thủ Đức', '0889555559', 8)
-ON DUPLICATE KEY UPDATE `code`=`code`;
+(1, 'NVL', 'Ways Station NVL', '70 Nguyễn Văn Lượng, P. 10, Gò Vấp, TP.HCM', '0889555559', 7),
+(2, 'DQII', 'Ways Station DQII', '262 Dương Quảng Hàm, P. 6, Gò Vấp, TP.HCM', '0889555559', 6),
+(3, 'NQA', 'Ways Station NQA', '86 Nguyễn Quý Anh, P. Tân Sơn Nhì, Tân Phú, TP.HCM', '0889555559', 6),
+(4, 'HB', 'Ways Station HB', '135 Hiệp Bình, TP. Thủ Đức, TP.HCM', '0889555559', 8)
+ON DUPLICATE KEY UPDATE `name`=VALUES(`name`), `address`=VALUES(`address`), `phone`=VALUES(`phone`), `total_courts`=VALUES(`total_courts`);
 
 -- 2. Thêm Sân cho chi nhánh NVL (Sân 1 -> Sân 7)
 INSERT INTO `courts` (`id`, `branch_id`, `name`, `court_number`, `court_group`, `active`) VALUES
@@ -94,9 +174,9 @@ INSERT INTO `courts` (`id`, `branch_id`, `name`, `court_number`, `court_group`, 
 (5, 1, 'Sân 5', 5, 'Sân 5+6', 1),
 (6, 1, 'Sân 6', 6, 'Sân 5+6', 1),
 (7, 1, 'Sân 7', 7, 'Sân 7', 1)
-ON DUPLICATE KEY UPDATE `name`=`name`;
+ON DUPLICATE KEY UPDATE `name`=VALUES(`name`);
 
--- 3. Thêm các Khung Giờ (24h tương tự hình ảnh san.ways.io.vn)
+-- 3. Thêm các Khung Giờ (24h)
 INSERT INTO `time_slots` (`id`, `start_time`, `end_time`, `display_label`, `standard_price`, `peak_price`, `is_peak_hour`, `sort_order`) VALUES
 (1, '00:15', '01:15', '0:15-1:15', 70000, 120000, 0, 1),
 (2, '01:20', '02:20', '1:20-2:20', 70000, 120000, 0, 2),
@@ -120,4 +200,26 @@ INSERT INTO `time_slots` (`id`, `start_time`, `end_time`, `display_label`, `stan
 (20, '20:50', '21:50', '20:50-21:50', 70000, 120000, 1, 20),
 (21, '21:55', '22:55', '21:55-22:55', 70000, 120000, 1, 21),
 (22, '23:00', '00:00', '23:00-0:00', 70000, 120000, 0, 22)
-ON DUPLICATE KEY UPDATE `display_label`=`display_label`;
+ON DUPLICATE KEY UPDATE `display_label`=VALUES(`display_label`), `standard_price`=VALUES(`standard_price`), `peak_price`=VALUES(`peak_price`);
+
+-- 4. Thêm Các Gói Hội Viên (Membership Packages)
+INSERT INTO `membership_packages` (`id`, `code`, `name`, `price`, `duration_days`, `discount_percent`, `perks`, `description`, `badge_color`, `icon`, `active`) VALUES
+(1, 'SILVER', 'Hội Viên Bạc (Silver)', 199000, 30, 5.0, 'Giảm 5% giá giờ chơi mọi khung giờ; Tặng 1 quấn cán vợt cao cấp/tháng; Đặt sân online ưu tiên giữ chỗ 15 phút', 'Gói khởi đầu tiết kiệm dành cho người chơi thể thao hàng tuần', '#0284c7', 'fa-solid fa-medal', 1),
+(2, 'GOLD', 'Hội Viên Vàng (Gold)', 499000, 90, 12.0, 'Giảm 12% giá giờ chơi; Ưu tiên đặt cố định ca giờ vàng 17:30 - 21:50; Miễn phí mượn vợt cao cấp Yonex/Victor 2 lần/tháng; Giảm 10% khi mua nước và phụ kiện', 'Gói phổ biến nhất, tối ưu chi phí cho các cơ thủ và nhóm bạn chơi thường xuyên', '#f59e0b', 'fa-solid fa-crown', 1),
+(3, 'DIAMOND', 'Kim Cương VIP (Diamond)', 1290000, 365, 20.0, 'Giảm 20% trọn đời toàn bộ dịch vụ; Tặng tủ để đồ riêng tại chi nhánh NVL; Miễn phí căng cước vợt 6 lần/năm; Mời khách giao lưu được áp dụng ưu đãi chung', 'Đặc quyền đẳng cấp nhất hệ thống Ways Station Badminton', '#10b981', 'fa-solid fa-gem', 1),
+(4, 'STUDENT', 'Gói Sinh Viên Thần Tốc', 99000, 30, 10.0, 'Giảm 10% khung giờ sáng & chiều trước 16:30; Áp dụng cho học sinh, sinh viên các trường đại học toàn thành phố', 'Gói tiếp sức đam mê thể thao trẻ học đường', '#8b5cf6', 'fa-solid fa-graduation-cap', 1)
+ON DUPLICATE KEY UPDATE `name`=VALUES(`name`), `price`=VALUES(`price`), `discount_percent`=VALUES(`discount_percent`), `perks`=VALUES(`perks`);
+
+-- 5. Thêm Tài Khoản Người Dùng Mẫu (Mật khẩu mặc định: '123456')
+-- Hash SHA-256 của '123456': e10adc3949ba59abbe56e057f20f883e (hoặc mã hóa chuẩn hệ thống)
+INSERT INTO `users` (`id`, `username`, `password`, `full_name`, `email`, `phone`, `role`, `membership_package_id`, `membership_expires_at`, `wallet_balance`, `status`) VALUES
+(1, 'admin', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'Quản Trị Viên Hệ Thống', 'admin@waysstation.vn', '0889555559', 'ROLE_ADMIN', 3, '2027-12-31 23:59:59', 5000000, 'ACTIVE'),
+(2, 'hoivien_gold', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'Nguyễn Văn Tuấn', 'tuan.badminton@gmail.com', '0909123456', 'ROLE_USER', 2, '2026-12-31 23:59:59', 850000, 'ACTIVE'),
+(3, 'khachhang1', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'Trần Minh Đức', 'duc.tm@gmail.com', '0912345678', 'ROLE_USER', NULL, NULL, 0, 'ACTIVE')
+ON DUPLICATE KEY UPDATE `full_name`=VALUES(`full_name`), `email`=VALUES(`email`), `phone`=VALUES(`phone`), `membership_package_id`=VALUES(`membership_package_id`);
+
+-- 6. Thêm Lịch Sử Mua Gói Mẫu (User Memberships)
+INSERT INTO `user_memberships` (`id`, `subscription_code`, `user_id`, `package_id`, `price_paid`, `discount_applied`, `start_date`, `end_date`, `payment_method`, `payment_status`, `transaction_code`, `notes`) VALUES
+(1, 'SUB-202610-GOLD-01', 2, 2, 499000, 0, '2026-10-01 08:00:00', '2026-12-31 23:59:59', 'VIETQR', 'PAID', 'TXN-QR-889922', 'Kích hoạt gói Hội Viên Vàng 3 tháng'),
+(2, 'SUB-202610-DIA-01', 1, 3, 1290000, 0, '2026-01-01 00:00:00', '2027-12-31 23:59:59', 'SYSTEM', 'PAID', 'TXN-ADMIN-SYS', 'Tài khoản Quản Trị đặc quyền VIP')
+ON DUPLICATE KEY UPDATE `price_paid`=VALUES(`price_paid`);

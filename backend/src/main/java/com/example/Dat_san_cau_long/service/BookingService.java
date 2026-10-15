@@ -4,7 +4,6 @@ import com.example.Dat_san_cau_long.dto.BookingRequestDto;
 import com.example.Dat_san_cau_long.dto.MatrixResponseDto;
 import com.example.Dat_san_cau_long.model.*;
 import com.example.Dat_san_cau_long.repository.*;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +13,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
-@RequiredArgsConstructor
 public class BookingService {
 
     private final BranchRepository branchRepository;
@@ -22,6 +20,16 @@ public class BookingService {
     private final TimeSlotRepository timeSlotRepository;
     private final BookingRepository bookingRepository;
     private final BookingDetailRepository bookingDetailRepository;
+    private final UserRepository userRepository;
+
+    public BookingService(BranchRepository branchRepository, CourtRepository courtRepository, TimeSlotRepository timeSlotRepository, BookingRepository bookingRepository, BookingDetailRepository bookingDetailRepository, UserRepository userRepository) {
+        this.branchRepository = branchRepository;
+        this.courtRepository = courtRepository;
+        this.timeSlotRepository = timeSlotRepository;
+        this.bookingRepository = bookingRepository;
+        this.bookingDetailRepository = bookingDetailRepository;
+        this.userRepository = userRepository;
+    }
 
     public MatrixResponseDto getMatrixData(String branchCode, LocalDate date) {
         if (branchCode == null || branchCode.isEmpty()) {
@@ -137,11 +145,35 @@ public class BookingService {
             details.add(detail);
         }
 
+        // Kiểm tra người dùng và áp dụng ưu đãi gói hội viên
+        User user = null;
+        double discountPercent = 0.0;
+        if (req.getUserId() != null) {
+            user = userRepository.findById(req.getUserId()).orElse(null);
+            if (user != null && user.isMembershipValid()) {
+                discountPercent = user.getActiveDiscountPercent();
+            }
+        }
+
+        double originalPrice = totalPrice;
+        double discountAmount = 0.0;
+        if (discountPercent > 0) {
+            discountAmount = Math.round(originalPrice * (discountPercent / 100.0));
+            totalPrice = originalPrice - discountAmount;
+        }
+
+        booking.setUser(user);
+        booking.setOriginalPrice(originalPrice);
+        booking.setDiscountAmount(discountAmount);
         booking.setTotalPrice(totalPrice);
         booking.setTotalHours(totalHours);
         booking.setDetails(details);
 
         return bookingRepository.save(booking);
+    }
+
+    public List<Booking> getBookingsByUserId(Long userId) {
+        return bookingRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
     @Transactional

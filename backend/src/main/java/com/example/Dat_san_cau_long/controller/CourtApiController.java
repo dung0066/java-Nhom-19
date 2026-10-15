@@ -4,8 +4,6 @@ import com.example.Dat_san_cau_long.model.Branch;
 import com.example.Dat_san_cau_long.model.Court;
 import com.example.Dat_san_cau_long.repository.BranchRepository;
 import com.example.Dat_san_cau_long.repository.CourtRepository;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,12 +12,16 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/courts")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class CourtApiController {
 
     private final CourtRepository courtRepository;
     private final BranchRepository branchRepository;
+
+    public CourtApiController(CourtRepository courtRepository, BranchRepository branchRepository) {
+        this.courtRepository = courtRepository;
+        this.branchRepository = branchRepository;
+    }
 
     @GetMapping
     public ResponseEntity<List<Court>> getCourts(@RequestParam(required = false) Long branchId,
@@ -92,12 +94,29 @@ public class CourtApiController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    @Data
     public static class CourtRequestDto {
         private Long branchId;
         private String name;
         private Integer courtNumber;
         private String courtGroup;
         private Boolean active;
+
+        public CourtRequestDto() {
+        }
+
+        public Long getBranchId() { return branchId; }
+        public void setBranchId(Long branchId) { this.branchId = branchId; }
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+
+        public Integer getCourtNumber() { return courtNumber; }
+        public void setCourtNumber(Integer courtNumber) { this.courtNumber = courtNumber; }
+
+        public String getCourtGroup() { return courtGroup; }
+        public void setCourtGroup(String courtGroup) { this.courtGroup = courtGroup; }
+
+        public Boolean getActive() { return active; }
+        public void setActive(Boolean active) { this.active = active; }
     }
 }
