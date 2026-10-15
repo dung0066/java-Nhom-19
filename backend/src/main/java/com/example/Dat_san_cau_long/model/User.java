@@ -39,6 +39,10 @@ public class User {
 
     private Double walletBalance = 0.0;
 
+    private Integer loyaltyPoints = 0;
+
+    private Double totalSpending = 0.0;
+
     @Column(length = 255)
     private String avatar;
 
@@ -50,7 +54,7 @@ public class User {
     public User() {
     }
 
-    public User(Long id, String username, String password, String fullName, String email, String phone, String role, MembershipPackage membershipPackage, LocalDateTime membershipExpiresAt, Double walletBalance, String avatar, String status, LocalDateTime createdAt) {
+    public User(Long id, String username, String password, String fullName, String email, String phone, String role, MembershipPackage membershipPackage, LocalDateTime membershipExpiresAt, Double walletBalance, Integer loyaltyPoints, Double totalSpending, String avatar, String status, LocalDateTime createdAt) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -61,6 +65,8 @@ public class User {
         this.membershipPackage = membershipPackage;
         this.membershipExpiresAt = membershipExpiresAt;
         this.walletBalance = walletBalance != null ? walletBalance : 0.0;
+        this.loyaltyPoints = loyaltyPoints != null ? loyaltyPoints : 0;
+        this.totalSpending = totalSpending != null ? totalSpending : 0.0;
         this.avatar = avatar;
         this.status = status != null ? status : "ACTIVE";
         this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
@@ -81,6 +87,8 @@ public class User {
         private MembershipPackage membershipPackage;
         private LocalDateTime membershipExpiresAt;
         private Double walletBalance = 0.0;
+        private Integer loyaltyPoints = 0;
+        private Double totalSpending = 0.0;
         private String avatar;
         private String status = "ACTIVE";
         private LocalDateTime createdAt = LocalDateTime.now();
@@ -95,18 +103,37 @@ public class User {
         public UserBuilder membershipPackage(MembershipPackage membershipPackage) { this.membershipPackage = membershipPackage; return this; }
         public UserBuilder membershipExpiresAt(LocalDateTime membershipExpiresAt) { this.membershipExpiresAt = membershipExpiresAt; return this; }
         public UserBuilder walletBalance(Double walletBalance) { this.walletBalance = walletBalance; return this; }
+        public UserBuilder loyaltyPoints(Integer loyaltyPoints) { this.loyaltyPoints = loyaltyPoints; return this; }
+        public UserBuilder totalSpending(Double totalSpending) { this.totalSpending = totalSpending; return this; }
         public UserBuilder avatar(String avatar) { this.avatar = avatar; return this; }
         public UserBuilder status(String status) { this.status = status; return this; }
         public UserBuilder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
 
         public User build() {
-            return new User(id, username, password, fullName, email, phone, role, membershipPackage, membershipExpiresAt, walletBalance, avatar, status, createdAt);
+            return new User(id, username, password, fullName, email, phone, role, membershipPackage, membershipExpiresAt, walletBalance, loyaltyPoints, totalSpending, avatar, status, createdAt);
         }
     }
 
+    /**
+     * Tích lũy chi tiêu và điểm thưởng từ hóa đơn đặt sân
+     * Cứ mỗi 10.000đ = 1 Điểm tích lũy (Loyalty Point)
+     */
+    public void addSpendingAndPoints(Double amount) {
+        if (amount == null || amount <= 0) return;
+        if (this.totalSpending == null) this.totalSpending = 0.0;
+        if (this.loyaltyPoints == null) this.loyaltyPoints = 0;
+
+        this.totalSpending += amount;
+        this.loyaltyPoints += (int) (amount / 10000.0);
+    }
+
     public boolean isMembershipValid() {
-        if (membershipPackage == null || membershipExpiresAt == null) {
+        if (membershipPackage == null) {
             return false;
+        }
+        // Nếu không cài ngày hết hạn => Hạng tích lũy vĩnh viễn theo mốc chi tiêu
+        if (membershipExpiresAt == null) {
+            return true;
         }
         return membershipExpiresAt.isAfter(LocalDateTime.now());
     }
@@ -117,6 +144,12 @@ public class User {
         }
         return 0.0;
     }
+
+    public Integer getLoyaltyPoints() { return loyaltyPoints != null ? loyaltyPoints : 0; }
+    public void setLoyaltyPoints(Integer loyaltyPoints) { this.loyaltyPoints = loyaltyPoints; }
+
+    public Double getTotalSpending() { return totalSpending != null ? totalSpending : 0.0; }
+    public void setTotalSpending(Double totalSpending) { this.totalSpending = totalSpending; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

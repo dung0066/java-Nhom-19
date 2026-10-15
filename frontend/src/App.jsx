@@ -4,6 +4,10 @@ import AppNavbar from './components/common/AppNavbar';
 import BookingPage from './pages/BookingPage';
 import AdminPage from './pages/AdminPage';
 import HomePage from './pages/HomePage';
+import MembershipComboPage from './pages/MembershipComboPage';
+import AuthModal from './components/common/AuthModal';
+import UserProfileModal from './components/common/UserProfileModal';
+import MembershipModal from './components/home/MembershipModal';
 import { checkBackendHealth } from './services/api';
 
 export default function App() {
@@ -18,6 +22,9 @@ export default function App() {
     if (path.includes('admin') || hash.includes('admin')) {
       return 'admin';
     }
+    if (path.includes('combo') || hash.includes('combo') || hash.includes('hoi-vien')) {
+      return 'combos';
+    }
     if (path === '/' && !path.includes('dat-san') && !hash.includes('dat-san') && hash.includes('home')) {
       return 'home';
     }
@@ -26,6 +33,7 @@ export default function App() {
   };
 
   const [currentPage, setCurrentPage] = useState(getInitialPage);
+  const [isMembershipModalOpen, setIsMembershipModalOpen] = useState(false);
 
   // Check backend health periodically
   useEffect(() => {
@@ -65,6 +73,8 @@ export default function App() {
       window.history.pushState(null, '', '#admin');
     } else if (page === 'home') {
       window.history.pushState(null, '', '#home');
+    } else if (page === 'combos') {
+      window.history.pushState(null, '', '#combo');
     } else {
       window.history.pushState(null, '', '#dat-san');
     }
@@ -82,9 +92,23 @@ export default function App() {
       {/* 2. MAIN ACTIVE VIEW WITH GSAP TRANSITION */}
       <main ref={mainRef} style={{ flex: 1 }}>
         {currentPage === 'admin' && <AdminPage onNavigate={handleNavigate} />}
-        {currentPage === 'home' && <HomePage onNavigate={handleNavigate} />}
+        {currentPage === 'combos' && <MembershipComboPage onNavigate={handleNavigate} />}
+        {currentPage === 'home' && (
+          <HomePage
+            onNavigate={handleNavigate}
+            onOpenMembershipModal={() => setIsMembershipModalOpen(true)}
+          />
+        )}
         {currentPage === 'booking' && <BookingPage onNavigate={handleNavigate} />}
       </main>
+
+      {/* 3. GLOBAL MODALS CONNECTED TO JAVA APIS */}
+      <AuthModal />
+      <UserProfileModal onOpenMembershipModal={() => setIsMembershipModalOpen(true)} />
+      <MembershipModal
+        isOpen={isMembershipModalOpen}
+        onClose={() => setIsMembershipModalOpen(false)}
+      />
     </div>
   );
 }

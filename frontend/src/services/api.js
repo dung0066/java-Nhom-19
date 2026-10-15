@@ -80,13 +80,43 @@ export async function fetchMatrixData(branchCode = 'NVL', dateStr) {
 
   // Tạo cấu trúc dữ liệu tương thích hoàn toàn với MatrixResponseDto của backend
   const currentBranch = MOCK_BRANCHES.find((b) => b.code === branchCode) || MOCK_BRANCHES[0];
+  const numCourts = currentBranch?.totalCourts || (branchCode === 'NQA' ? 6 : branchCode === 'HB' ? 2 : branchCode === 'DQII' || branchCode === 'DQH' ? 4 : 7);
+  
+  const dynamicCourts = Array.from({ length: numCourts }, (_, i) => ({
+    id: i + 1,
+    courtNumber: i + 1,
+    name: `Sân ${i + 1}`,
+    courtGroup: `Cụm ${Math.floor(i / 2) + 1}`,
+    type: 'Tiêu chuẩn BWF',
+    surface: 'Thảm Taraflex',
+    isVip: i === numCourts - 1 && numCourts > 4,
+    active: true
+  }));
+
+  // Tạo một số slot đã đặt mẫu đẹp mắt theo sơ đồ chi nhánh
+  const dynamicStatusMap = { ...DEFAULT_SLOT_STATUS_MAP };
+  if (branchCode === 'NQA') {
+    // Sân 1: các slot trưa chiều đã đặt
+    [8, 9, 13, 14, 15, 16, 17].forEach(sId => {
+      dynamicStatusMap[`1_${sId}`] = { status: 'BOOKED', price: 70000 };
+    });
+    // Sân 2: các slot sáng
+    [8, 9, 10].forEach(sId => {
+      dynamicStatusMap[`2_${sId}`] = { status: 'BOOKED', price: 70000 };
+    });
+    // Sân 4: slot trưa
+    [9, 10, 13, 14].forEach(sId => {
+      dynamicStatusMap[`4_${sId}`] = { status: 'BOOKED', price: 70000 };
+    });
+  }
+
   return {
     currentBranch,
     allBranches: MOCK_BRANCHES,
     selectedDate: targetDate,
-    courts: MOCK_COURTS,
+    courts: dynamicCourts,
     timeSlots: MOCK_TIME_SLOTS,
-    slotStatusMap: { ...DEFAULT_SLOT_STATUS_MAP },
+    slotStatusMap: dynamicStatusMap,
     isLiveBackend: false
   };
 }
@@ -96,13 +126,19 @@ export async function fetchMatrixData(branchCode = 'NVL', dateStr) {
  */
 export async function createBooking(bookingData) {
   try {
+    const stored = getStoredUser();
+    const payload = {
+      ...bookingData,
+      userId: bookingData.userId || (stored ? stored.id : null)
+    };
+
     const res = await fetch(`${API_BASE}/booking/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify(bookingData),
+      body: JSON.stringify(payload),
       signal: AbortSignal.timeout(6000)
     });
 
@@ -234,3 +270,452 @@ export async function fetchProducts() {
   }
   return null;
 }
+
+// ==========================================================
+// AUTHENTICATION APIs (ĐĂNG KÝ / ĐĂNG NHẬP / HỒ SƠ)
+// ==========================================================
+
+/**
+ * Đăng nhập tài khoản (username / phone / email)
+ */
+export async function loginUser(identifier, password) {
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier, password })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      localStorage.setItem('currentUser', JSON.stringify(data));
+      return data;
+    }
+    throw new Error(data.message || 'Đăng nhập không thành công');
+  } catch (err) {
+    throw err;
+  }
+}
+
+/**
+ * Đăng ký tài khoản mới
+ */
+export async function registerUser(userData) {
+  try {
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      localStorage.setItem('currentUser', JSON.stringify(data));
+      return data;
+    }
+    throw new Error(data.message || 'Đăng ký không thành công');
+  } catch (err) {
+    throw err;
+  }
+}
+
+/**
+ * Lấy thông tin tài khoản hiện tại từ Backend
+ */
+export async function fetchCurrentUserProfile(userId) {
+  try {
+    const res = await fetch(`${API_BASE}/auth/me?userId=${userId}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem('currentUser', JSON.stringify(data));
+        return data;
+      }
+    }
+  } catch (err) {
+    // Offline
+  }
+  return null;
+}
+
+/**
+ * Đăng xuất
+ */
+export function logoutUser() {
+  localStorage.removeItem('currentUser');
+}
+
+/**
+ * Lấy user đã lưu trong localStorage
+ */
+export function getStoredUser() {
+  try {
+    const stored = localStorage.getItem('currentUser');
+    return stored ? JSON.parse(stored) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// ==========================================================
+// MEMBERSHIP APIs (GÓI HỘI VIÊN & ĐẶC QUYỀN VIP)
+// ==========================================================
+
+/**
+ * Lấy danh sách các gói hội viên VIP đang mở bán
+ */
+export async function fetchMembershipPackages() {
+  try {
+    const res = await fetch(`${API_BASE}/memberships/packages`);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data;
+      }
+    }
+  } catch (err) {
+    // Fallback offline mock packages
+  }
+  return [
+    {
+      id: 1,
+      code: 'SILVER',
+      name: 'Hội Viên Bạc (Silver)',
+      price: 199000,
+      durationDays: 30,
+      discountPercent: 5.0,
+      badgeColor: '#0284c7',
+      icon: 'fa-solid fa-medal',
+      description: 'Gói khởi đầu tiết kiệm, đầy đủ tiện ích gửi đồ và khăn lạnh mỗi buổi tập',
+      perks: 'Giảm 5% giá giờ chơi; Miễn phí gửi đồ tại quầy lễ tân; Tặng 1 khăn lạnh ướp hương mỗi buổi chơi; Giảm 10% khi mua nước căn tin'
+    },
+    {
+      id: 2,
+      code: 'GOLD',
+      name: 'Hội Viên Vàng (Gold)',
+      price: 499000,
+      durationDays: 90,
+      discountPercent: 8.0,
+      badgeColor: '#f59e0b',
+      icon: 'fa-solid fa-crown',
+      description: 'Gói phổ biến nhất, tặng kèm dịch vụ tủ locker riêng, sấy khử khuẩn giày và ưu đãi căng vợt',
+      perks: 'Giảm 8% giá giờ chơi; Miễn phí tủ locker riêng khi chơi; Tặng khăn tập & sấy khử khuẩn giày bằng UV 2 lần/tháng; Trợ giá 50% công căng vợt; Ưu tiên giữ ca giờ vàng'
+    },
+    {
+      id: 3,
+      code: 'DIAMOND',
+      name: 'Kim Cương VIP (Diamond)',
+      price: 1290000,
+      durationDays: 365,
+      discountPercent: 10.0,
+      badgeColor: '#10b981',
+      icon: 'fa-solid fa-gem',
+      description: 'Đặc quyền VIP cao nhất, trọn gói gửi đồ qua đêm, căng vợt và chăm sóc giày chuyên nghiệp',
+      perks: 'Giảm 10% giá giờ chơi (mức tối đa); Tủ đồ cá nhân riêng để vợt qua đêm; Miễn phí công căng cước vợt 6 lần/năm; Vệ sinh sấy khô khử khuẩn giày không giới hạn; Miễn phí set khăn tập & nước khoáng mỗi buổi'
+    },
+    {
+      id: 4,
+      code: 'STUDENT',
+      name: 'Gói Sinh Viên Thần Tốc',
+      price: 99000,
+      durationDays: 30,
+      discountPercent: 7.0,
+      badgeColor: '#8b5cf6',
+      icon: 'fa-solid fa-graduation-cap',
+      description: 'Gói tiếp sức thể thao học đường với tiện ích gửi đồ an tâm và mượn vợt miễn phí',
+      perks: 'Giảm 7% giá giờ chơi ca sáng & chiều (trước 16:30); Miễn phí gửi balo & tài liệu học tập; Miễn phí mượn vợt tập; Tặng khăn lạnh mỗi buổi'
+    }
+  ];
+}
+
+/**
+ * Đăng ký / Mua gói hội viên
+ */
+export async function buyMembershipPackage(userId, packageId, paymentMethod = 'VIETQR', notes = '') {
+  try {
+    const res = await fetch(`${API_BASE}/memberships/buy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, packageId, paymentMethod, notes })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      // Cập nhật lại profile user trong localStorage
+      await fetchCurrentUserProfile(userId);
+      return data;
+    }
+    throw new Error(data.message || 'Không thể đăng ký gói hội viên');
+  } catch (err) {
+    throw err;
+  }
+}
+
+/**
+ * Lấy thông tin gói hội viên hiện tại của User
+ */
+export async function fetchUserActiveMembership(userId) {
+  try {
+    const res = await fetch(`${API_BASE}/memberships/user/${userId}/active`);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    // Offline
+  }
+  return { isMember: false };
+}
+
+/**
+ * Lấy lịch sử mua gói hội viên của User
+ */
+export async function fetchUserMembershipHistory(userId) {
+  try {
+    const res = await fetch(`${API_BASE}/memberships/user/${userId}/history`);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    // Offline
+  }
+  return [];
+}
+
+/**
+ * Lấy lịch sử đặt sân của User
+ */
+export async function fetchUserBookings(userId) {
+  try {
+    const res = await fetch(`${API_BASE}/booking/user/${userId}`);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    // Offline
+  }
+  return [];
+}
+
+/**
+ * Cập nhật thông tin tài khoản cá nhân
+ */
+export async function updateUserProfile(userId, profileData) {
+  try {
+    const res = await fetch(`${API_BASE}/auth/profile?userId=${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profileData)
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      localStorage.setItem('currentUser', JSON.stringify(data));
+      return data;
+    }
+    throw new Error(data.message || 'Không thể cập nhật hồ sơ');
+  } catch (err) {
+    throw err;
+  }
+}
+
+/**
+ * Đổi mật khẩu
+ */
+export async function changeUserPassword(userId, passwordData) {
+  try {
+    const res = await fetch(`${API_BASE}/auth/change-password?userId=${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(passwordData)
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      return data;
+    }
+    throw new Error(data.message || 'Không thể đổi mật khẩu');
+  } catch (err) {
+    throw err;
+  }
+}
+
+/**
+ * Admin: Lấy danh sách toàn bộ người dùng
+ */
+export async function fetchAllUsers() {
+  try {
+    const res = await fetch(`${API_BASE}/auth/users`);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    // Offline
+  }
+  return [];
+}
+
+// ==========================================================
+// BRANCH & COURT CRUD APIs (CHI NHÁNH & SÂN ĐẤU)
+// ==========================================================
+
+export async function createBranch(branchData) {
+  try {
+    const res = await fetch(`${API_BASE}/branches`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(branchData)
+    });
+    if (res.ok) return await res.json();
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Không thể tạo chi nhánh');
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function updateBranch(id, branchData) {
+  try {
+    const res = await fetch(`${API_BASE}/branches/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(branchData)
+    });
+    if (res.ok) return await res.json();
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Không thể cập nhật chi nhánh');
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function deleteBranch(id) {
+  try {
+    const res = await fetch(`${API_BASE}/branches/${id}`, { method: 'DELETE' });
+    if (res.ok) return await res.json();
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function fetchCourts(branchCode, branchId) {
+  try {
+    let url = `${API_BASE}/courts`;
+    if (branchCode) url += `?branchCode=${encodeURIComponent(branchCode)}`;
+    else if (branchId) url += `?branchId=${branchId}`;
+
+    const res = await fetch(url);
+    if (res.ok) return await res.json();
+  } catch (err) {
+    // Offline
+  }
+  return [];
+}
+
+export async function createCourt(courtData) {
+  try {
+    const res = await fetch(`${API_BASE}/courts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(courtData)
+    });
+    if (res.ok) return await res.json();
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Không thể tạo sân mới');
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function updateCourt(id, courtData) {
+  try {
+    const res = await fetch(`${API_BASE}/courts/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(courtData)
+    });
+    if (res.ok) return await res.json();
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Không thể cập nhật sân');
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function toggleCourtActive(id) {
+  try {
+    const res = await fetch(`${API_BASE}/courts/${id}/toggle`, { method: 'PATCH' });
+    if (res.ok) return await res.json();
+  } catch (err) {
+    // Offline
+  }
+}
+
+export async function deleteCourt(id) {
+  try {
+    const res = await fetch(`${API_BASE}/courts/${id}`, { method: 'DELETE' });
+    if (res.ok) return await res.json();
+  } catch (err) {
+    throw err;
+  }
+}
+
+// ==========================================================
+// ADMIN MEMBERSHIP APIs (QUẢN TRỊ GÓI HỘI VIÊN)
+// ==========================================================
+
+export async function fetchAllMembershipsAdmin() {
+  try {
+    const res = await fetch(`${API_BASE}/memberships/admin/all`);
+    if (res.ok) return await res.json();
+  } catch (err) {
+    // Offline
+  }
+  return [];
+}
+
+export async function fetchAllPackagesAdmin() {
+  try {
+    const res = await fetch(`${API_BASE}/memberships/admin/packages`);
+    if (res.ok) return await res.json();
+  } catch (err) {
+    // Offline
+  }
+  return [];
+}
+
+export async function createMembershipPackageAdmin(pkg) {
+  try {
+    const res = await fetch(`${API_BASE}/memberships/admin/packages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(pkg)
+    });
+    if (res.ok) return await res.json();
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Không thể tạo gói hội viên');
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function updateMembershipPackageAdmin(id, pkg) {
+  try {
+    const res = await fetch(`${API_BASE}/memberships/admin/packages/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(pkg)
+    });
+    if (res.ok) return await res.json();
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Không thể cập nhật gói hội viên');
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function deleteMembershipPackageAdmin(id) {
+  try {
+    const res = await fetch(`${API_BASE}/memberships/admin/packages/${id}`, {
+      method: 'DELETE'
+    });
+    if (res.ok) return await res.json();
+  } catch (err) {
+    throw err;
+  }
+}
+

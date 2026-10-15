@@ -16,6 +16,8 @@ public class AuthResponse {
     private String phone;
     private String role;
     private Double walletBalance;
+    private Integer loyaltyPoints;
+    private Double totalSpending;
     private String avatar;
     
     // Membership Status
@@ -27,7 +29,7 @@ public class AuthResponse {
     public AuthResponse() {
     }
 
-    public AuthResponse(boolean success, String message, String token, Long id, String username, String fullName, String email, String phone, String role, Double walletBalance, String avatar, boolean isMember, MembershipPackage membershipPackage, LocalDateTime membershipExpiresAt, Double discountPercent) {
+    public AuthResponse(boolean success, String message, String token, Long id, String username, String fullName, String email, String phone, String role, Double walletBalance, Integer loyaltyPoints, Double totalSpending, String avatar, boolean isMember, MembershipPackage membershipPackage, LocalDateTime membershipExpiresAt, Double discountPercent) {
         this.success = success;
         this.message = message;
         this.token = token;
@@ -38,6 +40,8 @@ public class AuthResponse {
         this.phone = phone;
         this.role = role;
         this.walletBalance = walletBalance;
+        this.loyaltyPoints = loyaltyPoints != null ? loyaltyPoints : 0;
+        this.totalSpending = totalSpending != null ? totalSpending : 0.0;
         this.avatar = avatar;
         this.isMember = isMember;
         this.membershipPackage = membershipPackage;
@@ -60,6 +64,8 @@ public class AuthResponse {
         private String phone;
         private String role;
         private Double walletBalance;
+        private Integer loyaltyPoints;
+        private Double totalSpending;
         private String avatar;
         private boolean isMember;
         private MembershipPackage membershipPackage;
@@ -76,6 +82,8 @@ public class AuthResponse {
         public AuthResponseBuilder phone(String phone) { this.phone = phone; return this; }
         public AuthResponseBuilder role(String role) { this.role = role; return this; }
         public AuthResponseBuilder walletBalance(Double walletBalance) { this.walletBalance = walletBalance; return this; }
+        public AuthResponseBuilder loyaltyPoints(Integer loyaltyPoints) { this.loyaltyPoints = loyaltyPoints; return this; }
+        public AuthResponseBuilder totalSpending(Double totalSpending) { this.totalSpending = totalSpending; return this; }
         public AuthResponseBuilder avatar(String avatar) { this.avatar = avatar; return this; }
         public AuthResponseBuilder isMember(boolean isMember) { this.isMember = isMember; return this; }
         public AuthResponseBuilder membershipPackage(MembershipPackage membershipPackage) { this.membershipPackage = membershipPackage; return this; }
@@ -83,7 +91,7 @@ public class AuthResponse {
         public AuthResponseBuilder discountPercent(Double discountPercent) { this.discountPercent = discountPercent; return this; }
 
         public AuthResponse build() {
-            return new AuthResponse(success, message, token, id, username, fullName, email, phone, role, walletBalance, avatar, isMember, membershipPackage, membershipExpiresAt, discountPercent);
+            return new AuthResponse(success, message, token, id, username, fullName, email, phone, role, walletBalance, loyaltyPoints, totalSpending, avatar, isMember, membershipPackage, membershipExpiresAt, discountPercent);
         }
     }
 
@@ -116,6 +124,12 @@ public class AuthResponse {
 
     public Double getWalletBalance() { return walletBalance; }
     public void setWalletBalance(Double walletBalance) { this.walletBalance = walletBalance; }
+
+    public Integer getLoyaltyPoints() { return loyaltyPoints; }
+    public void setLoyaltyPoints(Integer loyaltyPoints) { this.loyaltyPoints = loyaltyPoints; }
+
+    public Double getTotalSpending() { return totalSpending; }
+    public void setTotalSpending(Double totalSpending) { this.totalSpending = totalSpending; }
 
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }

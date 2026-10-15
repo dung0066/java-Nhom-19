@@ -24,7 +24,7 @@ public class MembershipPackage {
     private Integer durationDays; // 30, 90, 365 ngày
 
     @Column(nullable = false)
-    private Double discountPercent = 0.0; // 5%, 12%, 20% khi đặt sân
+    private Double discountPercent = 0.0; // Ưu đãi từ 5% - 10% khi đặt sân
 
     @Column(columnDefinition = "TEXT")
     private String perks;

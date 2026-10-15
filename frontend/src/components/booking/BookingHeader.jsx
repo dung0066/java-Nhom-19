@@ -12,7 +12,7 @@ export default function BookingHeader({
   const { t, isVietnamese } = useLanguage();
   const branches = [
     { code: 'NVL', label: '70 Nguyễn Văn Lượng, P. 10, Gò Vấp', short: 'NVL' },
-    { code: 'DQII', label: '262 Dương Quảng Hàm, Gò Vấp', short: 'DQH' },
+    { code: 'DQH', label: '262 Dương Quảng Hàm, Gò Vấp', short: 'DQH' },
     { code: 'NQA', label: '86 Nguyễn Quý Anh, Tân Phú', short: 'NQA' },
     { code: 'HB', label: '135 Hiệp Bình, Thủ Đức', short: 'HB' }
   ];
@@ -22,14 +22,9 @@ export default function BookingHeader({
       {/* 1. TOP BLUE STRIPE */}
       <div className="top-blue-stripe">
         <span>
-          <a
-            href="javascript:void(0)"
-            onClick={() => onNavigate('home')}
-            style={{ color: '#ffffff', textDecoration: 'none', marginRight: '12px' }}
-          >
-            <i className="fa-solid fa-house"></i> {t.navHome}
-          </a>{' '}
-          | &nbsp; {isVietnamese ? 'Để xem giờ tối: Nhấn giữ Shift và Scroll để cuộn ngang' : 'Scroll right or hold Shift to view evening / night slots'}
+          {isVietnamese
+            ? 'Để xem giờ tối: Nhấn giữ Shift và Scroll để cuộn ngang'
+            : 'Scroll right or hold Shift to view evening / night slots'}
         </span>
       </div>
 
@@ -39,13 +34,13 @@ export default function BookingHeader({
           <span className="marquee-item">
             <i className="fa-solid fa-circle-exclamation marquee-icon"></i>
             {isVietnamese
-              ? '(Sơ đồ sân HB: Sân 1+2) - (Sơ đồ sân NQA: Sân 1; Sân 2+3; Sân 4+5+6) - (Sơ đồ sân NVL: Sân 1+2; Sân 3+4; Sân 5+6+7) - (Sơ đồ sân DQII: Sân 1; Sân 2+3; Sân 4) | Hotline CSKH: 0889 555 559'
+              ? 'Ways có quyền từ chối) - (Sơ đồ sân HB: Sân 1+2) - (Sơ đồ sân NQA: Sân 1; Sân 2+3; Sân 4+5+6) - (Sơ đồ sân NVL: Sân 1+2; Sân 3+4; Sân 5+6+7) - (Sơ đồ sân DQH: Sân 1; Sân 2+3; Sân 4)(Quý KH thuê sân để tổ chức giải hoặc ghi hình cần liên hệ trước...) | Hotline CSKH: 0889 555 559'
               : '(Branch HB: Courts 1+2) - (Branch NQA: Courts 1-6) - (Branch NVL: Courts 1-7) - (Branch DQH: Courts 1-4) | Hotline: 0889 555 559'}
           </span>
           <span className="marquee-item">
             <i className="fa-solid fa-circle-exclamation marquee-icon"></i>
             {isVietnamese
-              ? '(Sơ đồ sân HB: Sân 1+2) - (Sơ đồ sân NQA: Sân 1; Sân 2+3; Sân 4+5+6) - (Sơ đồ sân NVL: Sân 1+2; Sân 3+4; Sân 5+6+7) - (Sơ đồ sân DQII: Sân 1; Sân 2+3; Sân 4) | Hotline CSKH: 0889 555 559'
+              ? 'Ways có quyền từ chối) - (Sơ đồ sân HB: Sân 1+2) - (Sơ đồ sân NQA: Sân 1; Sân 2+3; Sân 4+5+6) - (Sơ đồ sân NVL: Sân 1+2; Sân 3+4; Sân 5+6+7) - (Sơ đồ sân DQH: Sân 1; Sân 2+3; Sân 4)(Quý KH thuê sân để tổ chức giải hoặc ghi hình cần liên hệ trước...) | Hotline CSKH: 0889 555 559'
               : '(Branch HB: Courts 1+2) - (Branch NQA: Courts 1-6) - (Branch NVL: Courts 1-7) - (Branch DQH: Courts 1-4) | Hotline: 0889 555 559'}
           </span>
         </div>

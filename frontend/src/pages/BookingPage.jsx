@@ -3,7 +3,6 @@ import { useLanguage } from '../context/LanguageContext';
 import BookingHeader from '../components/booking/BookingHeader';
 import BookingMatrix from '../components/booking/BookingMatrix';
 import BookingBottomBar from '../components/booking/BookingBottomBar';
-import OffPeakComboBar from '../components/booking/OffPeakComboBar';
 import BookingBillingModal from '../components/booking/BookingBillingModal';
 import OrderHistoryModal from '../components/booking/OrderHistoryModal';
 import InitialWelcomeModal from '../components/booking/InitialWelcomeModal';
@@ -18,7 +17,7 @@ export default function BookingPage({ onNavigate }) {
   const todayStr = new Date().toISOString().split('T')[0];
 
   const [date, setDate] = useState(todayStr);
-  const [branch, setBranch] = useState('NVL');
+  const [branch, setBranch] = useState('NQA'); // default to NQA matching screenshot
   const [cellWidth, setCellWidth] = useState(68);
 
   const [courts, setCourts] = useState([]);
@@ -29,7 +28,7 @@ export default function BookingPage({ onNavigate }) {
   const [appliedCombo, setAppliedCombo] = useState(null);
 
   // Modals
-  const [isInitialModalOpen, setIsInitialModalOpen] = useState(true);
+  const [isInitialModalOpen, setIsInitialModalOpen] = useState(false);
   const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
   const [isOrderHistoryOpen, setIsOrderHistoryOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -140,6 +139,7 @@ export default function BookingPage({ onNavigate }) {
   const handleSubmitBooking = async (formData) => {
     try {
       const payload = {
+        userId: formData.userId || null,
         branchCode: formData.branchCode,
         bookingDate: formData.bookingDate,
         customerName: formData.customerName,
@@ -230,13 +230,6 @@ export default function BookingPage({ onNavigate }) {
         onNavigate={onNavigate}
       />
 
-      {/* OFF-PEAK COMBO SPECIALS BAR */}
-      <OffPeakComboBar
-        onSelectCombo={handleSelectCombo}
-        timeSlots={timeSlots}
-        courts={courts}
-      />
-
       <BookingMatrix
         courts={courts}
         timeSlots={timeSlots}
@@ -246,6 +239,7 @@ export default function BookingPage({ onNavigate }) {
         cellWidth={cellWidth}
         setCellWidth={setCellWidth}
         onClaimPassSlot={handleClaimPassSlot}
+        branch={branch}
       />
 
       <BookingBottomBar

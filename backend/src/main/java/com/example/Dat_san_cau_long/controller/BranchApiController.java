@@ -11,7 +11,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/branches")
-@CrossOrigin(origins = "*")
 public class BranchApiController {
 
     private final BranchRepository branchRepository;

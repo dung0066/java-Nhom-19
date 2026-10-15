@@ -1,14 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import '../../styles/navbar.css';
 
 export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, t, isVietnamese } = useLanguage();
+  const { currentUser, isLoggedIn, openAuthModal, openProfileModal } = useAuth();
   const navLinksRef = useRef(null);
   const pillRef = useRef(null);
   const homeBtnRef = useRef(null);
   const bookingBtnRef = useRef(null);
+  const combosBtnRef = useRef(null);
   const adminBtnRef = useRef(null);
 
   // Smooth sliding indicator with GSAP
@@ -16,6 +19,7 @@ export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
     let targetBtn = null;
     if (currentPage === 'home') targetBtn = homeBtnRef.current;
     else if (currentPage === 'booking') targetBtn = bookingBtnRef.current;
+    else if (currentPage === 'combos') targetBtn = combosBtnRef.current;
     else if (currentPage === 'admin') targetBtn = adminBtnRef.current;
 
     if (targetBtn && pillRef.current && navLinksRef.current) {
@@ -79,6 +83,16 @@ export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
           </button>
 
           <button
+            ref={combosBtnRef}
+            type="button"
+            className={`app-nav-item-btn ${currentPage === 'combos' ? 'active' : ''}`}
+            onClick={() => onNavigate('combos')}
+          >
+            <i className="fa-solid fa-crown"></i>
+            <span>{isVietnamese ? 'Hội Viên & Combo' : 'VIP & Combos'}</span>
+          </button>
+
+          <button
             ref={adminBtnRef}
             type="button"
             className={`app-nav-item-btn app-nav-item-admin ${currentPage === 'admin' ? 'active' : ''}`}
@@ -131,6 +145,77 @@ export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
             <span className="hl-label">{t.navHotlineLabel}</span>
             <span className="hl-number">0889 555 559</span>
           </div>
+
+          {/* User Account / Login Button */}
+          {isLoggedIn ? (
+            <button
+              type="button"
+              className="nav-user-chip-btn"
+              onClick={openProfileModal}
+              title={isVietnamese ? 'Xem hồ sơ & tài khoản cá nhân' : 'View account profile'}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: 'rgba(255, 255, 255, 0.12)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                borderRadius: '30px',
+                padding: '4px 12px 4px 5px',
+                color: '#fff',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                backdropFilter: 'blur(4px)'
+              }}
+            >
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: currentUser?.isMember
+                    ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                    : 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                }}
+              >
+                {(currentUser?.fullName || currentUser?.username || 'U').charAt(0).toUpperCase()}
+              </div>
+              <span style={{ fontSize: '12.5px', fontWeight: 700, maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {currentUser?.fullName?.split(' ').pop() || currentUser?.username}
+              </span>
+              {currentUser?.isMember && (
+                <i className="fa-solid fa-crown" style={{ color: '#fbbf24', fontSize: '11px' }}></i>
+              )}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="nav-auth-btn"
+              onClick={() => openAuthModal('login')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(255, 255, 255, 0.15)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                color: '#fff',
+                fontSize: '12.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              <i className="fa-solid fa-user-circle"></i>
+              <span>{isVietnamese ? 'Đăng Nhập' : 'Sign In'}</span>
+            </button>
+          )}
 
           {/* Context Action Button */}
           {currentPage !== 'booking' ? (

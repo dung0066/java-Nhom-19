@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 
 export const REFRESHMENT_ITEMS = [
   { id: 'water_lavie', name: 'Nước khoáng LaVie 500ml', price: 10000, icon: 'fa-bottle-water', unit: 'chai' },
@@ -44,6 +45,7 @@ export default function BookingBillingModal({
   onSubmitBooking
 }) {
   const { t, isVietnamese } = useLanguage();
+  const { currentUser, isLoggedIn } = useAuth();
   const [step, setStep] = useState(1); // 1: Giờ sân -> 2: Dịch vụ -> 3: Căng vợt -> 4: Tính đơn
   const modalBoxRef = useRef(null);
   const stepContentRef = useRef(null);
@@ -79,6 +81,15 @@ export default function BookingBillingModal({
   const [paymentMethod, setPaymentMethod] = useState('VIETQR');
   const [orderNotes, setOrderNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Prefill customer info from logged-in user
+  useEffect(() => {
+    if (isOpen && currentUser) {
+      setCustomerName(currentUser.fullName || currentUser.username || '');
+      setCustomerPhone(currentUser.phone || '');
+      setCustomerEmail(currentUser.email || '');
+    }
+  }, [isOpen, currentUser]);
 
   // Sync combo pre-selections when combo changes
   useEffect(() => {
@@ -133,7 +144,12 @@ export default function BookingBillingModal({
     comboDiscount = Math.round(courtPriceRaw * 0.4);
   }
 
-  const finalCourtPrice = Math.max(0, courtPriceRaw - comboDiscount);
+  // VIP Membership Discount
+  const vipDiscountPercent = (currentUser && currentUser.isMember && currentUser.discountPercent) ? currentUser.discountPercent : 0;
+  const vipDiscountAmount = vipDiscountPercent > 0 ? Math.round(courtPriceRaw * (vipDiscountPercent / 100)) : 0;
+
+  const totalDiscount = comboDiscount + vipDiscountAmount;
+  const finalCourtPrice = Math.max(0, courtPriceRaw - totalDiscount);
 
   // Refreshments Total
   const servicesTotal = Object.entries(serviceQuantities).reduce((sum, [id, qty]) => {
@@ -198,6 +214,7 @@ export default function BookingBillingModal({
     setIsSubmitting(true);
     try {
       const billingPayload = {
+        userId: currentUser?.id || null,
         branchCode: branch,
         bookingDate: date,
         customerName,
@@ -210,6 +227,9 @@ export default function BookingBillingModal({
         totalHours,
         courtPriceRaw,
         comboDiscount,
+        vipDiscountAmount,
+        vipDiscountPercent,
+        totalDiscount,
         finalCourtPrice,
         services: Object.entries(serviceQuantities)
           .filter(([_, qty]) => qty > 0)
@@ -569,6 +589,12 @@ export default function BookingBillingModal({
                       <strong className="text-success">- {comboDiscount.toLocaleString('vi-VN')} đ</strong>
                     </div>
                   )}
+                  {vipDiscountAmount > 0 && (
+                    <div className="inv-discount-row" style={{ color: '#d97706', background: '#fffbeb', padding: '6px 12px', borderRadius: '6px', marginTop: '6px' }}>
+                      <span><i className="fa-solid fa-crown" style={{ color: '#f59e0b' }}></i> Đặc quyền Hội Viên VIP ({currentUser?.membershipPackage?.name || 'VIP'} -{currentUser?.discountPercent}%):</span>
+                      <strong style={{ color: '#d97706' }}>- {vipDiscountAmount.toLocaleString('vi-VN')} đ</strong>
+                    </div>
+                  )}
                 </div>
 
                 {/* HẠNG MỤC 2: DỊCH VỤ ĐI KÈM */}
@@ -647,6 +673,24 @@ export default function BookingBillingModal({
 
               {/* FORM THÔNG TIN KHÁCH HÀNG & PHƯƠNG THỨC THANH TOÁN */}
               <form onSubmit={handleFinalSubmit} className="order-final-form">
+                {isLoggedIn ? (
+                  <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12.5px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '16px' }}>👤</span>
+                      <span>
+                        Đặt với tài khoản <strong>{currentUser.fullName || currentUser.username}</strong>
+                        {currentUser.isMember && <span style={{ color: '#d97706', fontWeight: 800, marginLeft: '6px' }}><i className="fa-solid fa-crown"></i> VIP Member (-{currentUser.discountPercent}%)</span>}
+                      </span>
+                    </div>
+                    <span style={{ color: '#15803d', fontWeight: 700 }}>✓ Tự động tích điểm</span>
+                  </div>
+                ) : (
+                  <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12.5px' }}>
+                    <div style={{ color: '#1e40af' }}>
+                      💡 Bạn có tài khoản Ways Station? Đăng nhập để nhận chiết khấu VIP và tự động lưu lịch sử đơn.
+                    </div>
+                  </div>
+                )}
                 <div className="form-grid-2">
                   <div className="field-block">
                     <label>Họ và tên khách hàng: <span className="req">*</span></label>

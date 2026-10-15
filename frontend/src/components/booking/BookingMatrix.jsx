@@ -9,7 +9,8 @@ export default function BookingMatrix({
   onToggleSlot,
   cellWidth,
   setCellWidth,
-  onClaimPassSlot
+  onClaimPassSlot,
+  branch = 'NVL'
 }) {
   const matrixContainerRef = useRef(null);
 
@@ -28,23 +29,46 @@ export default function BookingMatrix({
   // GSAP: Stagger entrance for court rows
   React.useEffect(() => {
     if (matrixContainerRef.current) {
-      const rows = matrixContainerRef.current.querySelectorAll('.court-row');
+      const rows = matrixContainerRef.current.querySelectorAll('.court-data-row');
       if (rows.length > 0) {
         gsap.fromTo(
           rows,
-          { autoAlpha: 0.2, y: 10 },
-          { autoAlpha: 1, y: 0, stagger: 0.03, duration: 0.35, ease: 'power2.out' }
+          { autoAlpha: 0.2, y: 8 },
+          { autoAlpha: 1, y: 0, stagger: 0.03, duration: 0.3, ease: 'power2.out' }
         );
       }
     }
-  }, [courts]);
+  }, [courts, branch]);
+
+  // Staggered minutes for each cluster (:15 for pair 1, :25 for pair 2, :35 for pair 3, :45 for pair 4)
+  const formatSlotLabelForCluster = (slot, clusterIdx) => {
+    const minuteOffsets = [15, 25, 35, 45];
+    const m = minuteOffsets[clusterIdx % minuteOffsets.length];
+    const mStr = String(m).padStart(2, '0');
+
+    if (slot.startTime && slot.endTime) {
+      const sH = parseInt(slot.startTime.split(':')[0], 10);
+      const eH = parseInt(slot.endTime.split(':')[0], 10);
+      return `${sH}:${mStr}-${eH}:${mStr}`;
+    }
+    return slot.displayLabel || '';
+  };
+
+  const getSlotPeriodTag = (slotIdx) => {
+    if (slotIdx < 5) return 'đêm';
+    if (slotIdx < 11) return 'sáng';
+    if (slotIdx < 13) return 'trưa';
+    if (slotIdx < 16) return 'chiều';
+    if (slotIdx < 21) return 'tối';
+    return 'đêm';
+  };
 
   const handleCellClick = (e, court, slot, status, isSelected) => {
     // If slot is booked, cannot select
     if (status === 'BOOKED') {
       gsap.to(e.currentTarget, {
-        x: [-4, 4, -4, 4, 0],
-        duration: 0.25,
+        x: [-3, 3, -3, 3, 0],
+        duration: 0.22,
         ease: 'power2.inOut'
       });
       return;
@@ -62,7 +86,7 @@ export default function BookingMatrix({
     gsap.fromTo(
       e.currentTarget,
       { scale: 0.88 },
-      { scale: 1, duration: 0.25, ease: 'back.out(2.5)' }
+      { scale: 1, duration: 0.22, ease: 'back.out(2.2)' }
     );
 
     onToggleSlot(court, slot);
@@ -73,20 +97,19 @@ export default function BookingMatrix({
       <div className="matrix-scroll-container" id="matrixScrollContainer">
         <div className="matrix-blocks-wrapper" id="matrixBlocksWrapper">
           {blocks.length === 0 ? (
-            <div style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
-              <i className="fa-solid fa-spinner fa-spin"></i> Đang tải sơ đồ sân...
+            <div style={{ padding: '36px', textAlign: 'center', color: '#64748b' }}>
+              <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '8px' }}></i> Đang tải sơ đồ sân...
             </div>
           ) : (
             blocks.map((courtPair, blockIdx) => (
               <div key={blockIdx} className="court-block-group">
-                {/* 1. Header row with time slots */}
+                {/* 1. Header row with time slots for this specific cluster */}
                 <div className="block-header-row">
                   <div className="block-header-corner"></div>
                   <div className="block-header-slots">
                     {timeSlots.map((slot, slotIdx) => {
-                      let tag = '';
-                      if (slotIdx < 6) tag = 'đơn';
-                      else if (slotIdx < 11) tag = 'sáng';
+                      const displayTime = formatSlotLabelForCluster(slot, blockIdx);
+                      const periodTag = getSlotPeriodTag(slotIdx);
 
                       return (
                         <div
@@ -94,44 +117,50 @@ export default function BookingMatrix({
                           className="header-slot-cell"
                           style={{ width: `${cellWidth}px`, minWidth: `${cellWidth}px` }}
                         >
-                          <span className="header-slot-time">{slot.displayLabel}</span>
-                          {tag && <span className="header-slot-tag">{tag}</span>}
+                          <span className="header-slot-time">{displayTime}</span>
+                          <span className="header-slot-tag">{periodTag}</span>
                         </div>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* 2. Court Data Rows */}
+                {/* 2. Court Data Rows (Sân 1, Sân 2...) */}
                 {courtPair.map((court) => (
-                  <div key={court.id} className="court-row">
-                    <div className="grid-cell-court-name">
-                      <span>{court.name.toUpperCase()}</span>
+                  <div key={court.id} className="court-data-row">
+                    {/* Left Court Title: CN ${branch} + Court Name */}
+                    <div className="court-title-cell">
+                      <div className="court-title-cn-col">
+                        <span className="cn-text">CN</span>
+                        <span className="branch-text">{branch}</span>
+                      </div>
+                      <div className="court-title-name-col">
+                        <span>{court.name}</span>
+                      </div>
                     </div>
 
+                    {/* Slots for this court */}
                     <div className="court-slots-row">
-                      {timeSlots.map((slot) => {
+                      {timeSlots.map((slot, slotIdx) => {
                         const slotKey = `${court.id}_${slot.id}`;
                         const baseStatus = slotStatusMap[slotKey] || 'AVAILABLE';
                         const isSelected = selectedSlots.some(
                           (s) => s.court.id === court.id && s.slot.id === slot.id
                         );
 
-                        let cellClass = 'status-available';
-                        let cellContent = `${Math.round(slot.price / 1000)}k`;
-
+                        let cellClass = 'is-available';
                         if (baseStatus === 'BOOKED') {
-                          cellClass = 'status-booked';
-                          cellContent = 'H';
+                          cellClass = 'is-booked';
                         } else if (baseStatus === 'PASS_WANTED') {
-                          cellClass = 'status-pass-wanted';
-                          cellContent = 'Pass';
+                          cellClass = 'is-pass';
                         }
 
                         if (isSelected) {
-                          cellClass = 'status-selected';
-                          cellContent = <i className="fa-solid fa-check"></i>;
+                          cellClass = 'is-selected';
                         }
+
+                        const displayTime = formatSlotLabelForCluster(slot, blockIdx);
+                        const priceStr = (slot.price || 70000).toLocaleString('vi-VN');
 
                         return (
                           <div
@@ -141,9 +170,9 @@ export default function BookingMatrix({
                             onClick={(e) =>
                               handleCellClick(e, court, slot, baseStatus, isSelected)
                             }
-                            title={`${court.name} - ${slot.displayLabel} (${(slot.price || 0).toLocaleString('vi-VN')} đ)`}
+                            title={`${court.name} - ${displayTime} (${priceStr} đ)`}
                           >
-                            <span>{cellContent}</span>
+                            {/* Empty clean colored tile - 100% pixel matching reference */}
                           </div>
                         );
                       })}
@@ -160,8 +189,8 @@ export default function BookingMatrix({
       <div className="zoom-floating-pill">
         <input
           type="range"
-          min="64"
-          max="88"
+          min="60"
+          max="84"
           value={cellWidth}
           onChange={(e) => setCellWidth(Number(e.target.value))}
           className="slider-blue"

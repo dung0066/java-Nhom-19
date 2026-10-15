@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
 public class AuthApiController {
 
     private final AuthService authService;

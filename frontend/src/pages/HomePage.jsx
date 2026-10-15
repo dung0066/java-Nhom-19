@@ -4,10 +4,15 @@ import { useLanguage } from '../context/LanguageContext';
 import MembershipModal from '../components/home/MembershipModal';
 import '../styles/home.css';
 
-export default function HomePage({ onNavigate }) {
+export default function HomePage({ onNavigate, onOpenMembershipModal }) {
   const { language, t } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isMembershipModalOpen, setIsMembershipModalOpen] = useState(false);
+  const [isLocalMembershipOpen, setIsLocalMembershipOpen] = useState(false);
+
+  const openMembership = () => {
+    if (onOpenMembershipModal) onOpenMembershipModal();
+    else setIsLocalMembershipOpen(true);
+  };
 
   const slides = [
     {
@@ -96,7 +101,7 @@ export default function HomePage({ onNavigate }) {
           label: t.slide4.btnPrimary,
           className: 'btn-action-gold',
           icon: 'fa-solid fa-crown',
-          action: () => setIsMembershipModalOpen(true)
+          action: () => openMembership()
         },
         {
           label: t.slide4.btnSecondary,
@@ -925,8 +930,8 @@ export default function HomePage({ onNavigate }) {
 
       {/* 9. VIP MEMBERSHIP MODAL */}
       <MembershipModal
-        isOpen={isMembershipModalOpen}
-        onClose={() => setIsMembershipModalOpen(false)}
+        isOpen={isLocalMembershipOpen}
+        onClose={() => setIsLocalMembershipOpen(false)}
       />
 
       {/* FOOTER */}

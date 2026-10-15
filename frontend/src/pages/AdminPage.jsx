@@ -5,6 +5,7 @@ import AdminBookingsTab from '../components/admin/AdminBookingsTab';
 import AdminProductsTab from '../components/admin/AdminProductsTab';
 import AdminBranchesTab from '../components/admin/AdminBranchesTab';
 import AdminPricingTab from '../components/admin/AdminPricingTab';
+import AdminMembershipsTab from '../components/admin/AdminMembershipsTab';
 import ProductModal from '../components/admin/ProductModal';
 
 import {
@@ -210,6 +211,13 @@ export default function AdminPage({ onNavigate }) {
           </button>
           <button
             type="button"
+            className={`tab-btn ${activeTab === 'memberships' ? 'active' : ''}`}
+            onClick={() => handleSwitchTab('memberships')}
+          >
+            <i className="fa-solid fa-crown"></i> Quản Lý Hội Viên VIP & User
+          </button>
+          <button
+            type="button"
             className={`tab-btn ${activeTab === 'pricing' ? 'active' : ''}`}
             onClick={() => handleSwitchTab('pricing')}
           >
@@ -243,12 +251,11 @@ export default function AdminPage({ onNavigate }) {
             <AdminBranchesTab
               branches={branches}
               courts={courts}
-              onOpenAddBranch={() => alert('Thêm chi nhánh mới')}
-              onOpenAddCourt={() => alert('Thêm sân mới')}
-              onDeleteBranch={(id) => alert(`Xóa chi nhánh ${id}`)}
-              onDeleteCourt={(id) => alert(`Xóa sân ${id}`)}
+              onRefresh={loadData}
             />
           )}
+
+          {activeTab === 'memberships' && <AdminMembershipsTab />}
 
           {activeTab === 'pricing' && <AdminPricingTab />}
         </div>

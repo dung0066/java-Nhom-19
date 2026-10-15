@@ -21,14 +21,16 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final BookingDetailRepository bookingDetailRepository;
     private final UserRepository userRepository;
+    private final MembershipPackageRepository packageRepository;
 
-    public BookingService(BranchRepository branchRepository, CourtRepository courtRepository, TimeSlotRepository timeSlotRepository, BookingRepository bookingRepository, BookingDetailRepository bookingDetailRepository, UserRepository userRepository) {
+    public BookingService(BranchRepository branchRepository, CourtRepository courtRepository, TimeSlotRepository timeSlotRepository, BookingRepository bookingRepository, BookingDetailRepository bookingDetailRepository, UserRepository userRepository, MembershipPackageRepository packageRepository) {
         this.branchRepository = branchRepository;
         this.courtRepository = courtRepository;
         this.timeSlotRepository = timeSlotRepository;
         this.bookingRepository = bookingRepository;
         this.bookingDetailRepository = bookingDetailRepository;
         this.userRepository = userRepository;
+        this.packageRepository = packageRepository;
     }
 
     public MatrixResponseDto getMatrixData(String branchCode, LocalDate date) {
@@ -169,7 +171,60 @@ public class BookingService {
         booking.setTotalHours(totalHours);
         booking.setDetails(details);
 
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+
+        // Tích lũy điểm thưởng và chi tiêu từ hóa đơn đặt sân, tự động thăng hạng theo mốc
+        if (user != null) {
+            user.addSpendingAndPoints(totalPrice);
+            autoUpgradeTier(user);
+            userRepository.save(user);
+        }
+
+        return savedBooking;
+    }
+
+    /**
+     * Tự động thăng hạng thành viên dựa trên mốc chi tiêu và điểm tích lũy:
+     * - Mốc >= 10.000.000đ (hoặc >= 1000 điểm): Hạng Kim Cương VIP (DIAMOND - Giảm 10% + full đặc quyền)
+     * - Mốc >= 5.000.000đ (hoặc >= 500 điểm): Hạng Vàng (GOLD - Giảm 8% + locker + sấy giày)
+     * - Mốc >= 2.000.000đ (hoặc >= 200 điểm): Hạng Bạc (SILVER - Giảm 5% + gửi đồ lễ tân + khăn)
+     */
+    private void autoUpgradeTier(User user) {
+        if (user == null || packageRepository == null) return;
+        double spending = user.getTotalSpending() != null ? user.getTotalSpending() : 0.0;
+        int points = user.getLoyaltyPoints() != null ? user.getLoyaltyPoints() : 0;
+
+        String targetCode = null;
+        if (spending >= 10000000.0 || points >= 1000) {
+            targetCode = "DIAMOND";
+        } else if (spending >= 5000000.0 || points >= 500) {
+            targetCode = "GOLD";
+        } else if (spending >= 2000000.0 || points >= 200) {
+            targetCode = "SILVER";
+        }
+
+        if (targetCode != null) {
+            String currentCode = user.getMembershipPackage() != null ? user.getMembershipPackage().getCode() : null;
+            if (!targetCode.equals(currentCode)) {
+                int currentRank = getRankLevel(currentCode);
+                int targetRank = getRankLevel(targetCode);
+                if (targetRank > currentRank) {
+                    MembershipPackage newPkg = packageRepository.findByCode(targetCode).orElse(null);
+                    if (newPkg != null) {
+                        user.setMembershipPackage(newPkg);
+                        // Hạng tích lũy theo mốc được công nhận dài hạn
+                        user.setMembershipExpiresAt(null);
+                    }
+                }
+            }
+        }
+    }
+
+    private int getRankLevel(String code) {
+        if ("DIAMOND".equals(code)) return 3;
+        if ("GOLD".equals(code)) return 2;
+        if ("SILVER".equals(code)) return 1;
+        return 0;
     }
 
     public List<Booking> getBookingsByUserId(Long userId) {
