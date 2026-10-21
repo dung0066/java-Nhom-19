@@ -24,11 +24,17 @@ public class BookingExpirationScheduler {
 
     private final BookingRepository bookingRepository;
     private final ProductInventoryRepository productInventoryRepository;
+    private final com.example.Dat_san_cau_long.repository.UserMembershipRepository userMembershipRepository;
+    private final com.example.Dat_san_cau_long.repository.SlotTransferRepository slotTransferRepository;
 
     public BookingExpirationScheduler(BookingRepository bookingRepository,
-                                      ProductInventoryRepository productInventoryRepository) {
+                                      ProductInventoryRepository productInventoryRepository,
+                                      com.example.Dat_san_cau_long.repository.UserMembershipRepository userMembershipRepository,
+                                      com.example.Dat_san_cau_long.repository.SlotTransferRepository slotTransferRepository) {
         this.bookingRepository = bookingRepository;
         this.productInventoryRepository = productInventoryRepository;
+        this.userMembershipRepository = userMembershipRepository;
+        this.slotTransferRepository = slotTransferRepository;
     }
 
     @Scheduled(fixedRate = 60000)
@@ -64,6 +70,26 @@ public class BookingExpirationScheduler {
                 bookingRepository.save(booking);
                 log.info("Đã hủy đơn hết hạn: {}", booking.getBookingCode());
             }
+        }
+    }
+
+    @Scheduled(fixedRate = 60000)
+    @Transactional
+    public void expireOldMemberships() {
+        LocalDateTime now = LocalDateTime.now();
+        int expiredCount = userMembershipRepository.expireOldMembershipsAtomic(now);
+        if (expiredCount > 0) {
+            log.info("Đã chuyển {} gói hội viên quá hạn sang trạng thái EXPIRED", expiredCount);
+        }
+    }
+
+    @Scheduled(fixedRate = 60000)
+    @Transactional
+    public void expireOldSlotTransfers() {
+        LocalDateTime now = LocalDateTime.now();
+        int expiredCount = slotTransferRepository.expirePastSlotTransfersAtomic(now.toLocalDate(), now.toLocalTime());
+        if (expiredCount > 0) {
+            log.info("Đã chuyển {} slot transfer quá hạn sang trạng thái EXPIRED", expiredCount);
         }
     }
 }

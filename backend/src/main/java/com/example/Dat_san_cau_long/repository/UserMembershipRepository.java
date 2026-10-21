@@ -43,4 +43,9 @@ public interface UserMembershipRepository extends JpaRepository<UserMembership, 
 
     @Query("SELECT MAX(um.endDate) FROM UserMembership um WHERE um.user.id = :userId AND um.status = 'ACTIVE' AND um.endDate > :now")
     Optional<LocalDateTime> findLatestActiveEndDate(@Param("userId") Long userId, @Param("now") LocalDateTime now);
+
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @Query("UPDATE UserMembership um SET um.status = 'EXPIRED' WHERE um.status = 'ACTIVE' AND um.endDate < :now")
+    int expireOldMembershipsAtomic(@Param("now") LocalDateTime now);
 }

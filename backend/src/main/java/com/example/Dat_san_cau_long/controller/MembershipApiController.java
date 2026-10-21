@@ -44,9 +44,11 @@ public class MembershipApiController {
      * Đăng ký mua gói hội viên VIP
      */
     @PostMapping("/buy")
-    public ResponseEntity<?> buyMembership(@RequestBody BuyMembershipRequest req) {
+    public ResponseEntity<?> buyMembership(@RequestBody BuyMembershipRequest req,
+                                           @org.springframework.security.core.annotation.AuthenticationPrincipal com.example.Dat_san_cau_long.security.CustomUserDetails userDetails) {
         try {
-            Map<String, Object> result = membershipService.buyMembership(req);
+            com.example.Dat_san_cau_long.model.User currentUser = userDetails != null ? userDetails.getUser() : null;
+            Map<String, Object> result = membershipService.buyMembership(req, currentUser);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));

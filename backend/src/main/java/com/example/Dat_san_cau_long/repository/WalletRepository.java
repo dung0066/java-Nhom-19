@@ -19,11 +19,13 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
     @Query("SELECT w FROM Wallet w WHERE w.userId = :userId")
     Optional<Wallet> findByUserIdForUpdate(@Param("userId") Long userId);
 
-    @Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Modifying(clearAutomatically = true)
     @Query("UPDATE Wallet w SET w.balance = w.balance - :amount WHERE w.userId = :userId AND w.balance >= :amount")
     int deductBalanceAtomic(@Param("userId") Long userId, @Param("amount") BigDecimal amount);
 
-    @Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Modifying(clearAutomatically = true)
     @Query("UPDATE Wallet w SET w.balance = w.balance + :amount WHERE w.userId = :userId")
     int addBalanceAtomic(@Param("userId") Long userId, @Param("amount") BigDecimal amount);
 }

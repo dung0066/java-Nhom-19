@@ -83,6 +83,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/me", "/api/auth/profile", "/api/auth/change-password").authenticated()
                         .requestMatchers("/api/auth/users").hasAuthority("ROLE_ADMIN")
 
+                        // Wallet & Memberships
+                        .requestMatchers("/api/wallet/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/memberships/buy").authenticated()
+                        .requestMatchers("/api/memberships/user/**").authenticated()
+                        .requestMatchers("/api/memberships/admin/**").hasAuthority("ROLE_ADMIN")
+
                         // Public Catalog & Matrix Endpoints
                         .requestMatchers(HttpMethod.GET, "/api/booking/branches", "/api/branches/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/booking/matrix/**").permitAll()

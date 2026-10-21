@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface MembershipPackageRepository extends JpaRepository<MembershipPackage, Long> {
 
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT p FROM MembershipPackage p LEFT JOIN FETCH p.benefits WHERE p.active = true ORDER BY p.price ASC")
     List<MembershipPackage> findByActiveTrueOrderByPriceAsc();
 
     Optional<MembershipPackage> findByCode(String code);

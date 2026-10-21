@@ -23,4 +23,10 @@ public interface SlotTransferRepository extends JpaRepository<SlotTransfer, Long
            "JOIN bd.court c " +
            "WHERE c.branch.id = :branchId AND bd.slotDate = :date AND st.status = 'LISTED'")
     List<SlotTransfer> findListedByBranchAndDate(@Param("branchId") Long branchId, @Param("date") LocalDate date);
+
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @Query("UPDATE SlotTransfer st SET st.status = 'EXPIRED' WHERE st.status = 'LISTED' AND st.bookingDetail.id IN (" +
+           "SELECT bd.id FROM BookingDetail bd WHERE bd.slotDate < :today OR (bd.slotDate = :today AND bd.timeSlot.startTime <= :nowTime))")
+    int expirePastSlotTransfersAtomic(@Param("today") java.time.LocalDate today, @Param("nowTime") java.time.LocalTime nowTime);
 }

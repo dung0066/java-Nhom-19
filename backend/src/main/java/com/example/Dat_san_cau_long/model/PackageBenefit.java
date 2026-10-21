@@ -20,6 +20,7 @@ public class PackageBenefit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "package_id", nullable = false)
     private MembershipPackage membershipPackage;
@@ -38,6 +39,7 @@ public class PackageBenefit {
     @Column(name = "quota_period")
     private QuotaPeriod quotaPeriod;
 
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "courts", "manager"})
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "branch_id")
     private Branch branch;
