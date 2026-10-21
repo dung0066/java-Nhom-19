@@ -12,7 +12,7 @@ export default function AdminProductsTab({
   const [pageSize, setPageSize] = useState(6);
 
   const filteredProducts = selectedCat
-    ? products.filter((p) => p.category === selectedCat)
+    ? products.filter((p) => p.category === selectedCat || (selectedCat === 'RACKET' && p.category === 'RACQUET'))
     : products;
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function AdminProductsTab({
               onChange={(e) => setSelectedCat(e.target.value)}
             >
               <option value="">Tất cả danh mục</option>
-              <option value="RACQUET">Vợt Cầu Lông</option>
+              <option value="RACKET">Vợt Cầu Lông</option>
               <option value="SHOES">Giày Thi Đấu</option>
               <option value="ACCESSORY">Phụ Kiện & Căn Tin</option>
             </select>

@@ -98,7 +98,7 @@ public class SecurityConfig {
 
                         // Booking public create & lookup
                         .requestMatchers(HttpMethod.POST, "/api/booking/create").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/booking/lookup/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/booking/lookup/**", "/api/booking/code/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/booking/all").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/api/booking/cancel/**").permitAll()
 

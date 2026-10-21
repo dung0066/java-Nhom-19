@@ -51,7 +51,10 @@ public class BookingApiController {
         Map<String, Object> res = new HashMap<>();
         res.put("success", true);
         res.put("message", "Đặt sân thành công!");
+        res.put("bookingId", booking.getId());
         res.put("bookingCode", booking.getBookingCode());
+        res.put("status", booking.getStatus() != null ? booking.getStatus().name() : "PENDING");
+        res.put("holdExpiresAt", booking.getHoldExpiresAt() != null ? booking.getHoldExpiresAt().toString() : null);
         res.put("originalPrice", booking.getOriginalPrice());
         res.put("discountAmount", booking.getDiscountAmount());
         res.put("totalPrice", booking.getTotalPrice());
@@ -59,6 +62,13 @@ public class BookingApiController {
         res.put("customerName", booking.getCustomerName());
         res.put("bookingDate", booking.getBookingDate() != null ? booking.getBookingDate().toString() : null);
         return ResponseEntity.ok(res);
+    }
+
+    @GetMapping("/code/{code}")
+    public ResponseEntity<?> getBookingByCode(@PathVariable String code) {
+        return bookingService.getBookingByCode(code)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/pass-slot")

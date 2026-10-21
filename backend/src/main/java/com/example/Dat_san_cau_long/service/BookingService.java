@@ -268,4 +268,8 @@ public class BookingService {
     public List<Booking> getAllBookings() {
         return bookingRepository.findAllByOrderByCreatedAtDesc();
     }
+
+    public Optional<Booking> getBookingByCode(String code) {
+        return bookingRepository.findByBookingCode(code);
+    }
 }

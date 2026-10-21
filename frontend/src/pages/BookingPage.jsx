@@ -151,6 +151,10 @@ export default function BookingPage({ onNavigate }) {
         slotIds: formData.slots.map((s) => ({
           courtId: s.court.id,
           slotId: s.slot.id
+        })),
+        addonItems: (formData.services || []).map((srv) => ({
+          productId: typeof srv.id === 'number' ? srv.id : 1,
+          quantity: srv.qty
         }))
       };
 
@@ -159,8 +163,10 @@ export default function BookingPage({ onNavigate }) {
       const generatedCode = result.bookingCode || `WAY-${Date.now().toString().slice(-6)}`;
 
       const newOrder = {
-        id: Date.now(),
+        id: result.bookingId || Date.now(),
         bookingCode: generatedCode,
+        status: result.status || 'PENDING',
+        holdExpiresAt: result.holdExpiresAt,
         customerName: formData.customerName,
         customerPhone: formData.customerPhone,
         customerEmail: formData.customerEmail,
@@ -175,7 +181,7 @@ export default function BookingPage({ onNavigate }) {
         hasStringing: formData.hasStringing,
         stringingOrders: formData.stringingOrders,
         stringingTotal: formData.stringingTotal,
-        totalPrice: formData.totalPrice,
+        totalPrice: result.totalPrice || formData.totalPrice,
         paymentType: formData.paymentType,
         createdAt: new Date().toISOString()
       };
@@ -190,12 +196,15 @@ export default function BookingPage({ onNavigate }) {
       }
 
       setBookingResult({
+        bookingId: result.bookingId,
         bookingCode: generatedCode,
+        status: result.status || 'PENDING',
+        holdExpiresAt: result.holdExpiresAt,
         customerName: formData.customerName,
         customerPhone: formData.customerPhone,
         bookingDate: formData.bookingDate,
         totalHours: formData.totalHours,
-        totalPrice: formData.totalPrice,
+        totalPrice: result.totalPrice || formData.totalPrice,
         paymentType: formData.paymentType
       });
 
@@ -205,8 +214,8 @@ export default function BookingPage({ onNavigate }) {
       setAppliedCombo(null);
       loadMatrix(branch, date);
     } catch (err) {
-      console.error(err);
-      alert('Đã ghi nhận đơn đặt sân thành công!');
+      console.error('Lỗi khi đặt sân:', err);
+      alert(err.message || 'Không thể tạo đơn đặt sân. Vui lòng thử lại!');
     }
   };
 

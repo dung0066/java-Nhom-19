@@ -10,7 +10,7 @@ export default function ProductModal({
   const [formData, setFormData] = useState({
     id: '',
     name: '',
-    category: 'RACQUET',
+    category: 'RACKET',
     brand: '',
     badge: '',
     price: '',
@@ -26,10 +26,12 @@ export default function ProductModal({
 
   useEffect(() => {
     if (initialData) {
+      const rawCat = initialData.category;
+      const normalizedCat = rawCat === 'RACQUET' ? 'RACKET' : (rawCat || 'RACKET');
       setFormData({
         id: initialData.id || '',
         name: initialData.name || '',
-        category: initialData.category || 'RACQUET',
+        category: normalizedCat,
         brand: initialData.brand || '',
         badge: initialData.badge || '',
         price: initialData.price || '',
@@ -44,7 +46,7 @@ export default function ProductModal({
       setFormData({
         id: '',
         name: '',
-        category: 'RACQUET',
+        category: 'RACKET',
         brand: '',
         badge: '',
         price: '',
@@ -113,7 +115,7 @@ export default function ProductModal({
                   }
                   required
                 >
-                  <option value="RACQUET">Vợt Cầu Lông</option>
+                  <option value="RACKET">Vợt Cầu Lông</option>
                   <option value="SHOES">Giày Thi Đấu</option>
                   <option value="ACCESSORY">Phụ Kiện & Căn Tin</option>
                 </select>

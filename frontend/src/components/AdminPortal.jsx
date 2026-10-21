@@ -45,7 +45,7 @@ export default function AdminPortal({ onBackToUserSite }) {
   const [courtForm, setCourtForm] = useState({ id: null, branchId: 1, name: '', courtNumber: 1, courtGroup: 'Cụm 1 (Sân 1+2)', active: true });
 
   const [showProductModal, setShowProductModal] = useState(false);
-  const [productForm, setProductForm] = useState({ id: null, name: '', category: 'RACQUET', brand: '', price: 25000, priceUnit: '/ buổi chơi', badge: '', description: '', active: true });
+  const [productForm, setProductForm] = useState({ id: null, name: '', category: 'RACKET', brand: '', price: 25000, priceUnit: '/ buổi chơi', badge: '', description: '', active: true });
 
   // GSAP animation on tab change
   useGSAP(() => {
@@ -117,8 +117,8 @@ export default function AdminPortal({ onBackToUserSite }) {
         setProducts(pData || []);
       } else {
         setProducts([
-          { id: 1, name: 'Yonex Astrox 88D Pro / 100ZZ', category: 'RACQUET', brand: 'YONEX JAPAN', price: 30000, priceUnit: '/ buổi chơi', badge: 'HOT NHẤT', active: true },
-          { id: 2, name: 'Victor Thruster Ryuga / Falcon', category: 'RACQUET', brand: 'VICTOR TAIWAN', price: 25000, priceUnit: '/ buổi chơi', badge: 'VIP ATTACK', active: true },
+          { id: 1, name: 'Yonex Astrox 88D Pro / 100ZZ', category: 'RACKET', brand: 'YONEX JAPAN', price: 30000, priceUnit: '/ buổi chơi', badge: 'HOT NHẤT', active: true },
+          { id: 2, name: 'Victor Thruster Ryuga / Falcon', category: 'RACKET', brand: 'VICTOR TAIWAN', price: 25000, priceUnit: '/ buổi chơi', badge: 'VIP ATTACK', active: true },
           { id: 3, name: 'Giày Yonex 65Z3 Khử Khuẩn UV', category: 'SHOES', brand: 'YONEX CUSHION', price: 25000, priceUnit: '/ buổi chơi', badge: 'KHỬ KHUẨN UV', active: true },
           { id: 4, name: 'Ống Cầu Victor Gold (12 Quả)', category: 'ACCESSORY', brand: 'VICTOR', price: 230000, priceUnit: '/ ống 12 quả', badge: 'THI ĐẤU', active: true }
         ]);
@@ -524,7 +524,7 @@ export default function AdminPortal({ onBackToUserSite }) {
                 <button
                   type="button"
                   onClick={() => {
-                    setProductForm({ id: null, name: '', category: 'RACQUET', brand: '', price: 25000, priceUnit: '/ buổi chơi', badge: '', description: '', active: true });
+                    setProductForm({ id: null, name: '', category: 'RACKET', brand: '', price: 25000, priceUnit: '/ buổi chơi', badge: '', description: '', active: true });
                     setShowProductModal(true);
                   }}
                   className="btn-admin-primary"
@@ -665,7 +665,7 @@ export default function AdminPortal({ onBackToUserSite }) {
                   value={productForm.category}
                   onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
                 >
-                  <option value="RACQUET">Vợt Cầu Lông (RACQUET)</option>
+                  <option value="RACKET">Vợt Cầu Lông (RACKET)</option>
                   <option value="SHOES">Giày Cầu Lông (SHOES)</option>
                   <option value="ACCESSORY">Dụng Cụ & Nước (ACCESSORY)</option>
                 </select>

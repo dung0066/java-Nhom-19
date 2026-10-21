@@ -43,9 +43,26 @@ public class BookingRequestDto {
     public List<SlotItemDto> getSelectedSlots() { return selectedSlots; }
     public void setSelectedSlots(List<SlotItemDto> selectedSlots) { this.selectedSlots = selectedSlots; }
 
+    public void setSlotIds(List<SlotItemDto> slotIds) {
+        if (this.selectedSlots == null || this.selectedSlots.isEmpty()) {
+            this.selectedSlots = slotIds;
+        }
+    }
+
+    public void setPaymentType(String paymentType) {
+        if (this.paymentMethod == null) {
+            this.paymentMethod = paymentType;
+        }
+    }
+
     private List<AddonItemDto> addonItems;
     public List<AddonItemDto> getAddonItems() { return addonItems; }
     public void setAddonItems(List<AddonItemDto> addonItems) { this.addonItems = addonItems; }
+    public void setItems(List<AddonItemDto> items) {
+        if (this.addonItems == null) {
+            this.addonItems = items;
+        }
+    }
 
     public static class AddonItemDto {
         private Long productId;
@@ -81,5 +98,11 @@ public class BookingRequestDto {
 
         public Long getTimeSlotId() { return timeSlotId; }
         public void setTimeSlotId(Long timeSlotId) { this.timeSlotId = timeSlotId; }
+
+        public void setSlotId(Long slotId) {
+            if (this.timeSlotId == null) {
+                this.timeSlotId = slotId;
+            }
+        }
     }
 }
