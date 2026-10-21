@@ -20,7 +20,8 @@ public interface PriceRuleRepository extends JpaRepository<PriceRule, Long> {
            "AND (pr.validFrom IS NULL OR :date >= pr.validFrom) " +
            "AND (pr.validTo IS NULL OR :date <= pr.validTo) " +
            "AND (pr.dayType = 'ALL' OR pr.dayType = :dayType) " +
-           "ORDER BY pr.priority DESC")
+           "ORDER BY pr.priority DESC, " +
+           "(CASE WHEN pr.branch IS NOT NULL THEN 2 ELSE 0 END + CASE WHEN pr.timeSlot IS NOT NULL THEN 1 ELSE 0 END) DESC")
     List<PriceRule> findCandidateRules(@Param("branchId") Long branchId,
                                        @Param("timeSlotId") Long timeSlotId,
                                        @Param("date") LocalDate date,

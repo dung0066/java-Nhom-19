@@ -50,6 +50,11 @@ public class BookingRequestDto {
         public SlotItemDto() {
         }
 
+        public SlotItemDto(Long courtId, Long timeSlotId) {
+            this.courtId = courtId;
+            this.timeSlotId = timeSlotId;
+        }
+
         public Long getCourtId() { return courtId; }
         public void setCourtId(Long courtId) { this.courtId = courtId; }
 

@@ -29,5 +29,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT DISTINCT b FROM Booking b JOIN b.details d WHERE d.slotDate = :date AND d.status != 'CANCELLED' ORDER BY b.createdAt DESC")
     List<Booking> findBySlotDate(@Param("date") LocalDate date);
 
+    List<Booking> findByCustomerPhone(String customerPhone);
+
     List<Booking> findByStatusAndHoldExpiresAtBefore(BookingStatus status, LocalDateTime now);
 }

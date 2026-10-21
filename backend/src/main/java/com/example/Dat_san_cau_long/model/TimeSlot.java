@@ -3,6 +3,7 @@ package com.example.Dat_san_cau_long.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
@@ -29,6 +30,21 @@ public class TimeSlot {
 
     @Column(name = "sort_order", nullable = false)
     private Integer sortOrder;
+
+    @Transient
+    private BigDecimal price;
+
+    @Transient
+    private Boolean isPeak;
+
+    @Transient
+    private Boolean isPeakHour;
+
+    @Transient
+    private BigDecimal standardPrice;
+
+    @Transient
+    private BigDecimal peakPrice;
 
     @Transient
     public String getDisplayLabel() {

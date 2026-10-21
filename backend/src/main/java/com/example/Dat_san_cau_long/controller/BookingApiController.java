@@ -6,6 +6,7 @@ import com.example.Dat_san_cau_long.model.Booking;
 import com.example.Dat_san_cau_long.model.Branch;
 import com.example.Dat_san_cau_long.repository.BranchRepository;
 import com.example.Dat_san_cau_long.service.BookingService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +14,9 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 @RestController
 @RequestMapping("/api/booking")
-@CrossOrigin(origins = "*")
 public class BookingApiController {
 
     private final BookingService bookingService;
@@ -45,38 +46,27 @@ public class BookingApiController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createBooking(@RequestBody BookingRequestDto request) {
-        try {
-            Booking booking = bookingService.createBooking(request);
-            Map<String, Object> res = new HashMap<>();
-            res.put("success", true);
-            res.put("message", "Đặt sân thành công!");
-            res.put("bookingCode", booking.getBookingCode());
-            res.put("originalPrice", booking.getOriginalPrice());
-            res.put("discountAmount", booking.getDiscountAmount());
-            res.put("totalPrice", booking.getTotalPrice());
-            res.put("totalHours", booking.getTotalHours());
-            res.put("customerName", booking.getCustomerName());
-            res.put("bookingDate", booking.getBookingDate().toString());
-            return ResponseEntity.ok(res);
-        } catch (Exception e) {
-            Map<String, Object> err = new HashMap<>();
-            err.put("success", false);
-            err.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(err);
-        }
+    public ResponseEntity<Map<String, Object>> createBooking(@Valid @RequestBody BookingRequestDto request) {
+        Booking booking = bookingService.createBooking(request);
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", true);
+        res.put("message", "Đặt sân thành công!");
+        res.put("bookingCode", booking.getBookingCode());
+        res.put("originalPrice", booking.getOriginalPrice());
+        res.put("discountAmount", booking.getDiscountAmount());
+        res.put("totalPrice", booking.getTotalPrice());
+        res.put("totalHours", booking.getTotalHours());
+        res.put("customerName", booking.getCustomerName());
+        res.put("bookingDate", booking.getBookingDate() != null ? booking.getBookingDate().toString() : null);
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/pass-slot")
-    public ResponseEntity<?> togglePassSlot(
+    public ResponseEntity<Map<String, Object>> togglePassSlot(
             @RequestParam Long detailId,
             @RequestParam(required = false) String contactPhone) {
-        try {
-            bookingService.togglePassStatus(detailId, contactPhone);
-            return ResponseEntity.ok(Map.of("success", true, "message", "Cập nhật trạng thái pass sân thành công!"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
-        }
+        bookingService.togglePassStatus(detailId, contactPhone);
+        return ResponseEntity.ok(Map.of("success", true, "message", "Cập nhật trạng thái pass sân thành công!"));
     }
 
     @GetMapping("/all")
@@ -90,12 +80,8 @@ public class BookingApiController {
     }
 
     @DeleteMapping("/cancel/{id}")
-    public ResponseEntity<?> cancelBooking(@PathVariable Long id) {
-        try {
-            bookingService.cancelBooking(id);
-            return ResponseEntity.ok(Map.of("success", true, "message", "Đã hủy đơn đặt sân thành công!"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
-        }
+    public ResponseEntity<Map<String, Object>> cancelBooking(@PathVariable Long id) {
+        bookingService.cancelBooking(id);
+        return ResponseEntity.ok(Map.of("success", true, "message", "Đã hủy đơn đặt sân thành công!"));
     }
 }

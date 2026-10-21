@@ -27,13 +27,14 @@ public interface UserMembershipRepository extends JpaRepository<UserMembership, 
     Page<UserMembership> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     @Query("SELECT um FROM UserMembership um " +
+           "JOIN FETCH um.membershipPackage " +
            "WHERE um.user.id = :userId " +
            "AND um.status = :status " +
            "AND :now BETWEEN um.startDate AND um.endDate " +
            "ORDER BY um.endDate DESC")
     List<UserMembership> findValidMemberships(@Param("userId") Long userId,
-                                             @Param("status") MembershipStatus status,
-                                             @Param("now") LocalDateTime now);
+                                              @Param("status") MembershipStatus status,
+                                              @Param("now") LocalDateTime now);
 
     default Optional<UserMembership> findActiveMembershipForUser(Long userId, LocalDateTime now) {
         List<UserMembership> list = findValidMemberships(userId, MembershipStatus.ACTIVE, now);

@@ -1,5 +1,7 @@
 package com.example.Dat_san_cau_long.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,6 +15,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Court {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,6 +23,7 @@ public class Court {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "branch_id", nullable = false)
+    @JsonIgnore
     private Branch branch;
 
     @Column(name = "court_number", nullable = false)
@@ -27,6 +31,7 @@ public class Court {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "court_group_id")
+    @JsonIgnore
     private CourtGroup courtGroup;
 
     @Column(nullable = false)
@@ -39,7 +44,7 @@ public class Court {
     }
 
     @Transient
-    public String getCourtGroupName() {
-        return courtGroup != null ? courtGroup.getName() : null;
+    public Long getBranchId() {
+        return branch != null ? branch.getId() : null;
     }
 }
