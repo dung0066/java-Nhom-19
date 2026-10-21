@@ -43,6 +43,27 @@ public class BookingRequestDto {
     public List<SlotItemDto> getSelectedSlots() { return selectedSlots; }
     public void setSelectedSlots(List<SlotItemDto> selectedSlots) { this.selectedSlots = selectedSlots; }
 
+    private List<AddonItemDto> addonItems;
+    public List<AddonItemDto> getAddonItems() { return addonItems; }
+    public void setAddonItems(List<AddonItemDto> addonItems) { this.addonItems = addonItems; }
+
+    public static class AddonItemDto {
+        private Long productId;
+        private Integer quantity;
+
+        public AddonItemDto() {}
+        public AddonItemDto(Long productId, Integer quantity) {
+            this.productId = productId;
+            this.quantity = quantity;
+        }
+
+        public Long getProductId() { return productId; }
+        public void setProductId(Long productId) { this.productId = productId; }
+
+        public Integer getQuantity() { return quantity; }
+        public void setQuantity(Integer quantity) { this.quantity = quantity; }
+    }
+
     public static class SlotItemDto {
         private Long courtId;
         private Long timeSlotId;

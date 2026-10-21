@@ -18,11 +18,13 @@ public interface ProductInventoryRepository extends JpaRepository<ProductInvento
 
     Optional<ProductInventory> findByBranchIdAndProductId(Long branchId, Long productId);
 
+    @org.springframework.transaction.annotation.Transactional
     @Modifying
     @Query("UPDATE ProductInventory pi SET pi.stockQuantity = pi.stockQuantity - :qty " +
            "WHERE pi.id.branchId = :branchId AND pi.id.productId = :productId AND pi.stockQuantity >= :qty")
     int deductStockAtomic(@Param("branchId") Long branchId, @Param("productId") Long productId, @Param("qty") int qty);
 
+    @org.springframework.transaction.annotation.Transactional
     @Modifying
     @Query("UPDATE ProductInventory pi SET pi.stockQuantity = pi.stockQuantity + :qty " +
            "WHERE pi.id.branchId = :branchId AND pi.id.productId = :productId")

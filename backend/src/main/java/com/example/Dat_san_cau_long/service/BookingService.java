@@ -5,8 +5,7 @@ import com.example.Dat_san_cau_long.dto.MatrixResponseDto;
 import com.example.Dat_san_cau_long.dto.ResolvedPriceInfo;
 import com.example.Dat_san_cau_long.exception.ResourceNotFoundException;
 import com.example.Dat_san_cau_long.model.*;
-import com.example.Dat_san_cau_long.model.enums.BookingDetailStatus;
-import com.example.Dat_san_cau_long.model.enums.BookingStatus;
+import com.example.Dat_san_cau_long.model.enums.*;
 import com.example.Dat_san_cau_long.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +26,9 @@ public class BookingService {
     private final BookingDetailRepository bookingDetailRepository;
     private final UserRepository userRepository;
     private final UserMembershipRepository userMembershipRepository;
+    private final PackageBenefitRepository packageBenefitRepository;
+    private final ProductRepository productRepository;
+    private final ProductInventoryRepository productInventoryRepository;
     private final PricingService pricingService;
 
     public BookingService(BranchRepository branchRepository,
@@ -36,6 +38,9 @@ public class BookingService {
                           BookingDetailRepository bookingDetailRepository,
                           UserRepository userRepository,
                           UserMembershipRepository userMembershipRepository,
+                          PackageBenefitRepository packageBenefitRepository,
+                          ProductRepository productRepository,
+                          ProductInventoryRepository productInventoryRepository,
                           PricingService pricingService) {
         this.branchRepository = branchRepository;
         this.courtRepository = courtRepository;
@@ -44,6 +49,9 @@ public class BookingService {
         this.bookingDetailRepository = bookingDetailRepository;
         this.userRepository = userRepository;
         this.userMembershipRepository = userMembershipRepository;
+        this.packageBenefitRepository = packageBenefitRepository;
+        this.productRepository = productRepository;
+        this.productInventoryRepository = productInventoryRepository;
         this.pricingService = pricingService;
     }
 
@@ -111,6 +119,25 @@ public class BookingService {
 
         String bookingCode = "WAY-" + date.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-" + (1000 + new Random().nextInt(9000));
 
+        // Xác định thời gian giữ chỗ (mặc định 10 phút, hội viên có đặc quyền HOLD_MINUTES có thể 15 phút)
+        int holdMinutes = 10;
+        User user = null;
+        if (req.getUserId() != null) {
+            user = userRepository.findById(req.getUserId()).orElse(null);
+            if (user != null) {
+                Optional<UserMembership> activeMembership = userMembershipRepository.findActiveMembershipForUser(user.getId(), LocalDateTime.now());
+                if (activeMembership.isPresent()) {
+                    List<PackageBenefit> benefits = packageBenefitRepository.findByMembershipPackageId(activeMembership.get().getMembershipPackage().getId());
+                    for (PackageBenefit b : benefits) {
+                        if (b.getBenefitType() == BenefitType.HOLD_MINUTES && b.getValue() != null && b.getValue().compareTo(BigDecimal.ZERO) > 0) {
+                            holdMinutes = b.getValue().intValue();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         Booking booking = Booking.builder()
                 .bookingCode(bookingCode)
                 .customerName(req.getCustomerName())
@@ -119,13 +146,9 @@ public class BookingService {
                 .branch(branch)
                 .notes(req.getNotes())
                 .status(BookingStatus.CONFIRMED)
+                .holdExpiresAt(LocalDateTime.now().plusMinutes(holdMinutes))
+                .user(user)
                 .build();
-
-        User user = null;
-        if (req.getUserId() != null) {
-            user = userRepository.findById(req.getUserId()).orElse(null);
-            booking.setUser(user);
-        }
 
         List<BookingDetail> details = new ArrayList<>();
         BigDecimal totalDiscount = BigDecimal.ZERO;
@@ -165,6 +188,36 @@ public class BookingService {
             details.add(detail);
         }
 
+        // Xử lý sản phẩm mua kèm và trừ tồn kho
+        List<BookingItem> bookingItems = new ArrayList<>();
+        if (req.getAddonItems() != null && !req.getAddonItems().isEmpty()) {
+            for (BookingRequestDto.AddonItemDto addon : req.getAddonItems()) {
+                if (addon.getProductId() == null || addon.getQuantity() == null || addon.getQuantity() <= 0) {
+                    continue;
+                }
+
+                Product product = productRepository.findById(addon.getProductId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm ID: " + addon.getProductId()));
+
+                int updated = productInventoryRepository.deductStockAtomic(branch.getId(), product.getId(), addon.getQuantity());
+                if (updated == 0) {
+                    ProductInventory inv = productInventoryRepository.findByBranchIdAndProductId(branch.getId(), product.getId()).orElse(null);
+                    int remaining = inv != null ? inv.getStockQuantity() : 0;
+                    throw new IllegalStateException("Sản phẩm '" + product.getName() + "' tại chi nhánh " + branch.getName() + " không đủ tồn kho (cần " + addon.getQuantity() + ", hiện có " + remaining + ")!");
+                }
+
+                BookingItem bookingItem = BookingItem.builder()
+                        .booking(booking)
+                        .product(product)
+                        .quantity(addon.getQuantity())
+                        .unitPrice(product.getPrice())
+                        .status(BookingItemStatus.RESERVED)
+                        .build();
+
+                bookingItems.add(bookingItem);
+            }
+        }
+
         if (user != null) {
             userMembershipRepository.findActiveMembershipForUser(user.getId(), LocalDateTime.now())
                     .ifPresent(booking::setAppliedMembership);
@@ -172,6 +225,7 @@ public class BookingService {
 
         booking.setDiscountAmount(totalDiscount);
         booking.setDetails(details);
+        booking.setItems(bookingItems);
 
         return bookingRepository.save(booking);
     }
@@ -195,6 +249,18 @@ public class BookingService {
         booking.setCancelledAt(LocalDateTime.now());
         for (BookingDetail d : booking.getDetails()) {
             d.setStatus(BookingDetailStatus.CANCELLED);
+        }
+        for (BookingItem item : booking.getItems()) {
+            if (item.getStatus() != BookingItemStatus.CANCELLED) {
+                item.setStatus(BookingItemStatus.CANCELLED);
+                if (booking.getBranch() != null && item.getProduct() != null) {
+                    productInventoryRepository.addStockAtomic(
+                            booking.getBranch().getId(),
+                            item.getProduct().getId(),
+                            item.getQuantity()
+                    );
+                }
+            }
         }
         bookingRepository.save(booking);
     }
