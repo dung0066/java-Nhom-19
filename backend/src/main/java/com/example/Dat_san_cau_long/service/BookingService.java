@@ -3,10 +3,13 @@ package com.example.Dat_san_cau_long.service;
 import com.example.Dat_san_cau_long.dto.BookingRequestDto;
 import com.example.Dat_san_cau_long.dto.MatrixResponseDto;
 import com.example.Dat_san_cau_long.model.*;
+import com.example.Dat_san_cau_long.model.enums.BookingDetailStatus;
+import com.example.Dat_san_cau_long.model.enums.BookingStatus;
 import com.example.Dat_san_cau_long.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -22,7 +25,12 @@ public class BookingService {
     private final BookingDetailRepository bookingDetailRepository;
     private final UserRepository userRepository;
 
-    public BookingService(BranchRepository branchRepository, CourtRepository courtRepository, TimeSlotRepository timeSlotRepository, BookingRepository bookingRepository, BookingDetailRepository bookingDetailRepository, UserRepository userRepository) {
+    public BookingService(BranchRepository branchRepository,
+                          CourtRepository courtRepository,
+                          TimeSlotRepository timeSlotRepository,
+                          BookingRepository bookingRepository,
+                          BookingDetailRepository bookingDetailRepository,
+                          UserRepository userRepository) {
         this.branchRepository = branchRepository;
         this.courtRepository = courtRepository;
         this.timeSlotRepository = timeSlotRepository;
@@ -54,10 +62,10 @@ public class BookingService {
         for (BookingDetail detail : activeBookings) {
             String key = detail.getCourt().getId() + "_" + detail.getTimeSlot().getId();
             statusMap.put(key, MatrixResponseDto.SlotStatusDto.builder()
-                    .status(detail.getStatus())
+                    .status(detail.getStatus().name())
                     .customerName(detail.getBooking() != null ? detail.getBooking().getCustomerName() : "Khách đã đặt")
-                    .passContact(detail.getPassContact())
-                    .price(detail.getPrice())
+                    .passContact(null)
+                    .price(detail.getPrice() != null ? detail.getPrice().doubleValue() : 70000.0)
                     .bookingDetailId(detail.getId())
                     .build());
         }
@@ -83,24 +91,19 @@ public class BookingService {
             throw new RuntimeException("Vui lòng chọn ít nhất 1 khung giờ đặt sân!");
         }
 
-        // Tạo mã đặt sân ngẫu nhiên: WAY-YYYYMMDD-XXXX
         String bookingCode = "WAY-" + date.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-" + (1000 + new Random().nextInt(9000));
 
-        double totalPrice = 0.0;
-        double totalHours = 0.0;
-
+        BigDecimal totalPrice = BigDecimal.ZERO;
         List<BookingDetail> details = new ArrayList<>();
+
         Booking booking = Booking.builder()
                 .bookingCode(bookingCode)
                 .customerName(req.getCustomerName())
                 .customerPhone(req.getCustomerPhone())
                 .customerEmail(req.getCustomerEmail())
-                .bookingDate(date)
                 .branch(branch)
-                .paymentMethod(req.getPaymentMethod() != null ? req.getPaymentMethod() : "VIETQR")
                 .notes(req.getNotes())
-                .status("CONFIRMED")
-                .createdAt(LocalDateTime.now())
+                .status(BookingStatus.CONFIRMED)
                 .build();
 
         for (BookingRequestDto.SlotItemDto item : req.getSelectedSlots()) {
@@ -109,64 +112,36 @@ public class BookingService {
             TimeSlot slot = timeSlotRepository.findById(item.getTimeSlotId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy khung giờ id: " + item.getTimeSlotId()));
 
-            // Kiểm tra trùng lịch
             Optional<BookingDetail> existing = bookingDetailRepository.findByCourtIdAndTimeSlotIdAndSlotDateAndStatusNot(
-                    court.getId(), slot.getId(), date, "CANCELLED");
-            
+                    court.getId(), slot.getId(), date, BookingDetailStatus.CANCELLED);
+
             if (existing.isPresent()) {
-                BookingDetail existDetail = existing.get();
-                if ("PASS_WANTED".equals(existDetail.getStatus())) {
-                    // Mua lại slot cần pass
-                    existDetail.setStatus("BOOKED");
-                    existDetail.setPassContact(null);
-                    existDetail.setBooking(booking);
-                    details.add(existDetail);
-                    totalPrice += (slot.getIsPeakHour() != null && slot.getIsPeakHour()) ? slot.getPeakPrice() : slot.getStandardPrice();
-                    totalHours += 1.0;
-                    continue;
-                } else {
-                    throw new RuntimeException("Sân " + court.getName() + " lúc " + slot.getDisplayLabel() + " đã có người đặt trước!");
-                }
+                throw new RuntimeException("Sân " + court.getName() + " lúc " + slot.getDisplayLabel() + " đã có người đặt trước!");
             }
 
-            double slotPrice = (slot.getIsPeakHour() != null && slot.getIsPeakHour()) ? slot.getPeakPrice() : slot.getStandardPrice();
-            totalPrice += slotPrice;
-            totalHours += 1.0;
+            BigDecimal slotPrice = BigDecimal.valueOf(70000);
+            totalPrice = totalPrice.add(slotPrice);
 
             BookingDetail detail = BookingDetail.builder()
                     .booking(booking)
+                    .branchId(branch.getId())
                     .court(court)
                     .timeSlot(slot)
                     .slotDate(date)
                     .price(slotPrice)
-                    .status("BOOKED")
+                    .status(BookingDetailStatus.BOOKED)
                     .build();
 
             details.add(detail);
         }
 
-        // Kiểm tra người dùng và áp dụng ưu đãi gói hội viên
         User user = null;
-        double discountPercent = 0.0;
         if (req.getUserId() != null) {
             user = userRepository.findById(req.getUserId()).orElse(null);
-            if (user != null && user.isMembershipValid()) {
-                discountPercent = user.getActiveDiscountPercent();
-            }
-        }
-
-        double originalPrice = totalPrice;
-        double discountAmount = 0.0;
-        if (discountPercent > 0) {
-            discountAmount = Math.round(originalPrice * (discountPercent / 100.0));
-            totalPrice = originalPrice - discountAmount;
         }
 
         booking.setUser(user);
-        booking.setOriginalPrice(originalPrice);
-        booking.setDiscountAmount(discountAmount);
-        booking.setTotalPrice(totalPrice);
-        booking.setTotalHours(totalHours);
+        booking.setDiscountAmount(BigDecimal.ZERO);
         booking.setDetails(details);
 
         return bookingRepository.save(booking);
@@ -180,14 +155,6 @@ public class BookingService {
     public void togglePassStatus(Long detailId, String passContact) {
         BookingDetail detail = bookingDetailRepository.findById(detailId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chi tiết đặt sân!"));
-        
-        if ("PASS_WANTED".equals(detail.getStatus())) {
-            detail.setStatus("BOOKED");
-            detail.setPassContact(null);
-        } else {
-            detail.setStatus("PASS_WANTED");
-            detail.setPassContact(passContact != null ? passContact : "0889555559");
-        }
         bookingDetailRepository.save(detail);
     }
 
@@ -195,9 +162,10 @@ public class BookingService {
     public void cancelBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt sân!"));
-        booking.setStatus("CANCELLED");
+        booking.setStatus(BookingStatus.CANCELLED);
+        booking.setCancelledAt(LocalDateTime.now());
         for (BookingDetail d : booking.getDetails()) {
-            d.setStatus("CANCELLED");
+            d.setStatus(BookingDetailStatus.CANCELLED);
         }
         bookingRepository.save(booking);
     }

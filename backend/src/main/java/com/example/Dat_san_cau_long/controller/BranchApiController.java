@@ -11,7 +11,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/branches")
-@CrossOrigin(origins = "*")
 public class BranchApiController {
 
     private final BranchRepository branchRepository;
@@ -36,9 +35,6 @@ public class BranchApiController {
 
     @PostMapping
     public ResponseEntity<Branch> createBranch(@RequestBody Branch branch) {
-        if (branch.getTotalCourts() == null) {
-            branch.setTotalCourts(0);
-        }
         return ResponseEntity.ok(branchRepository.save(branch));
     }
 
@@ -49,8 +45,8 @@ public class BranchApiController {
             existing.setName(branch.getName());
             existing.setAddress(branch.getAddress());
             existing.setPhone(branch.getPhone());
-            if (branch.getTotalCourts() != null) {
-                existing.setTotalCourts(branch.getTotalCourts());
+            if (branch.getActive() != null) {
+                existing.setActive(branch.getActive());
             }
             return ResponseEntity.ok(branchRepository.save(existing));
         }).orElse(ResponseEntity.notFound().build());

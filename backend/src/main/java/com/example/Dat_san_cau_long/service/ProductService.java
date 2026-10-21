@@ -25,7 +25,7 @@ public class ProductService {
     }
 
     public List<Product> getByCategory(String category) {
-        return productRepository.findByCategoryAndActiveTrue(category);
+        return productRepository.findByCategoryCodeAndActiveTrue(category);
     }
 
     public Product getById(Long id) {

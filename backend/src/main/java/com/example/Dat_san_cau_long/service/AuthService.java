@@ -2,15 +2,24 @@ package com.example.Dat_san_cau_long.service;
 
 import com.example.Dat_san_cau_long.dto.auth.*;
 import com.example.Dat_san_cau_long.model.User;
+import com.example.Dat_san_cau_long.model.UserMembership;
+import com.example.Dat_san_cau_long.model.Wallet;
+import com.example.Dat_san_cau_long.model.enums.UserRole;
+import com.example.Dat_san_cau_long.model.enums.UserStatus;
+import com.example.Dat_san_cau_long.repository.UserMembershipRepository;
 import com.example.Dat_san_cau_long.repository.UserRepository;
+import com.example.Dat_san_cau_long.repository.WalletRepository;
 import com.example.Dat_san_cau_long.util.PasswordUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -19,14 +28,17 @@ public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
+    private final WalletRepository walletRepository;
+    private final UserMembershipRepository userMembershipRepository;
 
-    public AuthService(UserRepository userRepository) {
+    public AuthService(UserRepository userRepository,
+                       WalletRepository walletRepository,
+                       UserMembershipRepository userMembershipRepository) {
         this.userRepository = userRepository;
+        this.walletRepository = walletRepository;
+        this.userMembershipRepository = userMembershipRepository;
     }
 
-    /**
-     * Đăng ký tài khoản người dùng mới
-     */
     @Transactional
     public AuthResponse register(RegisterRequest req) {
         if (req.getUsername() == null || req.getUsername().trim().isEmpty()) {
@@ -59,20 +71,25 @@ public class AuthService {
                 .fullName(req.getFullName() != null && !req.getFullName().trim().isEmpty() ? req.getFullName().trim() : username)
                 .email(email)
                 .phone(phone)
-                .role("ROLE_USER")
-                .status("ACTIVE")
-                .walletBalance(0.0)
+                .role(UserRole.ROLE_USER)
+                .status(UserStatus.ACTIVE)
                 .build();
 
         user = userRepository.save(user);
+
+        // Tạo ví ban đầu
+        Wallet wallet = Wallet.builder()
+                .userId(user.getId())
+                .user(user)
+                .balance(BigDecimal.ZERO)
+                .build();
+        walletRepository.save(wallet);
+
         log.info("Đã tạo tài khoản thành công cho user: {}", user.getUsername());
 
         return toAuthResponse(user, "Đăng ký tài khoản thành công!");
     }
 
-    /**
-     * Đăng nhập bằng username, số điện thoại hoặc email
-     */
     public AuthResponse login(LoginRequest req) {
         if (req.getIdentifier() == null || req.getIdentifier().trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng nhập tên đăng nhập, số điện thoại hoặc email!");
@@ -91,25 +108,19 @@ public class AuthService {
             throw new IllegalArgumentException("Tài khoản hoặc mật khẩu không chính xác!");
         }
 
-        if ("BLOCKED".equalsIgnoreCase(user.getStatus())) {
-            throw new IllegalStateException("Tài khoản của bạn đã bị tạm khóa, vui lòng liên hệ ban quản lý!");
+        if (user.getStatus() == UserStatus.LOCKED || user.getStatus() == UserStatus.DELETED) {
+            throw new IllegalStateException("Tài khoản của bạn đã bị tạm khóa hoặc ngừng hoạt động!");
         }
 
         return toAuthResponse(user, "Đăng nhập thành công!");
     }
 
-    /**
-     * Lấy thông tin cá nhân của User
-     */
     public AuthResponse getProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng!"));
         return toAuthResponse(user, "Lấy thông tin người dùng thành công");
     }
 
-    /**
-     * Cập nhật thông tin cá nhân
-     */
     @Transactional
     public AuthResponse updateProfile(Long userId, UpdateProfileRequest req) {
         User user = userRepository.findById(userId)
@@ -140,9 +151,6 @@ public class AuthService {
         return toAuthResponse(user, "Cập nhật hồ sơ thành công!");
     }
 
-    /**
-     * Đổi mật khẩu
-     */
     @Transactional
     public void changePassword(Long userId, ChangePasswordRequest req) {
         User user = userRepository.findById(userId)
@@ -159,21 +167,20 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    /**
-     * Quản trị viên lấy danh sách toàn bộ người dùng
-     */
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    /**
-     * Map Entity User sang AuthResponse DTO
-     */
     private AuthResponse toAuthResponse(User user, String message) {
-        // Tạo token phiên đăng nhập định danh
         String token = "WSB_" + Base64.getUrlEncoder().withoutPadding().encodeToString(
                 (user.getId() + ":" + user.getUsername() + ":" + UUID.randomUUID()).getBytes()
         );
+
+        BigDecimal balance = walletRepository.findById(user.getId())
+                .map(Wallet::getBalance)
+                .orElse(BigDecimal.ZERO);
+
+        Optional<UserMembership> activeMembership = userMembershipRepository.findActiveMembershipForUser(user.getId(), LocalDateTime.now());
 
         return AuthResponse.builder()
                 .success(true)
@@ -184,13 +191,13 @@ public class AuthService {
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
-                .role(user.getRole())
-                .walletBalance(user.getWalletBalance())
+                .role(user.getRole().name())
+                .walletBalance(balance.doubleValue())
                 .avatar(user.getAvatar())
-                .isMember(user.isMembershipValid())
-                .membershipPackage(user.isMembershipValid() ? user.getMembershipPackage() : null)
-                .membershipExpiresAt(user.getMembershipExpiresAt())
-                .discountPercent(user.getActiveDiscountPercent())
+                .isMember(activeMembership.isPresent())
+                .membershipPackage(activeMembership.map(UserMembership::getMembershipPackage).orElse(null))
+                .membershipExpiresAt(activeMembership.map(UserMembership::getEndDate).orElse(null))
+                .discountPercent(activeMembership.map(um -> um.getMembershipPackage().getDiscountPercent().doubleValue()).orElse(0.0))
                 .build();
     }
 }

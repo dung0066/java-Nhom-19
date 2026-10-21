@@ -10,5 +10,6 @@ import java.util.List;
 public interface CourtRepository extends JpaRepository<Court, Long> {
     List<Court> findByBranchCodeOrderByCourtNumberAsc(String branchCode);
     List<Court> findByBranchIdOrderByCourtNumberAsc(Long branchId);
+    long countByBranchIdAndActiveTrue(Long branchId);
     void deleteByBranchId(Long branchId);
 }

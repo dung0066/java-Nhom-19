@@ -12,7 +12,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/courts")
-@CrossOrigin(origins = "*")
 public class CourtApiController {
 
     private final CourtRepository courtRepository;
@@ -40,21 +39,23 @@ public class CourtApiController {
         Branch branch = branchRepository.findById(dto.getBranchId())
                 .orElseThrow(() -> new RuntimeException("Chi nhánh không tồn tại"));
 
+        Integer courtNumber = dto.getCourtNumber();
+        if (courtNumber == null && dto.getName() != null) {
+            try {
+                courtNumber = Integer.parseInt(dto.getName().replaceAll("\\D+", ""));
+            } catch (Exception ignored) {
+                courtNumber = 1;
+            }
+        }
+        if (courtNumber == null) courtNumber = 1;
+
         Court court = Court.builder()
                 .branch(branch)
-                .name(dto.getName())
-                .courtNumber(dto.getCourtNumber() != null ? dto.getCourtNumber() : 1)
-                .courtGroup(dto.getCourtGroup())
+                .courtNumber(courtNumber)
                 .active(dto.getActive() != null ? dto.getActive() : true)
                 .build();
 
         Court saved = courtRepository.save(court);
-
-        // Update branch court count
-        List<Court> allCourts = courtRepository.findByBranchIdOrderByCourtNumberAsc(branch.getId());
-        branch.setTotalCourts(allCourts.size());
-        branchRepository.save(branch);
-
         return ResponseEntity.ok(saved);
     }
 
@@ -64,9 +65,13 @@ public class CourtApiController {
             if (dto.getBranchId() != null) {
                 branchRepository.findById(dto.getBranchId()).ifPresent(court::setBranch);
             }
-            if (dto.getName() != null) court.setName(dto.getName());
-            if (dto.getCourtNumber() != null) court.setCourtNumber(dto.getCourtNumber());
-            if (dto.getCourtGroup() != null) court.setCourtGroup(dto.getCourtGroup());
+            if (dto.getCourtNumber() != null) {
+                court.setCourtNumber(dto.getCourtNumber());
+            } else if (dto.getName() != null) {
+                try {
+                    court.setCourtNumber(Integer.parseInt(dto.getName().replaceAll("\\D+", "")));
+                } catch (Exception ignored) {}
+            }
             if (dto.getActive() != null) court.setActive(dto.getActive());
             return ResponseEntity.ok(courtRepository.save(court));
         }).orElse(ResponseEntity.notFound().build());
@@ -83,13 +88,7 @@ public class CourtApiController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteCourt(@PathVariable Long id) {
         return courtRepository.findById(id).map(court -> {
-            Branch b = court.getBranch();
             courtRepository.deleteById(id);
-            if (b != null) {
-                List<Court> allCourts = courtRepository.findByBranchIdOrderByCourtNumberAsc(b.getId());
-                b.setTotalCourts(allCourts.size());
-                branchRepository.save(b);
-            }
             return ResponseEntity.ok(Map.of("message", "Đã xóa sân thành công!"));
         }).orElse(ResponseEntity.notFound().build());
     }

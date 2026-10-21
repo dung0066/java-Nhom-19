@@ -1,129 +1,98 @@
 package com.example.Dat_san_cau_long.model;
 
+import com.example.Dat_san_cau_long.model.enums.ProductType;
 import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Iterator;
+import java.util.Map;
 
 @Entity
 @Table(name = "products")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    private ProductCategory category;
+
+    @Column(nullable = false, length = 150)
     private String name;
 
-    @Column(nullable = false)
-    private String category; // RACQUET, SHOES, ACCESSORY
-
+    @Column(length = 100)
     private String brand;
 
-    @Column(nullable = false)
-    private Double price;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "product_type", nullable = false)
+    @Builder.Default
+    private ProductType productType = ProductType.RENTAL;
 
-    private String priceUnit; // / buổi chơi, / ống 12 quả, / món
+    @Column(nullable = false, precision = 12, scale = 0)
+    private BigDecimal price;
 
-    @Column(length = 1000)
+    @Column(name = "price_unit", nullable = false, length = 50)
+    @Builder.Default
+    private String priceUnit = "/ buoi choi";
+
+    @Column(name = "image_url", length = 500)
     private String imageUrl;
 
-    private String badge; // HOT NHẤT, VIP, BÁN CHẠY...
+    @Column(length = 50)
+    private String badge;
 
-    private String spec1; // Trọng lượng: 4U/G5
-
-    private String spec2; // Lực căng: 11.0 kg
-
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "specs", columnDefinition = "json")
+    private Map<String, Object> specs;
+
+    @Column(nullable = false)
+    @Builder.Default
     private Boolean active = true;
 
-    public Product() {
-    }
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    public Product(Long id, String name, String category, String brand, Double price, String priceUnit, String imageUrl, String badge, String spec1, String spec2, String description, Boolean active) {
-        this.id = id;
-        this.name = name;
-        this.category = category;
-        this.brand = brand;
-        this.price = price;
-        this.priceUnit = priceUnit;
-        this.imageUrl = imageUrl;
-        this.badge = badge;
-        this.spec1 = spec1;
-        this.spec2 = spec2;
-        this.description = description;
-        this.active = active != null ? active : true;
-    }
-
-    public static ProductBuilder builder() {
-        return new ProductBuilder();
-    }
-
-    public static class ProductBuilder {
-        private Long id;
-        private String name;
-        private String category;
-        private String brand;
-        private Double price;
-        private String priceUnit;
-        private String imageUrl;
-        private String badge;
-        private String spec1;
-        private String spec2;
-        private String description;
-        private Boolean active = true;
-
-        public ProductBuilder id(Long id) { this.id = id; return this; }
-        public ProductBuilder name(String name) { this.name = name; return this; }
-        public ProductBuilder category(String category) { this.category = category; return this; }
-        public ProductBuilder brand(String brand) { this.brand = brand; return this; }
-        public ProductBuilder price(Double price) { this.price = price; return this; }
-        public ProductBuilder priceUnit(String priceUnit) { this.priceUnit = priceUnit; return this; }
-        public ProductBuilder imageUrl(String imageUrl) { this.imageUrl = imageUrl; return this; }
-        public ProductBuilder badge(String badge) { this.badge = badge; return this; }
-        public ProductBuilder spec1(String spec1) { this.spec1 = spec1; return this; }
-        public ProductBuilder spec2(String spec2) { this.spec2 = spec2; return this; }
-        public ProductBuilder description(String description) { this.description = description; return this; }
-        public ProductBuilder active(Boolean active) { this.active = active; return this; }
-
-        public Product build() {
-            return new Product(id, name, category, brand, price, priceUnit, imageUrl, badge, spec1, spec2, description, active);
+    @Transient
+    public String getSpec1() {
+        if (specs == null || specs.isEmpty()) return null;
+        Iterator<Map.Entry<String, Object>> it = specs.entrySet().iterator();
+        if (it.hasNext()) {
+            Map.Entry<String, Object> entry = it.next();
+            return entry.getKey() + ": " + entry.getValue();
         }
+        return null;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    @Transient
+    public String getSpec2() {
+        if (specs == null || specs.size() < 2) return null;
+        Iterator<Map.Entry<String, Object>> it = specs.entrySet().iterator();
+        it.next(); // skip first
+        if (it.hasNext()) {
+            Map.Entry<String, Object> entry = it.next();
+            return entry.getKey() + ": " + entry.getValue();
+        }
+        return null;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
-
-    public String getBrand() { return brand; }
-    public void setBrand(String brand) { this.brand = brand; }
-
-    public Double getPrice() { return price; }
-    public void setPrice(Double price) { this.price = price; }
-
-    public String getPriceUnit() { return priceUnit; }
-    public void setPriceUnit(String priceUnit) { this.priceUnit = priceUnit; }
-
-    public String getImageUrl() { return imageUrl; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-
-    public String getBadge() { return badge; }
-    public void setBadge(String badge) { this.badge = badge; }
-
-    public String getSpec1() { return spec1; }
-    public void setSpec1(String spec1) { this.spec1 = spec1; }
-
-    public String getSpec2() { return spec2; }
-    public void setSpec2(String spec2) { this.spec2 = spec2; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public Boolean getActive() { return active; }
-    public void setActive(Boolean active) { this.active = active; }
+    @Transient
+    public String getCategoryCode() {
+        return category != null ? category.getCode() : null;
+    }
 }
