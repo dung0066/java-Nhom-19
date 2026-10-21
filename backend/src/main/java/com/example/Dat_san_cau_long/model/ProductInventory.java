@@ -15,11 +15,13 @@ public class ProductInventory {
     @EmbeddedId
     private ProductInventoryId id;
 
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "courts", "manager"})
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("branchId")
     @JoinColumn(name = "branch_id")
     private Branch branch;
 
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "category"})
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("productId")
     @JoinColumn(name = "product_id")

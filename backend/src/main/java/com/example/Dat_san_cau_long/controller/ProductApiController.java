@@ -10,7 +10,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/products")
-@CrossOrigin(origins = "*")
 public class ProductApiController {
 
     private final ProductService productService;
@@ -37,23 +36,27 @@ public class ProductApiController {
         return ResponseEntity.ok(productService.getById(id));
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<Product> createProduct(@RequestBody Product product) {
         return ResponseEntity.ok(productService.saveOrUpdate(product));
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
         product.setId(id);
         return ResponseEntity.ok(productService.saveOrUpdate(product));
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.ok(Map.of("message", "Đã xóa sản phẩm thành công!"));
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PatchMapping("/{id}/toggle")
     public ResponseEntity<Product> toggleActive(@PathVariable Long id) {
         return ResponseEntity.ok(productService.toggleActive(id));
