@@ -32,4 +32,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByCustomerPhone(String customerPhone);
 
     List<Booking> findByStatusAndHoldExpiresAtBefore(BookingStatus status, LocalDateTime now);
+
+    List<Booking> findByBranchIdOrderByCreatedAtDesc(Long branchId);
+
+    Page<Booking> findByBranchIdOrderByCreatedAtDesc(Long branchId, Pageable pageable);
+
+    List<Booking> findByStatusOrderByCreatedAtDesc(BookingStatus status);
 }

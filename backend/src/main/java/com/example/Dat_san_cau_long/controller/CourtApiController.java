@@ -34,6 +34,7 @@ public class CourtApiController {
         return ResponseEntity.ok(courtRepository.findAll());
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<Court> createCourt(@RequestBody CourtRequestDto dto) {
         Branch branch = branchRepository.findById(dto.getBranchId())
@@ -59,6 +60,7 @@ public class CourtApiController {
         return ResponseEntity.ok(saved);
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Court> updateCourt(@PathVariable Long id, @RequestBody CourtRequestDto dto) {
         return courtRepository.findById(id).map(court -> {
@@ -77,6 +79,7 @@ public class CourtApiController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PatchMapping("/{id}/toggle")
     public ResponseEntity<Court> toggleActive(@PathVariable Long id) {
         return courtRepository.findById(id).map(court -> {
@@ -85,6 +88,7 @@ public class CourtApiController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteCourt(@PathVariable Long id) {
         return courtRepository.findById(id).map(court -> {

@@ -33,11 +33,13 @@ public class BranchApiController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<Branch> createBranch(@RequestBody Branch branch) {
         return ResponseEntity.ok(branchRepository.save(branch));
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Branch> updateBranch(@PathVariable Long id, @RequestBody Branch branch) {
         return branchRepository.findById(id).map(existing -> {
@@ -52,6 +54,7 @@ public class BranchApiController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteBranch(@PathVariable Long id) {
         courtRepository.deleteByBranchId(id);
