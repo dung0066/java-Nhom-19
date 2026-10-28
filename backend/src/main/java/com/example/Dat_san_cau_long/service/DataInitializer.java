@@ -289,8 +289,6 @@ public class DataInitializer implements CommandLineRunner {
             ProductCategory cat = ProductCategory.builder()
                     .code(code)
                     .name(name)
-                    .sortOrder(sortOrder)
-                    .active(true)
                     .build();
             return categoryRepository.save(cat);
         });

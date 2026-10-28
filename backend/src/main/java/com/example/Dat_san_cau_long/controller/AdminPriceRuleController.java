@@ -10,6 +10,7 @@ import com.example.Dat_san_cau_long.repository.PriceRuleRepository;
 import com.example.Dat_san_cau_long.repository.TimeSlotRepository;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +40,11 @@ public class AdminPriceRuleController {
     @GetMapping
     public ResponseEntity<List<PriceRule>> getAllPriceRules() {
         return ResponseEntity.ok(priceRuleRepository.findAll());
+    }
+
+    @GetMapping("/time-slots")
+    public ResponseEntity<List<TimeSlot>> getAllTimeSlots() {
+        return ResponseEntity.ok(timeSlotRepository.findAll(Sort.by("sortOrder")));
     }
 
     @PostMapping

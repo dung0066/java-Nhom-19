@@ -78,9 +78,10 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         // Public Auth Endpoints
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register", "/api/auth/forgot-password/**", "/api/auth/test-mail").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auth/forgot-password/**").permitAll()
                         // Protected Auth Endpoints
-                        .requestMatchers("/api/auth/me", "/api/auth/profile", "/api/auth/change-password").authenticated()
+                        .requestMatchers("/api/auth/me", "/api/auth/profile", "/api/auth/change-password", "/api/auth/otp/**").authenticated()
                         .requestMatchers("/api/auth/users").hasAuthority("ROLE_ADMIN")
 
                         // Wallet & Memberships

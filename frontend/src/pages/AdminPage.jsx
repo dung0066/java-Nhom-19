@@ -10,6 +10,7 @@ import ProductModal from '../components/admin/ProductModal';
 import CourtModal from '../components/admin/CourtModal';
 import ArticleModal from '../components/admin/ArticleModal';
 import BranchModal from '../components/admin/BranchModal';
+import AdminResetPasswordModal from '../components/admin/AdminResetPasswordModal';
 
 import {
   fetchCurrentUser,
@@ -151,7 +152,7 @@ export default function AdminPage({ onNavigate }) {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState('bookings');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   // Main Data States
   const [bookings, setBookings] = useState([]);
@@ -179,6 +180,7 @@ export default function AdminPage({ onNavigate }) {
   const [isCourtModalOpen, setIsCourtModalOpen] = useState(false);
   const [editingCourt, setEditingCourt] = useState(null);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState(null);
 
   const tabContainerRef = useRef(null);
@@ -865,6 +867,26 @@ export default function AdminPage({ onNavigate }) {
                 </>
               )}
             </button>
+            <div style={{ textAlign: 'center', marginTop: '6px' }}>
+              <button
+                type="button"
+                onClick={() => setIsResetPasswordModalOpen(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#0284c7',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 10px'
+                }}
+              >
+                <i className="fa-solid fa-key"></i> Quên mật khẩu? Đặt lại bằng Email OTP
+              </button>
+            </div>
 
             <button
               type="button"
@@ -874,10 +896,19 @@ export default function AdminPage({ onNavigate }) {
               <i className="fa-solid fa-arrow-left"></i> Quay Về Trang Đặt Sân
             </button>
           </form>
-        </div>
+
+        <AdminResetPasswordModal
+          isOpen={isResetPasswordModalOpen}
+          onClose={() => setIsResetPasswordModalOpen(false)}
+          initialIdentifier={loginForm.username || 'admin'}
+          onSuccess={(newPwd) => {
+            setLoginForm(prev => ({ ...prev, password: newPwd }));
+          }}
+        />
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   // ==========================================
   // RENDER: GIAO DIỆN QUẢN TRỊ VIÊN CHÍNH
@@ -896,6 +927,13 @@ export default function AdminPage({ onNavigate }) {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              type="button"
+              onClick={() => setIsResetPasswordModalOpen(true)}
+              style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+            >
+              <i className="fa-solid fa-key"></i> Đổi Mật Khẩu (OTP)
+            </button>
             <button
               type="button"
               onClick={loadData}
@@ -1053,6 +1091,14 @@ export default function AdminPage({ onNavigate }) {
         onClose={() => setIsProductModalOpen(false)}
         initialData={editingProduct}
         onSave={handleSaveProduct}
+      />
+
+      {/* Admin Reset / Change Password Modal */}
+      <AdminResetPasswordModal
+        isOpen={isResetPasswordModalOpen}
+        onClose={() => setIsResetPasswordModalOpen(false)}
+        initialIdentifier={currentUser?.email || currentUser?.username || 'admin'}
+        onSuccess={() => {}}
       />
     </div>
   );

@@ -41,3 +41,6 @@ gsap-skills/
 *.sw?
 .DS_Store
 Thumbs.db
+
+.settings/
+backend/.settings/

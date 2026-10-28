@@ -806,3 +806,118 @@ export async function deleteAdminArticle(id) {
     method: 'DELETE'
   });
 }
+
+// ==========================================
+// EXPANDED ADMIN APIs (FULL MODULE SUITE)
+// ==========================================
+export async function fetchAdminDashboardStats() {
+  return await authFetch('/api/admin/dashboard/stats');
+}
+
+export async function fetchAdminTimeSlots() {
+  return await authFetch('/api/admin/price-rules/time-slots');
+}
+
+export async function updateAdminPriceRule(ruleId, ruleData) {
+  return await authFetch('/api/admin/price-rules/' + ruleId, {
+    method: 'PUT',
+    body: JSON.stringify(ruleData)
+  });
+}
+
+export async function fetchAdminMembershipPackages() {
+  return await authFetch('/api/admin/memberships/packages');
+}
+
+export async function createAdminMembershipPackage(packageData) {
+  return await authFetch('/api/admin/memberships/packages', {
+    method: 'POST',
+    body: JSON.stringify(packageData)
+  });
+}
+
+export async function updateAdminMembershipPackage(packageId, packageData) {
+  return await authFetch('/api/admin/memberships/packages/' + packageId, {
+    method: 'PUT',
+    body: JSON.stringify(packageData)
+  });
+}
+
+export async function deleteAdminMembershipPackage(packageId) {
+  return await authFetch('/api/admin/memberships/packages/' + packageId, {
+    method: 'DELETE'
+  });
+}
+
+export async function fetchAdminMembershipHistory() {
+  return await authFetch('/api/admin/memberships/history');
+}
+
+export async function changeAdminUserRole(userId, role) {
+  return await authFetch('/api/admin/users/' + userId + '/role', {
+    method: 'PATCH',
+    body: JSON.stringify({ role })
+  });
+}
+
+export async function createAdminUser(userData) {
+  return await authFetch('/api/admin/users', {
+    method: 'POST',
+    body: JSON.stringify(userData)
+  });
+}
+
+export async function updateAdminUser(userId, userData) {
+  return await authFetch('/api/admin/users/' + userId, {
+    method: 'PUT',
+    body: JSON.stringify(userData)
+  });
+}
+
+export async function fetchAdminProductInventory(productId) {
+  return await authFetch('/api/admin/products/' + productId + '/inventory');
+}
+
+export async function updateAdminProductStock(productId, branchId, stockQuantity) {
+  return await authFetch('/api/admin/products/' + productId + '/inventory', {
+    method: 'PUT',
+    body: JSON.stringify({ branchId, stockQuantity })
+  });
+}
+
+// ==========================================
+// PASSWORD RESET & OTP EMAIL APIS
+// ==========================================
+export async function sendForgotPasswordOtp(identifier) {
+  return await authFetch('/api/auth/forgot-password/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ identifier })
+  });
+}
+
+export async function verifyForgotPasswordOtp(identifier, otp) {
+  return await authFetch('/api/auth/forgot-password/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ identifier, otp })
+  });
+}
+
+export async function resetPasswordWithToken(resetToken, newPassword) {
+  return await authFetch('/api/auth/forgot-password/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ resetToken, newPassword })
+  });
+}
+
+export async function sendAdminChangePasswordOtp() {
+  return await authFetch('/api/auth/otp/send-change-password-otp', {
+    method: 'POST'
+  });
+}
+
+export async function verifyAndChangePassword(otp, newPassword) {
+  return await authFetch('/api/auth/otp/verify-and-change-password', {
+    method: 'POST',
+    body: JSON.stringify({ otp, newPassword })
+  });
+}

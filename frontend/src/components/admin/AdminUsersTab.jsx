@@ -3,17 +3,30 @@ import React, { useState } from 'react';
 /**
  * Tab Quản Lý Tài Khoản Khách Hàng & Người Dùng
  * Kết nối REST API /api/admin/users
- * Code đơn giản, ngắn gọn, trực quan để báo cáo đồ án
  */
 export default function AdminUsersTab({
   users = [],
   onToggleUserStatus,
+  onChangeUserRole,
+  onCreateUser,
   onDeleteUser,
   onRefresh,
   isLoading
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+
+  // Modal Thêm User mới
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newUserForm, setNewUserForm] = useState({
+    username: '',
+    password: '',
+    fullName: '',
+    phone: '',
+    email: '',
+    role: 'ROLE_USER'
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredUsers = users.filter((u) => {
     const q = searchTerm.toLowerCase();
@@ -28,16 +41,45 @@ export default function AdminUsersTab({
     return matchSearch && matchRole;
   });
 
+  const handleCreateSubmit = async (e) => {
+    e.preventDefault();
+    if (!newUserForm.username || !newUserForm.password) {
+      alert('Vui lòng nhập tên đăng nhập và mật khẩu!');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      if (onCreateUser) {
+        await onCreateUser(newUserForm);
+        alert('Đã thêm tài khoản mới thành công vào CSDL!');
+        setIsAddModalOpen(false);
+        setNewUserForm({
+          username: '',
+          password: '',
+          fullName: '',
+          phone: '',
+          email: '',
+          role: 'ROLE_USER'
+        });
+      }
+    } catch (err) {
+      alert('Lỗi tạo tài khoản: ' + (err.message || err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section id="usersTab" className="tab-pane">
       <div className="admin-content-card">
         <div className="card-header-flex">
           <div>
             <h3 style={{ margin: 0 }}>
-              <i className="fa-solid fa-users"></i> Quản Lý Tài Khoản Người Dùng & Khách Hàng
+              <i className="fa-solid fa-users"></i> Quản Lý Tài Khoản Người Dùng & Phân Quyền
             </h3>
             <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px', margin: '4px 0 0 0' }}>
-              Xem danh sách tài khoản đã đăng ký, phân quyền hệ thống và quản lý trạng thái tài khoản
+              Xem danh sách tài khoản đã đăng ký, phân quyền vai trò (Admin / Staff / User) và quản lý trạng thái
             </p>
           </div>
 
@@ -59,13 +101,21 @@ export default function AdminUsersTab({
             >
               <option value="">Tất cả vai trò</option>
               <option value="ROLE_USER">Khách Hàng (ROLE_USER)</option>
-              <option value="ROLE_ADMIN">Quản Trị Viên (ROLE_ADMIN)</option>
               <option value="ROLE_STAFF">Nhân Viên Sân (ROLE_STAFF)</option>
+              <option value="ROLE_ADMIN">Quản Trị Viên (ROLE_ADMIN)</option>
             </select>
 
             <button
               type="button"
               className="btn-action-add"
+              onClick={() => setIsAddModalOpen(true)}
+            >
+              <i className="fa-solid fa-user-plus"></i> Thêm Tài Khoản Mới
+            </button>
+
+            <button
+              type="button"
+              className="btn-tbl btn-tbl-edit"
               onClick={onRefresh}
             >
               <i className="fa-solid fa-rotate"></i> Làm mới
@@ -119,15 +169,25 @@ export default function AdminUsersTab({
                       <td>{u.phone || '---'}</td>
                       <td>{u.email || '---'}</td>
                       <td>
-                        <span style={{
-                          display: 'inline-flex', alignItems: 'center', gap: '5px',
-                          padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
-                          background: isAdmin ? '#fef3c7' : '#e0f2fe',
-                          color: isAdmin ? '#b45309' : '#0369a1'
-                        }}>
-                          <i className={isAdmin ? "fa-solid fa-shield-halved" : "fa-solid fa-user"}></i>
-                          {u.role || 'ROLE_USER'}
-                        </span>
+                        <select
+                          value={u.role || 'ROLE_USER'}
+                          disabled={u.id === 1} // Không đổi role của super admin ID 1
+                          onChange={(e) => onChangeUserRole && onChangeUserRole(u.id, e.target.value)}
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            border: '1px solid #cbd5e1',
+                            background: isAdmin ? '#fef3c7' : '#f0f9ff',
+                            color: isAdmin ? '#b45309' : '#0369a1',
+                            cursor: u.id === 1 ? 'default' : 'pointer'
+                          }}
+                        >
+                          <option value="ROLE_USER">Khách (ROLE_USER)</option>
+                          <option value="ROLE_STAFF">Nhân viên (ROLE_STAFF)</option>
+                          <option value="ROLE_ADMIN">Quản trị (ROLE_ADMIN)</option>
+                        </select>
                       </td>
                       <td>
                         {isLocked ? (
@@ -142,7 +202,7 @@ export default function AdminUsersTab({
                       </td>
                       <td>
                         <div className="action-btn-group">
-                          {!isAdmin && (
+                          {u.id !== 1 && (
                             <button
                               type="button"
                               className="btn-tbl"
@@ -158,7 +218,7 @@ export default function AdminUsersTab({
                               {isLocked ? 'Mở Khóa' : 'Khóa'}
                             </button>
                           )}
-                          {!isAdmin && (
+                          {u.id !== 1 && (
                             <button
                               type="button"
                               className="btn-tbl btn-tbl-delete"
@@ -168,9 +228,9 @@ export default function AdminUsersTab({
                               <i className="fa-solid fa-trash"></i> Xóa
                             </button>
                           )}
-                          {isAdmin && (
+                          {u.id === 1 && (
                             <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>
-                              Quản trị viên
+                              Super Admin
                             </span>
                           )}
                         </div>
@@ -183,7 +243,134 @@ export default function AdminUsersTab({
           </table>
         </div>
       </div>
+
+      {/* MODAL THÊM USER MỚI */}
+      {isAddModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
+          <div
+            className="modal-content"
+            style={{ maxWidth: '480px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h3>
+                <i className="fa-solid fa-user-plus"></i> Thêm Tài Khoản Người Dùng Mới
+              </h3>
+              <button
+                type="button"
+                className="btn-modal-close"
+                onClick={() => setIsAddModalOpen(false)}
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateSubmit}>
+              <div className="modal-body" style={{ padding: '20px' }}>
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                    Tên Đăng Nhập (Username) *
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="VD: staff_tanphu"
+                    value={newUserForm.username}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, username: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                    Mật Khẩu *
+                  </label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="Nhập mật khẩu..."
+                    value={newUserForm.password}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                    Họ Và Tên
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="VD: Nguyễn Văn A"
+                    value={newUserForm.fullName}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, fullName: e.target.value })}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                      Số Điện Thoại
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="0912 345 678"
+                      value={newUserForm.phone}
+                      onChange={(e) => setNewUserForm({ ...newUserForm, phone: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                      Vai Trò (Role) *
+                    </label>
+                    <select
+                      className="form-control"
+                      value={newUserForm.role}
+                      onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
+                    >
+                      <option value="ROLE_USER">Khách Hàng (ROLE_USER)</option>
+                      <option value="ROLE_STAFF">Nhân Viên Sân (ROLE_STAFF)</option>
+                      <option value="ROLE_ADMIN">Quản Trị Viên (ROLE_ADMIN)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    placeholder="user@example.com"
+                    value={newUserForm.email}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-footer" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="btn-tbl btn-tbl-edit"
+                  onClick={() => setIsAddModalOpen(false)}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-action-add"
+                >
+                  {isSubmitting ? 'Đang tạo...' : 'Tạo Tài Khoản'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
-
