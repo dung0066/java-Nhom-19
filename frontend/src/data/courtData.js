@@ -43,30 +43,51 @@ export const BRANCHES = [
   }
 ];
 
-// 22 Khung giờ chuẩn theo backend database.sql
+// 38 Khung giờ chuẩn 30 phút từ 05:00 sáng đến 24:00 đêm
 export const TIME_SLOTS = [
-  { id: 1, startTime: '00:15', endTime: '01:15', displayLabel: '0:15 - 1:15', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 1, period: 'night' },
-  { id: 2, startTime: '01:20', endTime: '02:20', displayLabel: '1:20 - 2:20', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 2, period: 'night' },
-  { id: 3, startTime: '02:25', endTime: '03:25', displayLabel: '2:25 - 3:25', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 3, period: 'night' },
-  { id: 4, startTime: '03:30', endTime: '04:30', displayLabel: '3:30 - 4:30', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 4, period: 'night' },
-  { id: 5, startTime: '04:35', endTime: '05:35', displayLabel: '4:35 - 5:35', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 5, period: 'morning' },
-  { id: 6, startTime: '05:40', endTime: '06:40', displayLabel: '5:40 - 6:40', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 6, period: 'morning' },
-  { id: 7, startTime: '06:45', endTime: '07:45', displayLabel: '6:45 - 7:45', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 7, period: 'morning' },
-  { id: 8, startTime: '08:00', endTime: '09:00', displayLabel: '8:00 - 9:00', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 8, period: 'morning' },
-  { id: 9, startTime: '09:05', endTime: '10:05', displayLabel: '9:05 - 10:05', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 9, period: 'morning' },
-  { id: 10, startTime: '10:10', endTime: '11:10', displayLabel: '10:10 - 11:10', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 10, period: 'morning' },
-  { id: 11, startTime: '11:15', endTime: '12:15', displayLabel: '11:15 - 12:15', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 11, period: 'morning' },
-  { id: 12, startTime: '12:20', endTime: '13:20', displayLabel: '12:20 - 13:20', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 12, period: 'afternoon' },
-  { id: 13, startTime: '13:25', endTime: '14:25', displayLabel: '13:25 - 14:25', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 13, period: 'afternoon' },
-  { id: 14, startTime: '14:30', endTime: '15:30', displayLabel: '14:30 - 15:30', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 14, period: 'afternoon' },
-  { id: 15, startTime: '15:35', endTime: '16:35', displayLabel: '15:35 - 16:35', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 15, period: 'afternoon' },
-  { id: 16, startTime: '16:40', endTime: '17:40', displayLabel: '16:40 - 17:40', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 16, period: 'afternoon' },
-  { id: 17, startTime: '17:45', endTime: '18:45', displayLabel: '17:45 - 18:45', standardPrice: 70000, peakPrice: 120000, isPeakHour: true, sortOrder: 17, period: 'evening' },
-  { id: 18, startTime: '18:50', endTime: '19:50', displayLabel: '18:50 - 19:50', standardPrice: 70000, peakPrice: 120000, isPeakHour: true, sortOrder: 18, period: 'evening' },
-  { id: 19, startTime: '19:55', endTime: '20:55', displayLabel: '19:55 - 20:55', standardPrice: 70000, peakPrice: 120000, isPeakHour: true, sortOrder: 19, period: 'evening' },
-  { id: 20, startTime: '21:00', endTime: '22:00', displayLabel: '21:00 - 22:00', standardPrice: 70000, peakPrice: 120000, isPeakHour: true, sortOrder: 20, period: 'evening' },
-  { id: 21, startTime: '22:05', endTime: '23:05', displayLabel: '22:05 - 23:05', standardPrice: 70000, peakPrice: 120000, isPeakHour: true, sortOrder: 21, period: 'evening' },
-  { id: 22, startTime: '23:10', endTime: '00:10', displayLabel: '23:10 - 0:10', standardPrice: 70000, peakPrice: 120000, isPeakHour: false, sortOrder: 22, period: 'night' }
+  // Ca Sáng: 05:00 - 12:00 (14 khung)
+  { id: 1, startTime: '05:00', endTime: '05:30', displayLabel: '05:00 - 05:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 1, period: 'morning' },
+  { id: 2, startTime: '05:30', endTime: '06:00', displayLabel: '05:30 - 06:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 2, period: 'morning' },
+  { id: 3, startTime: '06:00', endTime: '06:30', displayLabel: '06:00 - 06:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 3, period: 'morning' },
+  { id: 4, startTime: '06:30', endTime: '07:00', displayLabel: '06:30 - 07:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 4, period: 'morning' },
+  { id: 5, startTime: '07:00', endTime: '07:30', displayLabel: '07:00 - 07:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 5, period: 'morning' },
+  { id: 6, startTime: '07:30', endTime: '08:00', displayLabel: '07:30 - 08:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 6, period: 'morning' },
+  { id: 7, startTime: '08:00', endTime: '08:30', displayLabel: '08:00 - 08:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 7, period: 'morning' },
+  { id: 8, startTime: '08:30', endTime: '09:00', displayLabel: '08:30 - 09:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 8, period: 'morning' },
+  { id: 9, startTime: '09:00', endTime: '09:30', displayLabel: '09:00 - 09:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 9, period: 'morning' },
+  { id: 10, startTime: '09:30', endTime: '10:00', displayLabel: '09:30 - 10:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 10, period: 'morning' },
+  { id: 11, startTime: '10:00', endTime: '10:30', displayLabel: '10:00 - 10:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 11, period: 'morning' },
+  { id: 12, startTime: '10:30', endTime: '11:00', displayLabel: '10:30 - 11:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 12, period: 'morning' },
+  { id: 13, startTime: '11:00', endTime: '11:30', displayLabel: '11:00 - 11:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 13, period: 'morning' },
+  { id: 14, startTime: '11:30', endTime: '12:00', displayLabel: '11:30 - 12:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 14, period: 'morning' },
+
+  // Ca Chiều: 12:00 - 17:00 (10 khung)
+  { id: 15, startTime: '12:00', endTime: '12:30', displayLabel: '12:00 - 12:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 15, period: 'afternoon' },
+  { id: 16, startTime: '12:30', endTime: '13:00', displayLabel: '12:30 - 13:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 16, period: 'afternoon' },
+  { id: 17, startTime: '13:00', endTime: '13:30', displayLabel: '13:00 - 13:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 17, period: 'afternoon' },
+  { id: 18, startTime: '13:30', endTime: '14:00', displayLabel: '13:30 - 14:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 18, period: 'afternoon' },
+  { id: 19, startTime: '14:00', endTime: '14:30', displayLabel: '14:00 - 14:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 19, period: 'afternoon' },
+  { id: 20, startTime: '14:30', endTime: '15:00', displayLabel: '14:30 - 15:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 20, period: 'afternoon' },
+  { id: 21, startTime: '15:00', endTime: '15:30', displayLabel: '15:00 - 15:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 21, period: 'afternoon' },
+  { id: 22, startTime: '15:30', endTime: '16:00', displayLabel: '15:30 - 16:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 22, period: 'afternoon' },
+  { id: 23, startTime: '16:00', endTime: '16:30', displayLabel: '16:00 - 16:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 23, period: 'afternoon' },
+  { id: 24, startTime: '16:30', endTime: '17:00', displayLabel: '16:30 - 17:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 24, period: 'afternoon' },
+
+  // Ca Tối & Giờ Vàng: 17:00 - 24:00 (14 khung)
+  { id: 25, startTime: '17:00', endTime: '17:30', displayLabel: '17:00 - 17:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: true, sortOrder: 25, period: 'evening' },
+  { id: 26, startTime: '17:30', endTime: '18:00', displayLabel: '17:30 - 18:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: true, sortOrder: 26, period: 'evening' },
+  { id: 27, startTime: '18:00', endTime: '18:30', displayLabel: '18:00 - 18:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: true, sortOrder: 27, period: 'evening' },
+  { id: 28, startTime: '18:30', endTime: '19:00', displayLabel: '18:30 - 19:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: true, sortOrder: 28, period: 'evening' },
+  { id: 29, startTime: '19:00', endTime: '19:30', displayLabel: '19:00 - 19:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: true, sortOrder: 29, period: 'evening' },
+  { id: 30, startTime: '19:30', endTime: '20:00', displayLabel: '19:30 - 20:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: true, sortOrder: 30, period: 'evening' },
+  { id: 31, startTime: '20:00', endTime: '20:30', displayLabel: '20:00 - 20:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: true, sortOrder: 31, period: 'evening' },
+  { id: 32, startTime: '20:30', endTime: '21:00', displayLabel: '20:30 - 21:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: true, sortOrder: 32, period: 'evening' },
+  { id: 33, startTime: '21:00', endTime: '21:30', displayLabel: '21:00 - 21:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: true, sortOrder: 33, period: 'evening' },
+  { id: 34, startTime: '21:30', endTime: '22:00', displayLabel: '21:30 - 22:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: true, sortOrder: 34, period: 'evening' },
+  { id: 35, startTime: '22:00', endTime: '22:30', displayLabel: '22:00 - 22:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 35, period: 'evening' },
+  { id: 36, startTime: '22:30', endTime: '23:00', displayLabel: '22:30 - 23:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 36, period: 'evening' },
+  { id: 37, startTime: '23:00', endTime: '23:30', displayLabel: '23:00 - 23:30', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 37, period: 'evening' },
+  { id: 38, startTime: '23:30', endTime: '24:00', displayLabel: '23:30 - 24:00', standardPrice: 35000, peakPrice: 60000, isPeakHour: false, sortOrder: 38, period: 'evening' }
 ];
 
 // Danh sách sân cho chi nhánh NVL (mặc định)
@@ -84,34 +105,29 @@ export const INITIAL_COURTS = COURTS_NVL;
 
 // Dữ liệu slot mặc định nếu backend chưa bật
 export const DEFAULT_SLOT_STATUS_MAP = {
-  '1_12': { status: 'PASS_WANTED', customerName: 'Hoàng Long', passContact: '0912 345 678', price: 70000, bookingDetailId: 101 },
-  '1_13': { status: 'BOOKED', customerName: 'Nguyễn Văn Tuấn', price: 70000, bookingDetailId: 102 },
-  '1_17': { status: 'BOOKED', customerName: 'CLB Cầu Lông Gò Vấp', price: 120000, bookingDetailId: 103 },
-  '1_18': { status: 'BOOKED', customerName: 'CLB Cầu Lông Gò Vấp', price: 120000, bookingDetailId: 104 },
-  '1_19': { status: 'BOOKED', customerName: 'CLB Cầu Lông Gò Vấp', price: 120000, bookingDetailId: 105 },
+  '1_25': { status: 'BOOKED', customerName: 'CLB Gò Vấp', price: 60000, bookingDetailId: 101 },
+  '1_26': { status: 'BOOKED', customerName: 'CLB Gò Vấp', price: 60000, bookingDetailId: 102 },
+  '1_27': { status: 'BOOKED', customerName: 'CLB Gò Vấp', price: 60000, bookingDetailId: 103 },
+  '1_28': { status: 'BOOKED', customerName: 'CLB Gò Vấp', price: 60000, bookingDetailId: 104 },
 
-  '2_17': { status: 'BOOKED', customerName: 'Trần Minh Đức', price: 120000, bookingDetailId: 106 },
-  '2_18': { status: 'BOOKED', customerName: 'Trần Minh Đức', price: 120000, bookingDetailId: 107 },
-  '2_19': { status: 'PASS_WANTED', customerName: 'Ngô Kiến Huy', passContact: '0908 889 999', price: 120000, bookingDetailId: 108 },
+  '2_27': { status: 'BOOKED', customerName: 'Trần Minh Đức', price: 60000, bookingDetailId: 105 },
+  '2_28': { status: 'BOOKED', customerName: 'Trần Minh Đức', price: 60000, bookingDetailId: 106 },
+  '2_29': { status: 'PASS_WANTED', customerName: 'Ngô Kiến Huy', passContact: '0908 889 999', price: 60000, bookingDetailId: 107 },
 
-  '3_7': { status: 'BOOKED', customerName: 'Bác Sĩ Quang', price: 70000, bookingDetailId: 109 },
-  '3_8': { status: 'BOOKED', customerName: 'Bác Sĩ Quang', price: 70000, bookingDetailId: 110 },
-  '3_17': { status: 'BOOKED', customerName: 'Nhóm Công Ty FPT', price: 120000, bookingDetailId: 111 },
-  '3_18': { status: 'BOOKED', customerName: 'Nhóm Công Ty FPT', price: 120000, bookingDetailId: 112 },
+  '3_7': { status: 'BOOKED', customerName: 'Bác Sĩ Quang', price: 35000, bookingDetailId: 108 },
+  '3_8': { status: 'BOOKED', customerName: 'Bác Sĩ Quang', price: 35000, bookingDetailId: 109 },
+  '3_27': { status: 'BOOKED', customerName: 'Nhóm FPT', price: 60000, bookingDetailId: 110 },
+  '3_28': { status: 'BOOKED', customerName: 'Nhóm FPT', price: 60000, bookingDetailId: 111 },
 
-  '4_18': { status: 'BOOKED', customerName: 'Lê Hoàng Nam', price: 120000, bookingDetailId: 113 },
-  '4_19': { status: 'BOOKED', customerName: 'Lê Hoàng Nam', price: 120000, bookingDetailId: 114 },
+  '4_28': { status: 'BOOKED', customerName: 'Lê Hoàng Nam', price: 60000, bookingDetailId: 112 },
+  '4_29': { status: 'BOOKED', customerName: 'Lê Hoàng Nam', price: 60000, bookingDetailId: 113 },
 
-  '5_12': { status: 'PASS_WANTED', customerName: 'Đặng Thu Thảo', passContact: '0933 557 799', price: 70000, bookingDetailId: 115 },
-  '5_17': { status: 'BOOKED', customerName: 'Phạm Hải Đăng', price: 120000, bookingDetailId: 116 },
-  '5_18': { status: 'BOOKED', customerName: 'Phạm Hải Đăng', price: 120000, bookingDetailId: 117 },
+  '5_15': { status: 'PASS_WANTED', customerName: 'Đặng Thu Thảo', passContact: '0933 557 799', price: 35000, bookingDetailId: 114 },
+  '5_27': { status: 'BOOKED', customerName: 'Phạm Hải Đăng', price: 60000, bookingDetailId: 115 },
+  '5_28': { status: 'BOOKED', customerName: 'Phạm Hải Đăng', price: 60000, bookingDetailId: 116 },
 
-  '6_18': { status: 'BOOKED', customerName: 'Vũ Quốc Bảo', price: 120000, bookingDetailId: 118 },
-  '6_19': { status: 'BOOKED', customerName: 'Vũ Quốc Bảo', price: 120000, bookingDetailId: 119 },
-
-  '7_17': { status: 'BOOKED', customerName: 'Anh Tuấn VIP', price: 120000, bookingDetailId: 120 },
-  '7_18': { status: 'BOOKED', customerName: 'Anh Tuấn VIP', price: 120000, bookingDetailId: 121 },
-  '7_19': { status: 'BOOKED', customerName: 'Anh Tuấn VIP', price: 120000, bookingDetailId: 122 }
+  '7_27': { status: 'BOOKED', customerName: 'Anh Tuấn VIP', price: 60000, bookingDetailId: 117 },
+  '7_28': { status: 'BOOKED', customerName: 'Anh Tuấn VIP', price: 60000, bookingDetailId: 118 }
 };
 
 // Dịch vụ và dụng cụ (đồng bộ với ProductApiController)
@@ -269,6 +285,192 @@ export const SERVICES_CATEGORIES = [
 ];
 
 export const ALL_ADDONS = SERVICES_CATEGORIES.flatMap((c) => c.items);
+
+// 13 Sản phẩm & Dịch vụ chuẩn hệ thống D2 Shop đồng bộ giữa Admin SQL và Giao diện Đặt Sân / Trang Chủ
+export const DEFAULT_D2_PRODUCTS = [
+  {
+    id: 1,
+    name: 'Vợt Yonex Astrox 88D Pro',
+    brand: 'Yonex',
+    category: 'RACKET',
+    price: 50000,
+    priceUnit: '/ ca chơi',
+    badge: 'Bán chạy nhất',
+    spec1: 'Căng sẵn cước BG65Ti 10.5kg',
+    spec2: 'Trọng lượng 4U-G5',
+    description: 'Dòng vợt tấn công chuyên nghiệp, smash cắm sân và trợ lực tốt',
+    imageUrl: 'https://images.unsplash.com/photo-1613918108466-292b78a8ef95?q=80&w=600&auto=format&fit=crop',
+    active: true
+  },
+  {
+    id: 2,
+    name: 'Vợt Lining Axforce 90 Max',
+    brand: 'Lining',
+    category: 'RACKET',
+    price: 45000,
+    priceUnit: '/ ca chơi',
+    badge: 'Cao cấp',
+    spec1: 'Công thủ toàn diện',
+    spec2: 'Thân đũa mỏng trợ lực tốt',
+    description: 'Thích hợp cho người chơi công thủ toàn diện, đũa vợt dẻo phản tạt cực nhanh',
+    imageUrl: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=600&auto=format&fit=crop',
+    active: true
+  },
+  {
+    id: 3,
+    name: 'Giày Yonex Power Cushion 65Z3',
+    brand: 'Yonex',
+    category: 'SHOES',
+    price: 35000,
+    priceUnit: '/ ca chơi',
+    badge: 'Đủ size 39-44',
+    spec1: 'Đế đệm khí êm ái chống lật sơ mi',
+    spec2: 'Khử khuẩn sấy UV 100%',
+    description: 'Đế cao su bám sân thảm BWF, đệm Power Cushion giảm chấn gót chân',
+    imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop',
+    active: true
+  },
+  {
+    id: 4,
+    name: 'Pocari Sweat 500ml',
+    brand: 'Pocari',
+    category: 'REFRESHMENTS',
+    price: 20000,
+    priceUnit: '/ chai',
+    badge: 'Bù điện giải',
+    spec1: 'Bù 5 ion khoáng thiết yếu',
+    spec2: 'Giảm chuột rút khi vận động',
+    description: 'Bù nước và 5 ion khoáng thiết yếu, chống chuột rút tức thì',
+    imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=600&auto=format&fit=crop',
+    active: true
+  },
+  {
+    id: 5,
+    name: 'Revive Chanh Muối 500ml',
+    brand: 'Revive',
+    category: 'REFRESHMENTS',
+    price: 18000,
+    priceUnit: '/ chai',
+    badge: 'Ướp lạnh',
+    spec1: 'Ướp lạnh sâu',
+    spec2: 'Giải khát tức thì',
+    description: 'Ướp lạnh sâu, bổ sung muối khoáng và năng lượng cho cơ thể',
+    imageUrl: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?q=80&w=600&auto=format&fit=crop',
+    active: true
+  },
+  {
+    id: 6,
+    name: 'Nước khoáng thiên nhiên LaVie 500ml',
+    brand: 'LaVie',
+    category: 'REFRESHMENTS',
+    price: 10000,
+    priceUnit: '/ chai',
+    badge: 'Khoáng tự nhiên',
+    spec1: 'Thanh khiết, dịu mát',
+    spec2: 'Chai 500ml ướp lạnh',
+    description: 'Nước khoáng thiên nhiên thanh khiết, giải tỏa cơn khát sảng khoái',
+    imageUrl: 'https://images.unsplash.com/photo-1560023907-5f339617ea30?q=80&w=600&auto=format&fit=crop',
+    active: true
+  },
+  {
+    id: 7,
+    name: 'Bò Húc Red Bull Thái',
+    brand: 'Red Bull',
+    category: 'REFRESHMENTS',
+    price: 22000,
+    priceUnit: '/ lon',
+    badge: 'Tăng lực',
+    spec1: 'Tỉnh táo bùng nổ thể lực',
+    spec2: 'Red Bull nắp bật Thái',
+    description: 'Tỉnh táo, bùng nổ sức mạnh cho set đấu quyết định',
+    imageUrl: 'https://images.unsplash.com/photo-1622543925917-763c34d1a86e?q=80&w=600&auto=format&fit=crop',
+    active: true
+  },
+  {
+    id: 8,
+    name: 'Khăn Lạnh Kháng Khuẩn Bạc Hà',
+    brand: 'D2 Shop',
+    category: 'REFRESHMENTS',
+    price: 5000,
+    priceUnit: '/ cái',
+    badge: 'Mát lạnh',
+    spec1: 'Mát lạnh tiệt trùng sạch sẽ',
+    spec2: 'Hương bạc hà sảng khoái',
+    description: 'Khăn ướt tiệt trùng cao cấp, lau mồ hôi và hạ nhiệt tức thì',
+    imageUrl: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?q=80&w=600&auto=format&fit=crop',
+    active: true
+  },
+  {
+    id: 9,
+    name: 'Thuê Khăn Bông Yonex Cotton',
+    brand: 'Yonex',
+    category: 'ACCESSORY',
+    price: 25000,
+    priceUnit: '/ buổi',
+    badge: 'Cotton 100%',
+    spec1: 'Thấm hút mồ hôi tối đa',
+    spec2: 'Giặt sấy tiệt trùng thơm tho',
+    description: 'Khăn bông 100% cotton Yonex chuyên dụng thể thao, giặt sấy UV thơm tho',
+    imageUrl: 'https://images.unsplash.com/photo-1616627547584-bf28cee262db?q=80&w=600&auto=format&fit=crop',
+    active: true
+  },
+  {
+    id: 10,
+    name: 'Ký Gửi Tủ Locker Mã PIN',
+    brand: 'D2 Locker',
+    category: 'SERVICES',
+    price: 20000,
+    priceUnit: '/ buổi',
+    badge: 'Bảo mật',
+    spec1: 'Mã PIN cá nhân riêng',
+    spec2: 'Để trọn bộ balo vợt giày',
+    description: 'Tủ riêng biệt bảo quản đồ an toàn tuyệt đối suốt buổi tập luyện',
+    imageUrl: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=600&auto=format&fit=crop',
+    active: true
+  },
+  {
+    id: 11,
+    name: 'Giặt Sấy & Khử Khuẩn Giày UV',
+    brand: 'D2 Care',
+    category: 'SERVICES',
+    price: 60000,
+    priceUnit: '/ đôi',
+    badge: 'Khử khuẩn UV',
+    spec1: 'Làm sạch sâu vết bám sân',
+    spec2: 'Sấy UV tiệt trùng 15 phút',
+    description: 'Vệ sinh sạch sâu đế giày cao su, sấy khô tiệt trùng bằng đèn UV thơm tho',
+    imageUrl: 'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?q=80&w=600&auto=format&fit=crop',
+    active: true
+  },
+  {
+    id: 12,
+    name: 'Cước Yonex BG65 (Độ bền cao)',
+    brand: 'Yonex',
+    category: 'SERVICES',
+    price: 140000,
+    priceUnit: '/ cây',
+    badge: 'Độ bền cao',
+    spec1: 'Cước đan máy điện tử chuẩn kg',
+    spec2: 'Bền bỉ, giữ kg lâu dài',
+    description: 'Dây cước phổ biến nhất thế giới, chịu lực bền bỉ và giữ độ căng cực tốt',
+    imageUrl: 'https://images.unsplash.com/photo-1599474924187-334a4ae5bd3c?q=80&w=600&auto=format&fit=crop',
+    active: true
+  },
+  {
+    id: 13,
+    name: 'Cước Yonex BG65 Titanium',
+    brand: 'Yonex',
+    category: 'SERVICES',
+    price: 160000,
+    priceUnit: '/ cây',
+    badge: 'Nổ đanh',
+    spec1: 'Lớp phủ hợp kim Titanium',
+    spec2: 'Âm thanh nổ đanh trợ lực đập',
+    description: 'Âm thanh nổ đanh vang dội, bề mặt trợ lực smash cực cắm và hiểm hóc',
+    imageUrl: 'https://images.unsplash.com/photo-1599474924187-334a4ae5bd3c?q=80&w=600&auto=format&fit=crop',
+    active: true
+  }
+];
 
 export const COURT_PACKAGES = [
   {

@@ -23,10 +23,61 @@ export default function ProductModal({
   });
 
   const modalBoxRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [isProcessingImg, setIsProcessingImg] = useState(false);
+
+  // Xử lý nén và tải ảnh từ máy tính thành Data URL
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file hình ảnh hợp lệ (JPG, PNG, WEBP)!');
+      return;
+    }
+
+    setIsProcessingImg(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxW = 800;
+        const maxH = 600;
+        let w = img.width;
+        let h = img.height;
+
+        if (w > maxW || h > maxH) {
+          if (w / h > maxW / maxH) {
+            h = Math.round((h * maxW) / w);
+            w = maxW;
+          } else {
+            w = Math.round((w * maxH) / h);
+            h = maxH;
+          }
+        }
+
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+        setFormData((prev) => ({ ...prev, imageUrl: compressedBase64 }));
+        setIsProcessingImg(false);
+      };
+      img.onerror = () => {
+        setIsProcessingImg(false);
+        alert('Không thể đọc file ảnh. Vui lòng thử lại!');
+      };
+      img.src = event.target?.result;
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     if (initialData) {
-      const rawCat = initialData.category;
+      const rawCat = typeof initialData.category === 'object' ? initialData.category?.code : initialData.category;
       const normalizedCat = rawCat === 'RACQUET' ? 'RACKET' : (rawCat || 'RACKET');
       setFormData({
         id: initialData.id || '',
@@ -115,9 +166,11 @@ export default function ProductModal({
                   }
                   required
                 >
-                  <option value="RACKET">Vợt Cầu Lông</option>
-                  <option value="SHOES">Giày Thi Đấu</option>
-                  <option value="ACCESSORY">Phụ Kiện & Căn Tin</option>
+                  <option value="RACKET">Vợt Cầu Lông (RACKET)</option>
+                  <option value="SHOES">Giày Thi Đấu (SHOES)</option>
+                  <option value="REFRESHMENTS">Nước Giải Khát & Khăn Lạnh (REFRESHMENTS)</option>
+                  <option value="SERVICES">Dịch Vụ Căng Cước & Tiện Ích (SERVICES)</option>
+                  <option value="ACCESSORY">Phụ Kiện Thể Thao (ACCESSORY)</option>
                 </select>
               </div>
             </div>
@@ -179,28 +232,68 @@ export default function ProductModal({
             </div>
 
             <div className="form-group">
-              <label>Đường Dẫn Ảnh (Image URL):</label>
+              <label>Hình Ảnh Sản Phẩm (Tải từ máy tính hoặc dán URL):</label>
               <input
-                type="url"
-                className="form-control"
-                placeholder="https://..."
-                value={formData.imageUrl}
-                onChange={(e) =>
-                  setFormData({ ...formData, imageUrl: e.target.value })
-                }
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleImageUpload}
               />
-              <div className="image-preview-box">
-                {formData.imageUrl ? (
-                  <img
-                    src={formData.imageUrl}
-                    alt="Preview"
-                    onError={(e) => (e.target.style.display = 'none')}
-                  />
-                ) : (
-                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                    <i className="fa-solid fa-image"></i> Xem trước hình ảnh sản phẩm
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isProcessingImg}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '8px',
+                    backgroundColor: '#0284c7', color: '#fff', border: 'none',
+                    padding: '9px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 700,
+                    cursor: 'pointer', boxShadow: '0 2px 4px rgba(2, 132, 199, 0.2)'
+                  }}
+                >
+                  <i className={isProcessingImg ? "fa-solid fa-spinner fa-spin" : "fa-solid fa-cloud-arrow-up"}></i>
+                  {isProcessingImg ? 'Đang nén ảnh...' : '📁 Chọn ảnh từ máy tính'}
+                </button>
+                <span style={{ fontSize: '12px', color: '#64748b' }}>
+                  Hỗ trợ JPG, PNG, WEBP từ thiết bị của bạn
+                </span>
+              </div>
+
+              <div className="image-preview-box" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+                <div style={{ width: '80px', height: '60px', borderRadius: '6px', overflow: 'hidden', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {formData.imageUrl ? (
+                    <img
+                      src={formData.imageUrl}
+                      alt="Xem trước sản phẩm"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => (e.target.style.display = 'none')}
+                    />
+                  ) : (
+                    <i className="fa-solid fa-image" style={{ color: '#94a3b8', fontSize: '20px' }}></i>
+                  )}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155', display: 'block', marginBottom: '4px' }}>
+                    {formData.imageUrl?.startsWith('data:') ? (
+                      <span style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <i className="fa-solid fa-circle-check"></i> Đã chọn ảnh từ máy tính!
+                      </span>
+                    ) : (
+                      'Đường dẫn ảnh sản phẩm:'
+                    )}
                   </span>
-                )}
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Hoặc dán URL ảnh nếu có..."
+                    value={formData.imageUrl}
+                    onChange={(e) =>
+                      setFormData({ ...formData, imageUrl: e.target.value })
+                    }
+                    style={{ fontSize: '12px', padding: '6px 10px' }}
+                  />
+                </div>
               </div>
             </div>
 

@@ -26,9 +26,24 @@ public class Product {
     private Long id;
 
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "category_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
     private ProductCategory category;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("category")
+    public void setCategoryFromJson(Object cat) {
+        if (cat instanceof ProductCategory pc) {
+            this.category = pc;
+        } else if (cat instanceof String str) {
+            this.category = ProductCategory.builder().code(str.toUpperCase()).name(str).build();
+        } else if (cat instanceof Map<?, ?> map) {
+            Object idVal = map.get("id");
+            Long id = idVal instanceof Number n ? n.longValue() : null;
+            String code = (String) map.get("code");
+            String name = (String) map.get("name");
+            this.category = ProductCategory.builder().id(id).code(code).name(name != null ? name : code).build();
+        }
+    }
 
     @Column(nullable = false, length = 150)
     private String name;
@@ -48,7 +63,7 @@ public class Product {
     @Builder.Default
     private String priceUnit = "/ buoi choi";
 
-    @Column(name = "image_url", length = 500)
+    @Column(name = "image_url", columnDefinition = "LONGTEXT")
     private String imageUrl;
 
     @Column(length = 50)

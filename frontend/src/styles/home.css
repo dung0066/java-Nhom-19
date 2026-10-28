@@ -164,7 +164,7 @@ body.theme-white {
 /* 3. HERO CAROUSEL SECTION (BANNER CHẠY LIÊN TỤC) */
 .hero-carousel-section {
     position: relative;
-    height: 520px;
+    height: 640px;
     background: #0f172a;
     overflow: hidden;
 }
@@ -217,7 +217,7 @@ body.theme-white {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     background-size: cover;
-    background-position: center;
+    background-position: center 25%;
     will-change: transform, opacity;
     transform: translateZ(0);
     backface-visibility: hidden;
@@ -1119,4 +1119,135 @@ body.theme-white {
     background: #0284c7;
     border-color: #0284c7;
     transform: scale(1.1);
+}
+
+/* Minimal Clean Dots (No text overlay) */
+.carousel-dots-clean {
+    position: absolute;
+    bottom: 92px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 20;
+}
+
+.carousel-dot-clean {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.45);
+    border: 1.5px solid rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    padding: 0;
+    outline: none;
+}
+
+.carousel-dot-clean:hover {
+    background: rgba(255, 255, 255, 0.85);
+    transform: scale(1.18);
+}
+
+.carousel-dot-clean.active {
+    width: 32px;
+    border-radius: 8px;
+    background: #009fe3;
+    border-color: #009fe3;
+    box-shadow: 0 0 12px rgba(0, 159, 227, 0.7);
+}
+
+/* ========================================================
+   3-COLUMN FEATURE STRIP UNDER BANNER (EXACT USER DESIGN)
+   ======================================================== */
+.home-feature-strip {
+    background: #ffffff;
+    padding: 36px 24px 44px 24px;
+    border-bottom: 1.5px solid #f1f5f9;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+    position: relative;
+    z-index: 10;
+}
+
+.home-feature-strip-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.home-feature-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 28px;
+    cursor: pointer;
+    transition: transform 0.25s ease;
+    user-select: none;
+}
+
+.home-feature-col:hover {
+    transform: translateY(-4px);
+}
+
+.home-feature-icon-wrap {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.home-feature-col:hover .home-feature-icon-wrap {
+    transform: scale(1.12);
+}
+
+.home-feature-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.06));
+}
+
+.home-feature-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.2px;
+}
+
+.home-feature-desc {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #64748b;
+    margin: 0;
+    max-width: 330px;
+}
+
+.home-feature-divider {
+    width: 1px;
+    align-self: stretch;
+    background: #e2e8f0;
+    margin: 12px 0;
+    flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+    .home-feature-strip-inner {
+        flex-direction: column;
+        gap: 32px;
+    }
+    .home-feature-divider {
+        width: 60%;
+        height: 1px;
+        align-self: center;
+        margin: 0;
+    }
 }

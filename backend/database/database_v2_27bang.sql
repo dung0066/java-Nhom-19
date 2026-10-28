@@ -355,7 +355,7 @@ CREATE TABLE `products` (
     `product_type` ENUM('RENTAL','RETAIL') NOT NULL DEFAULT 'RENTAL',
     `price`        DECIMAL(12,0) NOT NULL,
     `price_unit`   VARCHAR(50) NOT NULL DEFAULT '/ buoi choi',
-    `image_url`    VARCHAR(500),
+    `image_url`    LONGTEXT,
     `badge`        VARCHAR(50),
     `description`  TEXT,
     `specs`        JSON NULL,                    -- thong so ky thuat dang JSON (thay spec1, spec2)
@@ -363,6 +363,21 @@ CREATE TABLE `products` (
     `created_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT `chk_products_price` CHECK (`price` >= 0),
     CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `product_categories` (`id`)
+) ENGINE=InnoDB;
+
+-- Bang quan ly tin tuc & bai viet D2 Shop
+CREATE TABLE IF NOT EXISTS `articles` (
+    `id`             BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `title`          VARCHAR(250) NOT NULL,
+    `summary`        VARCHAR(500),
+    `content`        TEXT,
+    `image`          LONGTEXT,
+    `category`       VARCHAR(50) NOT NULL DEFAULT 'TIN_TUC',
+    `category_label` VARCHAR(100) NOT NULL DEFAULT 'Tin Tức',
+    `author`         VARCHAR(100) NOT NULL DEFAULT 'D2 Media',
+    `read_time`      VARCHAR(50) NOT NULL DEFAULT '5 phút đọc',
+    `published`      BOOLEAN NOT NULL DEFAULT TRUE,
+    `created_at`     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 CREATE TABLE `product_inventory` (
@@ -595,15 +610,28 @@ INSERT INTO `payments`
 INSERT INTO `vouchers` (`code`, `description`, `discount_type`, `discount_value`, `max_discount`, `min_order`, `valid_from`, `valid_to`, `usage_limit`) VALUES
 ('WELCOME10', 'Giảm 10% cho khách mới, tối đa 50.000đ', 'PERCENT', 10, 50000, 100000, '2026-10-01 00:00:00', '2026-12-31 23:59:59', 500);
 
--- 10. San pham mau
+-- 10. Danh muc & San pham/Dich vu he thong D2 Shop dong bo User Booking & Admin
 INSERT INTO `product_categories` (`id`, `code`, `name`) VALUES
-(1, 'RACKET', 'Vợt cầu lông'), (2, 'SHOES', 'Giày'), (3, 'ACCESSORY', 'Phụ kiện');
+(1, 'RACKET', 'Vợt cầu lông'),
+(2, 'SHOES', 'Giày thi đấu'),
+(3, 'REFRESHMENTS', 'Nước giải khát & Khăn lạnh'),
+(4, 'SERVICES', 'Dịch vụ căng cước & Tiện ích'),
+(5, 'ACCESSORY', 'Phụ kiện thể thao');
 
-INSERT INTO `products` (`id`, `category_id`, `name`, `brand`, `product_type`, `price`, `price_unit`, `badge`, `description`, `specs`) VALUES
-(1, 1, 'Vợt Yonex Astrox 77 Pro',  'Yonex',  'RENTAL', 50000, '/ buổi chơi', 'HOT', 'Vợt thiên công, phù hợp người chơi trung cấp', JSON_OBJECT('Trọng lượng', '4U (83g)', 'Điểm cân bằng', 'Nặng đầu')),
-(2, 1, 'Vợt Victor Thruster K 12', 'Victor', 'RENTAL', 50000, '/ buổi chơi', NULL,  'Vợt công thủ toàn diện', JSON_OBJECT('Trọng lượng', '4U (83g)', 'Điểm cân bằng', 'Cân bằng')),
-(3, 2, 'Giày Yonex Power Cushion',  'Yonex',  'RENTAL', 30000, '/ buổi chơi', NULL,  'Giày chuyên dụng chống trượt', JSON_OBJECT('Size', '38 - 44', 'Loại đế', 'Cao su chống trượt')),
-(4, 3, 'Quấn cán vợt Yonex AC102',  'Yonex',  'RETAIL', 25000, '/ cuộn',      NULL,  'Quấn cán thấm hút mồ hôi', NULL);
+INSERT INTO `products` (`id`, `category_id`, `name`, `brand`, `product_type`, `price`, `price_unit`, `badge`, `image_url`, `description`, `specs`) VALUES
+(1, 1, 'Vợt Yonex Astrox 88D Pro', 'Yonex', 'RENTAL', 50000, '/ ca chơi', 'HOT', 'https://images.unsplash.com/photo-1613918108466-292b78a8ef95?q=80&w=600&auto=format&fit=crop', 'Dòng vợt tấn công chuyên nghiệp, smash cắm sân và trợ lực tốt', JSON_OBJECT('Cước căng', 'BG65Ti 10.5kg', 'Trọng lượng', '4U-G5')),
+(2, 1, 'Vợt Lining Axforce 90 Max', 'Lining', 'RENTAL', 45000, '/ ca chơi', 'Cao cấp', 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=600&auto=format&fit=crop', 'Thích hợp cho người chơi công thủ toàn diện, đũa vợt dẻo phản tạt cực nhanh', JSON_OBJECT('Lối chơi', 'Công thủ toàn diện', 'Thân đũa', 'Mỏng dẻo')),
+(3, 2, 'Giày Yonex Power Cushion 65Z3', 'Yonex', 'RENTAL', 35000, '/ ca chơi', 'Đủ size 39-44', 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop', 'Đế cao su bám sân thảm BWF, đệm Power Cushion giảm chấn gót chân và sấy khử khuẩn UV', JSON_OBJECT('Size', '39 - 44', 'Khử khuẩn', 'Sấy đèn UV 100%')),
+(4, 3, 'Pocari Sweat 500ml', 'Pocari', 'RETAIL', 20000, '/ chai', 'Bù điện giải', 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=600&auto=format&fit=crop', 'Bù nước và 5 ion khoáng thiết yếu, chống chuột rút tức thì khi thi đấu', JSON_OBJECT('Dung tích', '500ml', 'Tính năng', 'Bù khoáng điện giải')),
+(5, 3, 'Revive Chanh Muối 500ml', 'Revive', 'RETAIL', 18000, '/ chai', 'Ướp lạnh', 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?q=80&w=600&auto=format&fit=crop', 'Ướp lạnh sâu, bổ sung muối khoáng và năng lượng cho cơ thể', JSON_OBJECT('Hương vị', 'Chanh muối', 'Nhiệt độ', 'Ướp lạnh 4 độ C')),
+(6, 3, 'Nước khoáng thiên nhiên LaVie 500ml', 'LaVie', 'RETAIL', 10000, '/ chai', 'Khoáng tự nhiên', 'https://images.unsplash.com/photo-1560023907-5f339617ea30?q=80&w=600&auto=format&fit=crop', 'Nước khoáng thiên nhiên thanh khiết, giải tỏa cơn khát sảng khoái', JSON_OBJECT('Nguồn gốc', 'Khoáng tự nhiên', 'Đóng chai', '500ml')),
+(7, 3, 'Bò Húc Red Bull Thái', 'Red Bull', 'RETAIL', 22000, '/ lon', 'Tăng lực', 'https://images.unsplash.com/photo-1622543925917-763c34d1a86e?q=80&w=600&auto=format&fit=crop', 'Tỉnh táo, bùng nổ sức mạnh cho set đấu quyết định', JSON_OBJECT('Xuất xứ', 'Thái Lan', 'Quy cách', 'Lon 250ml')),
+(8, 3, 'Khăn Lạnh Kháng Khuẩn Bạc Hà', 'D2 Shop', 'RETAIL', 5000, '/ cái', 'Mát lạnh', 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?q=80&w=600&auto=format&fit=crop', 'Khăn ướt tiệt trùng cao cấp, lau mồ hôi và hạ nhiệt tức thì', JSON_OBJECT('Mùi hương', 'Bạc hà dịu mát', 'Đặc tính', 'Kháng khuẩn')),
+(9, 5, 'Thuê Khăn Bông Yonex Cotton', 'Yonex', 'RENTAL', 25000, '/ buổi', 'Cotton 100%', 'https://images.unsplash.com/photo-1616627547584-bf28cee262db?q=80&w=600&auto=format&fit=crop', 'Khăn bông 100% cotton Yonex chuyên dụng thể thao, giặt sấy UV thơm tho', JSON_OBJECT('Chất liệu', '100% Cotton', 'Vệ sinh', 'Giặt sấy tiệt trùng')),
+(10, 4, 'Ký Gửi Tủ Locker Mã PIN', 'D2 Locker', 'RENTAL', 20000, '/ buổi', 'Bảo mật', 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=600&auto=format&fit=crop', 'Tủ riêng biệt bảo quản đồ an toàn tuyệt đối suốt buổi tập luyện', JSON_OBJECT('Khóa', 'Mã PIN điện tử', 'Kích thước', 'Để trọn vẹn balo vợt')),
+(11, 4, 'Giặt Sấy & Khử Khuẩn Giày UV', 'D2 Care', 'RENTAL', 60000, '/ đôi', 'Khử khuẩn UV', 'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?q=80&w=600&auto=format&fit=crop', 'Vệ sinh sạch sâu đế giày cao su, sấy khô tiệt trùng bằng đèn UV thơm tho 15 phút', JSON_OBJECT('Thời gian', '15 phút lấy ngay', 'Công nghệ', 'Khử khuẩn đèn UV')),
+(12, 4, 'Cước Yonex BG65 (Độ bền cao)', 'Yonex', 'RETAIL', 140000, '/ cây', 'Độ bền cao', 'https://images.unsplash.com/photo-1599474924187-334a4ae5bd3c?q=80&w=600&auto=format&fit=crop', 'Dây cước phổ biến nhất thế giới, chịu lực bền bỉ và giữ độ căng cực tốt', JSON_OBJECT('Độ dày', '0.70mm', 'Căng máy', 'Đo điện tử 4 nút')),
+(13, 4, 'Cước Yonex BG65 Titanium', 'Yonex', 'RETAIL', 160000, '/ cây', 'Nổ đanh', 'https://images.unsplash.com/photo-1599474924187-334a4ae5bd3c?q=80&w=600&auto=format&fit=crop', 'Âm thanh nổ đanh vang dội, bề mặt trợ lực smash cực cắm và hiểm hóc', JSON_OBJECT('Lớp phủ', 'Hydroid Titanium', 'Đặc tính', 'Âm nổ đanh'));
 
 INSERT INTO `product_inventory` (`branch_id`, `product_id`, `stock_quantity`)
 SELECT b.id, p.id, CASE WHEN p.product_type = 'RENTAL' THEN 10 ELSE 50 END

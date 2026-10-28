@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import AppNavbar from './components/common/AppNavbar';
-import BookingPage from './pages/BookingPage';
-import AdminPage from './pages/AdminPage';
+import AppFooter from './components/common/AppFooter';
+import FloatingContactBar from './components/common/FloatingContactBar';
 import HomePage from './pages/HomePage';
+import AboutPage from './pages/AboutPage';
+import BookingPage from './pages/BookingPage';
+import NewsPage from './pages/NewsPage';
+import ContactPage from './pages/ContactPage';
+import AdminPage from './pages/AdminPage';
 import { checkBackendHealth } from './services/api';
 
 export default function App() {
@@ -18,11 +23,20 @@ export default function App() {
     if (path.includes('admin') || hash.includes('admin')) {
       return 'admin';
     }
+    if (path.includes('about') || hash.includes('about') || hash.includes('gioi-thieu')) {
+      return 'about';
+    }
+    if (path.includes('news') || hash.includes('news') || hash.includes('tin-tuc')) {
+      return 'news';
+    }
+    if (path.includes('contact') || hash.includes('contact') || hash.includes('lien-he')) {
+      return 'contact';
+    }
     if (path === '/' && !path.includes('dat-san') && !hash.includes('dat-san') && hash.includes('home')) {
       return 'home';
     }
-    // Default to booking page (Trang đặt sân chuẩn template)
-    return 'booking';
+    // Default to home page
+    return 'home';
   };
 
   const [currentPage, setCurrentPage] = useState(getInitialPage);
@@ -65,6 +79,12 @@ export default function App() {
       window.history.pushState(null, '', '#admin');
     } else if (page === 'home') {
       window.history.pushState(null, '', '#home');
+    } else if (page === 'about') {
+      window.history.pushState(null, '', '#gioi-thieu');
+    } else if (page === 'news') {
+      window.history.pushState(null, '', '#tin-tuc');
+    } else if (page === 'contact') {
+      window.history.pushState(null, '', '#lien-he');
     } else {
       window.history.pushState(null, '', '#dat-san');
     }
@@ -83,8 +103,17 @@ export default function App() {
       <main ref={mainRef} style={{ flex: 1 }}>
         {currentPage === 'admin' && <AdminPage onNavigate={handleNavigate} />}
         {currentPage === 'home' && <HomePage onNavigate={handleNavigate} />}
+        {currentPage === 'about' && <AboutPage onNavigate={handleNavigate} />}
         {currentPage === 'booking' && <BookingPage onNavigate={handleNavigate} />}
+        {currentPage === 'news' && <NewsPage onNavigate={handleNavigate} />}
+        {currentPage === 'contact' && <ContactPage onNavigate={handleNavigate} />}
       </main>
+
+      {/* 3. UNIFIED APP FOOTER */}
+      {currentPage !== 'admin' && <AppFooter onNavigate={handleNavigate} />}
+
+      {/* 4. FLOATING CONTACT BAR (MÉP TRÁI MÀN HÌNH) */}
+      {currentPage !== 'admin' && <FloatingContactBar />}
     </div>
   );
 }

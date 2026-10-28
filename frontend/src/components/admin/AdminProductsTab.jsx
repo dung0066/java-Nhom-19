@@ -9,10 +9,21 @@ export default function AdminProductsTab({
 }) {
   const [selectedCat, setSelectedCat] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(6);
+  const [pageSize, setPageSize] = useState(8);
+
+  const getCatCode = (p) => {
+    if (!p) return '';
+    if (typeof p.category === 'object') return p.category?.code || '';
+    return p.category || p.categoryCode || '';
+  };
 
   const filteredProducts = selectedCat
-    ? products.filter((p) => p.category === selectedCat || (selectedCat === 'RACKET' && p.category === 'RACQUET'))
+    ? products.filter((p) => {
+        const catCode = getCatCode(p).toUpperCase();
+        if (selectedCat === 'RACKET') return catCode === 'RACKET' || catCode === 'RACQUET';
+        if (selectedCat === 'REFRESHMENTS') return catCode === 'REFRESHMENTS' || catCode === 'DRINKS';
+        return catCode === selectedCat;
+      })
     : products;
 
   useEffect(() => {
@@ -33,7 +44,7 @@ export default function AdminProductsTab({
               <i className="fa-solid fa-wand-magic-sparkles"></i> Quản Lý Kho Dụng Cụ, Vợt & Giày Cho Thuê
             </h3>
             <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
-              Thay đổi hình ảnh, giá thuê, thông số kỹ thuật và trạng thái hiển thị trực tiếp lên Trang Chủ
+              Thay đổi hình ảnh, giá thuê, thông số kỹ thuật và trạng thái hiển thị trực tiếp lên Trang Chủ và Bước Đặt Sân
             </p>
           </div>
           <div className="filter-tools-row">
@@ -42,10 +53,12 @@ export default function AdminProductsTab({
               value={selectedCat}
               onChange={(e) => setSelectedCat(e.target.value)}
             >
-              <option value="">Tất cả danh mục</option>
+              <option value="">Tất cả danh mục ({products.length})</option>
               <option value="RACKET">Vợt Cầu Lông</option>
               <option value="SHOES">Giày Thi Đấu</option>
-              <option value="ACCESSORY">Phụ Kiện & Căn Tin</option>
+              <option value="REFRESHMENTS">Nước Uống & Khăn Lạnh</option>
+              <option value="SERVICES">Dịch Vụ Căng Cước & Tiện Ích</option>
+              <option value="ACCESSORY">Phụ Kiện Thể Thao</option>
             </select>
             <button
               type="button"
@@ -65,9 +78,12 @@ export default function AdminProductsTab({
             </p>
           ) : (
             paginatedProducts.map((p) => {
+              const catCode = getCatCode(p).toUpperCase();
               let catLabel = 'Vợt Cầu Lông';
-              if (p.category === 'SHOES') catLabel = 'Giày Thi Đấu';
-              else if (p.category === 'ACCESSORY') catLabel = 'Phụ Kiện';
+              if (catCode === 'SHOES') catLabel = 'Giày Thi Đấu';
+              else if (catCode === 'REFRESHMENTS' || catCode === 'DRINKS') catLabel = 'Nước & Khăn Lạnh';
+              else if (catCode === 'SERVICES') catLabel = 'Dịch Vụ Căng Cước';
+              else if (catCode === 'ACCESSORY') catLabel = 'Phụ Kiện Thể Thao';
 
               return (
                 <div

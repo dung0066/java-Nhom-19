@@ -11,13 +11,16 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final com.example.Dat_san_cau_long.repository.ProductCategoryRepository categoryRepository;
     private final com.example.Dat_san_cau_long.repository.ProductInventoryRepository productInventoryRepository;
     private final com.example.Dat_san_cau_long.repository.BranchRepository branchRepository;
 
     public ProductService(ProductRepository productRepository,
+                          com.example.Dat_san_cau_long.repository.ProductCategoryRepository categoryRepository,
                           com.example.Dat_san_cau_long.repository.ProductInventoryRepository productInventoryRepository,
                           com.example.Dat_san_cau_long.repository.BranchRepository branchRepository) {
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
         this.productInventoryRepository = productInventoryRepository;
         this.branchRepository = branchRepository;
     }
@@ -41,6 +44,23 @@ public class ProductService {
 
     @Transactional
     public Product saveOrUpdate(Product product) {
+        if (product.getCategory() != null) {
+            String code = product.getCategory().getCode();
+            Long catId = product.getCategory().getId();
+            if (catId != null) {
+                categoryRepository.findById(catId).ifPresent(product::setCategory);
+            } else if (code != null) {
+                String upper = code.toUpperCase();
+                com.example.Dat_san_cau_long.model.ProductCategory dbCat = categoryRepository.findByCode(upper)
+                        .orElseGet(() -> categoryRepository.save(
+                                com.example.Dat_san_cau_long.model.ProductCategory.builder()
+                                        .code(upper)
+                                        .name(upper)
+                                        .build()
+                        ));
+                product.setCategory(dbCat);
+            }
+        }
         return productRepository.save(product);
     }
 

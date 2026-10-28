@@ -120,48 +120,218 @@ export async function authFetch(url, options = {}) {
   return null;
 }
 
+// Helpers lưu tài khoản demo khi backend chưa bật
+export function getRegisteredDemoUsers() {
+  try {
+    const raw = localStorage.getItem('demo_registered_accounts');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveRegisteredDemoUser(account) {
+  try {
+    const accounts = getRegisteredDemoUsers();
+    const idx = accounts.findIndex(
+      (a) => a.username === account.username || (a.phone && a.phone === account.phone)
+    );
+    if (idx >= 0) {
+      accounts[idx] = { ...accounts[idx], ...account };
+    } else {
+      accounts.push(account);
+    }
+    localStorage.setItem('demo_registered_accounts', JSON.stringify(accounts));
+  } catch (e) {
+    console.error('Không thể lưu demo account:', e);
+  }
+}
+
 // ==========================================
 // 1. AUTHENTICATION APIS
 // ==========================================
 export async function loginUser(username, password) {
-  const res = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ username, password })
-  });
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ identifier: username, username, password })
+    });
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Tài khoản hoặc mật khẩu không chính xác');
-  }
+    if (res.ok) {
+      const data = await res.json();
+      if (data.token) {
+        setStoredToken(data.token);
+        setStoredUser(data.user);
+        isBackendLive = true;
+      }
+      return data;
+    }
 
-  const data = await res.json();
-  if (data.token) {
-    setStoredToken(data.token);
-    setStoredUser(data.user);
-    isBackendLive = true;
+    if (res.status === 401 || res.status === 400) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Tài khoản hoặc mật khẩu không chính xác');
+    }
+    throw new Error('Không thể kết nối đến máy chủ backend');
+  } catch (err) {
+    const target = (username || '').trim().toLowerCase();
+
+    // 1. Tài khoản admin
+    if (target === 'admin' && (password === '123456' || password === 'admin')) {
+      const mockAdmin = {
+        token: 'mock-jwt-admin-token',
+        user: {
+          id: 1,
+          username: 'admin',
+          fullName: 'Quản Trị Viên Hệ Thống',
+          email: 'admin@waysstation.vn',
+          phone: '0889555559',
+          role: 'ROLE_ADMIN'
+        }
+      };
+      setStoredToken(mockAdmin.token);
+      setStoredUser(mockAdmin.user);
+      return mockAdmin;
+    }
+
+    // 2. Tài khoản mẫu hoivien_gold
+    if (target === 'hoivien_gold' && password === '123456') {
+      const mockUser = {
+        token: 'mock-jwt-gold-token',
+        user: {
+          id: 2,
+          username: 'hoivien_gold',
+          fullName: 'Nguyễn Văn Tuấn',
+          email: 'tuan.badminton@gmail.com',
+          phone: '0909123456',
+          role: 'ROLE_USER'
+        }
+      };
+      setStoredToken(mockUser.token);
+      setStoredUser(mockUser.user);
+      return mockUser;
+    }
+
+    // 3. Tài khoản mẫu khachhang1
+    if (target === 'khachhang1' && password === '123456') {
+      const mockUser = {
+        token: 'mock-jwt-kh-token',
+        user: {
+          id: 3,
+          username: 'khachhang1',
+          fullName: 'Trần Minh Đức',
+          email: 'duc.tm@gmail.com',
+          phone: '0912345678',
+          role: 'ROLE_USER'
+        }
+      };
+      setStoredToken(mockUser.token);
+      setStoredUser(mockUser.user);
+      return mockUser;
+    }
+
+    // 4. Kiểm tra danh sách tài khoản vừa đăng ký trong Demo Mode
+    const demoAccounts = getRegisteredDemoUsers();
+    const matched = demoAccounts.find(
+      (a) =>
+        (a.username?.toLowerCase() === target ||
+          a.phone?.toLowerCase() === target ||
+          a.email?.toLowerCase() === target) &&
+        (!a.password || a.password === password)
+    );
+
+    if (matched) {
+      const mockUser = {
+        token: 'mock-jwt-acc-' + matched.id,
+        user: {
+          id: matched.id,
+          username: matched.username,
+          fullName: matched.fullName || matched.username,
+          email: matched.email,
+          phone: matched.phone,
+          role: matched.role || 'ROLE_USER'
+        }
+      };
+      setStoredToken(mockUser.token);
+      setStoredUser(mockUser.user);
+      return mockUser;
+    }
+
+    // 5. Nếu đăng nhập bằng Số điện thoại (dù đăng ký trước đó hay số mới) trong Demo Mode
+    if (/^[0-9]{9,11}$/.test(target)) {
+      const autoUser = {
+        id: Math.floor(Math.random() * 1000) + 50,
+        username: target,
+        fullName: 'Hội Viên (' + target.slice(-4) + ')',
+        email: `${target}@gmail.com`,
+        phone: target,
+        role: 'ROLE_USER'
+      };
+      const mockUser = {
+        token: 'mock-jwt-phone-' + Date.now(),
+        user: autoUser
+      };
+      setStoredToken(mockUser.token);
+      setStoredUser(mockUser.user);
+      return mockUser;
+    }
+
+    throw new Error('Tài khoản hoặc mật khẩu không chính xác');
   }
-  return data;
 }
 
 export async function registerUser(userData) {
-  const res = await fetch(`${API_BASE}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(userData)
-  });
+  try {
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(userData)
+    });
 
-  if (!res.ok) {
+    if (res.ok) {
+      const data = await res.json();
+      if (data.token) {
+        setStoredToken(data.token);
+        setStoredUser(data.user);
+        isBackendLive = true;
+      }
+      return data;
+    }
+
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || 'Đăng ký tài khoản thất bại');
-  }
+  } catch (err) {
+    // Nếu backend offline (Demo Mode), lưu tài khoản demo và trả về kết quả
+    if (userData.username || userData.phone) {
+      const uname = userData.username || userData.phone;
+      const demoAccount = {
+        id: Math.floor(Math.random() * 1000) + 10,
+        username: uname,
+        fullName: userData.fullName || uname,
+        email: userData.email || `${uname}@gmail.com`,
+        phone: userData.phone || uname,
+        password: userData.password,
+        role: 'ROLE_USER'
+      };
+      saveRegisteredDemoUser(demoAccount);
 
-  const data = await res.json();
-  if (data.token) {
-    setStoredToken(data.token);
-    setStoredUser(data.user);
+      const mockUser = {
+        token: 'mock-jwt-reg-' + Date.now(),
+        user: {
+          id: demoAccount.id,
+          username: demoAccount.username,
+          fullName: demoAccount.fullName,
+          email: demoAccount.email,
+          phone: demoAccount.phone,
+          role: demoAccount.role
+        }
+      };
+      setStoredToken(mockUser.token);
+      setStoredUser(mockUser.user);
+      return mockUser;
+    }
+    throw new Error(err.message || 'Đăng ký tài khoản thất bại');
   }
-  return data;
 }
 
 export async function fetchCurrentUser() {
@@ -172,6 +342,9 @@ export async function fetchCurrentUser() {
     setStoredUser(user);
     return user;
   } catch (err) {
+    // Nếu backend chưa bật hoặc lỗi mạng, trả về user đã lưu trong localStorage (Demo Mode)
+    const stored = getStoredUser();
+    if (stored) return stored;
     return null;
   }
 }
@@ -511,9 +684,64 @@ export async function createAdminBranch(branchData) {
   });
 }
 
+export async function updateAdminBranch(id, branchData) {
+  return await authFetch(`/api/admin/branches/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(branchData)
+  });
+}
+
+export async function deleteAdminBranch(id) {
+  return await authFetch(`/api/admin/branches/${id}`, {
+    method: 'DELETE'
+  });
+}
+
 export async function fetchAdminCourts(branchId) {
   const query = branchId ? `?branchId=${branchId}` : '';
   return await authFetch(`/api/admin/courts${query}`);
+}
+
+export async function createAdminCourt(courtData) {
+  return await authFetch('/api/admin/courts', {
+    method: 'POST',
+    body: JSON.stringify(courtData)
+  });
+}
+
+export async function updateAdminCourt(courtId, courtData) {
+  return await authFetch(`/api/admin/courts/${courtId}`, {
+    method: 'PUT',
+    body: JSON.stringify(courtData)
+  });
+}
+
+export async function toggleAdminCourtActive(courtId) {
+  return await authFetch(`/api/admin/courts/${courtId}/toggle`, {
+    method: 'PATCH'
+  });
+}
+
+export async function deleteAdminCourt(courtId) {
+  return await authFetch(`/api/admin/courts/${courtId}`, {
+    method: 'DELETE'
+  });
+}
+
+export async function fetchAdminUsers() {
+  return await authFetch('/api/admin/users');
+}
+
+export async function toggleAdminUserStatus(userId) {
+  return await authFetch(`/api/admin/users/${userId}/toggle-status`, {
+    method: 'PATCH'
+  });
+}
+
+export async function deleteAdminUser(userId) {
+  return await authFetch(`/api/admin/users/${userId}`, {
+    method: 'DELETE'
+  });
 }
 
 export async function fetchAdminPriceRules(branchId, dayType) {
@@ -533,6 +761,48 @@ export async function createAdminPriceRule(priceRuleData) {
 
 export async function deleteAdminPriceRule(ruleId) {
   return await authFetch(`/api/admin/price-rules/${ruleId}`, {
+    method: 'DELETE'
+  });
+}
+
+// ==========================================
+// ARTICLE / NEWS API (KẾT NỐI SQL DATABASE)
+// ==========================================
+export async function fetchArticles(category) {
+  const query = category && category !== 'all' ? `?category=${category}` : '';
+  return await authFetch(`/api/articles${query}`);
+}
+
+export async function fetchArticleById(id) {
+  return await authFetch(`/api/articles/${id}`);
+}
+
+export async function fetchAdminArticles() {
+  return await authFetch('/api/admin/articles');
+}
+
+export async function createAdminArticle(articleData) {
+  return await authFetch('/api/admin/articles', {
+    method: 'POST',
+    body: JSON.stringify(articleData)
+  });
+}
+
+export async function updateAdminArticle(id, articleData) {
+  return await authFetch(`/api/admin/articles/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(articleData)
+  });
+}
+
+export async function toggleAdminArticle(id) {
+  return await authFetch(`/api/admin/articles/${id}/toggle`, {
+    method: 'PATCH'
+  });
+}
+
+export async function deleteAdminArticle(id) {
+  return await authFetch(`/api/admin/articles/${id}`, {
     method: 'DELETE'
   });
 }

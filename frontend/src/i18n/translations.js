@@ -2,7 +2,7 @@
 export const translations = {
   vi: {
     // Brand
-    brandName: 'WAYS STATION',
+    brandName: 'D2 SHOP',
     brandSub: 'BADMINTON CLUB',
 
     // Navbar
@@ -188,7 +188,7 @@ export const translations = {
 
   en: {
     // Brand
-    brandName: 'WAYS STATION',
+    brandName: 'D2 SHOP',
     brandSub: 'BADMINTON CLUB',
 
     // Navbar

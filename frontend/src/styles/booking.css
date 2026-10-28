@@ -347,32 +347,37 @@ body {
     width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    padding: 10px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin-bottom: 14px;
     scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-color: #94a3b8 #f1f5f9;
 }
 
 .matrix-scroll-container::-webkit-scrollbar {
-    height: 8px;
+    height: 9px;
 }
 
 .matrix-scroll-container::-webkit-scrollbar-track {
-    background: transparent;
+    background: #f1f5f9;
+    border-radius: 6px;
 }
 
 .matrix-scroll-container::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
+    background: #94a3b8;
+    border-radius: 6px;
+}
+
+.matrix-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #0284c7;
 }
 
 .matrix-blocks-wrapper {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    width: max-content;
+    width: 100%;
 }
 
 /* Court Block Group */

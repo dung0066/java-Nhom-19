@@ -5,6 +5,7 @@ export default function AdminBookingsTab({
   bookings = [],
   onRefresh,
   onConfirmPayment,
+  onCheckinBooking,
   onCancelBooking,
   isLoading
 }) {
@@ -23,8 +24,12 @@ export default function AdminBookingsTab({
   let totalRevenue = 0;
   let totalHours = 0;
   const totalBookings = bookings.length;
+  let pendingCount = 0;
 
   bookings.forEach((b) => {
+    if (b.status === 'PENDING' || b.status === 'WAITING_PAYMENT') {
+      pendingCount++;
+    }
     if (b.status !== 'CANCELLED') {
       totalRevenue += b.totalAmount || 0;
       totalHours += b.details ? b.details.length : 1;
@@ -40,7 +45,8 @@ export default function AdminBookingsTab({
       (b.customerName && b.customerName.toLowerCase().includes(q)) ||
       (b.customerPhone && b.customerPhone.toLowerCase().includes(q));
 
-    const matchBranch = !branchFilter || (b.branch && b.branch.code === branchFilter);
+    const branchCode = b.branch?.code || b.branchCode || '';
+    const matchBranch = !branchFilter || branchCode === branchFilter;
     const matchStatus = !statusFilter || b.status === statusFilter;
 
     return matchQuery && matchBranch && matchStatus;
@@ -81,7 +87,7 @@ export default function AdminBookingsTab({
 
   return (
     <section id="bookingsTab" className="tab-pane">
-      {/* 1. STATS CARDS WITH GSAP STAGGER */}
+      {/* 1. STATS CARDS */}
       <div className="stats-grid" ref={statsGridRef}>
         <div className="stat-card">
           <div className="stat-icon">
@@ -114,11 +120,11 @@ export default function AdminBookingsTab({
         </div>
         <div className="stat-card orange">
           <div className="stat-icon">
-            <i className="fa-solid fa-share-nodes"></i>
+            <i className="fa-solid fa-bell"></i>
           </div>
           <div className="stat-meta">
-            <h4>Yêu Cầu Cần Pass</h4>
-            <div className="stat-val">1</div>
+            <h4>Đơn Cần Xử Lý</h4>
+            <div className="stat-val">{pendingCount}</div>
           </div>
         </div>
       </div>
@@ -126,9 +132,14 @@ export default function AdminBookingsTab({
       {/* 2. TABLE CARD */}
       <div className="admin-content-card">
         <div className="card-header-flex">
-          <h3>
-            <i className="fa-solid fa-list-check"></i> Danh Sách Khách Đặt Sân Trực Tuyến
-          </h3>
+          <div>
+            <h3 style={{ margin: 0 }}>
+              <i className="fa-solid fa-list-check"></i> Danh Sách Khách Đặt Sân Trực Tuyến
+            </h3>
+            <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px', margin: '4px 0 0 0' }}>
+              Quản lý tất cả đơn đặt sân thực tế của khách hàng, xác nhận duyệt đơn, check-in vào sân và xử lý hủy đơn
+            </p>
+          </div>
           <div className="filter-tools-row">
             <div className="input-search-box">
               <i className="fa-solid fa-magnifying-glass"></i>
@@ -145,10 +156,10 @@ export default function AdminBookingsTab({
               onChange={(e) => setBranchFilter(e.target.value)}
             >
               <option value="">Tất cả chi nhánh</option>
-              <option value="NVL">Ways Station NVL</option>
-              <option value="DQII">Ways Station DQII</option>
-              <option value="NQA">Ways Station NQA</option>
-              <option value="HB">Ways Station HB</option>
+              <option value="NVL">D2 NVL (Gò Vấp)</option>
+              <option value="DQII">D2 DQII (Gò Vấp)</option>
+              <option value="NQA">D2 NQA (Tân Phú)</option>
+              <option value="HB">D2 HB (TP. Thủ Đức)</option>
             </select>
             <select
               className="select-filter"
@@ -157,7 +168,9 @@ export default function AdminBookingsTab({
             >
               <option value="">Tất cả trạng thái</option>
               <option value="PAID">Đã thanh toán (PAID)</option>
-              <option value="PENDING">Chờ xác nhận (PENDING)</option>
+              <option value="CONFIRMED">Đã xác nhận (CONFIRMED)</option>
+              <option value="COMPLETED">Đã nhận sân (COMPLETED)</option>
+              <option value="PENDING">Chờ duyệt (PENDING)</option>
               <option value="CANCELLED">Đã hủy (CANCELLED)</option>
             </select>
             <button
@@ -182,7 +195,7 @@ export default function AdminBookingsTab({
                 <th>Khung Giờ & Sân</th>
                 <th>Tổng Tiền</th>
                 <th>Trạng Thái</th>
-                <th>Thao Tác</th>
+                <th>Thao Tác Quản Trị</th>
               </tr>
             </thead>
             <tbody ref={tableBodyRef}>
@@ -203,22 +216,25 @@ export default function AdminBookingsTab({
                   let badgeClass = 'badge-pending';
                   let statusText = 'Chờ xử lý';
 
-                  if (b.status === 'PAID') {
+                  if (b.status === 'PAID' || b.status === 'CONFIRMED') {
                     badgeClass = 'badge-active';
-                    statusText = 'Đã thanh toán';
+                    statusText = 'Đã xác nhận';
+                  } else if (b.status === 'COMPLETED') {
+                    badgeClass = 'badge-active';
+                    statusText = 'Đã nhận sân';
                   } else if (b.status === 'CANCELLED') {
                     badgeClass = 'badge-danger';
-                    statusText = 'Đã hủy';
+                    statusText = 'Đã hủy đơn';
                   }
 
                   const slotsStr = b.details && b.details.length > 0
-                    ? b.details.map((d) => `${d.court ? d.court.name : 'Sân'}: ${d.timeSlot ? d.timeSlot.displayLabel : ''}`).join(', ')
-                    : 'Ca tiêu chuẩn';
+                    ? b.details.map((d) => `${d.court ? (d.court.name || `Sân ${d.court.courtNumber}`) : (d.courtName || 'Sân')}: ${d.timeSlot ? d.timeSlot.displayLabel : (d.timeSlotStr || '')}`).join(', ')
+                    : (b.timeSlotStr || 'Ca tiêu chuẩn');
 
                   return (
-                    <tr key={b.id}>
+                    <tr key={b.id || b.bookingCode}>
                       <td>
-                        <strong>#{b.id}</strong>
+                        <strong style={{ color: '#0284c7' }}>#{b.id || b.bookingCode?.slice(-4)}</strong>
                         <br />
                         <small style={{ color: '#64748b' }}>{b.bookingCode}</small>
                       </td>
@@ -228,13 +244,13 @@ export default function AdminBookingsTab({
                       <td>{b.customerPhone || '---'}</td>
                       <td>
                         <span className="badge-status badge-active">
-                          {b.branch ? b.branch.code : 'NVL'}
+                          {b.branch?.code || b.branchCode || 'NVL'}
                         </span>
                       </td>
-                      <td>{b.bookingDate || '---'}</td>
-                      <td style={{ fontSize: '12px', lineHeight: 1.4 }}>{slotsStr}</td>
+                      <td>{b.bookingDate || 'Hôm nay'}</td>
+                      <td style={{ fontSize: '12px', lineHeight: 1.4, maxWidth: '200px' }}>{slotsStr}</td>
                       <td>
-                        <strong style={{ color: '#ea580c' }}>
+                        <strong style={{ color: '#ea580c', fontSize: '14px' }}>
                           {(b.totalAmount || 0).toLocaleString('vi-VN')} đ
                         </strong>
                       </td>
@@ -243,24 +259,35 @@ export default function AdminBookingsTab({
                       </td>
                       <td>
                         <div className="action-btn-group">
-                          {b.status !== 'PAID' && (
+                          {b.status !== 'PAID' && b.status !== 'CONFIRMED' && b.status !== 'COMPLETED' && b.status !== 'CANCELLED' && (
                             <button
                               type="button"
                               className="btn-tbl btn-tbl-success"
-                              title="Xác nhận thanh toán"
-                              onClick={() => onConfirmPayment(b.id)}
+                              title="Duyệt và xác nhận đơn"
+                              onClick={() => onConfirmPayment && onConfirmPayment(b.id)}
                             >
-                              <i className="fa-solid fa-check"></i>
+                              <i className="fa-solid fa-check"></i> Duyệt
                             </button>
                           )}
-                          {b.status !== 'CANCELLED' && (
+                          {(b.status === 'PAID' || b.status === 'CONFIRMED') && (
+                            <button
+                              type="button"
+                              className="btn-tbl btn-tbl-primary"
+                              style={{ background: '#0284c7', color: '#fff', border: 'none' }}
+                              title="Khách đến sân, bấm Check-in"
+                              onClick={() => onCheckinBooking && onCheckinBooking(b.id)}
+                            >
+                              <i className="fa-solid fa-right-to-bracket"></i> Check-in
+                            </button>
+                          )}
+                          {b.status !== 'CANCELLED' && b.status !== 'COMPLETED' && (
                             <button
                               type="button"
                               className="btn-tbl btn-tbl-delete"
                               title="Hủy đơn đặt sân"
-                              onClick={() => onCancelBooking(b.id)}
+                              onClick={() => onCancelBooking && onCancelBooking(b.id)}
                             >
-                              <i className="fa-solid fa-ban"></i>
+                              <i className="fa-solid fa-xmark"></i> Hủy
                             </button>
                           )}
                         </div>
@@ -273,56 +300,28 @@ export default function AdminBookingsTab({
           </table>
         </div>
 
-        {/* 3. PAGINATION BAR */}
-        {filteredBookings.length > 0 && (
-          <div className="admin-pagination-bar">
-            <div className="pagination-info">
-              Hiển thị <strong>{startIndex + 1} - {endIndex}</strong> trên tổng <strong>{filteredBookings.length}</strong> đơn đặt sân
-              &nbsp;&bull;&nbsp;
-              <label style={{ marginLeft: '8px' }}>
-                Số đơn/trang:
-                <select
-                  className="pagination-size-select"
-                  value={pageSize}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
-                  style={{ marginLeft: '6px' }}
-                >
-                  <option value={5}>5</option>
-                  <option value={8}>8</option>
-                  <option value={15}>15</option>
-                  <option value={25}>25</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="pagination-controls">
+        {/* Phân trang */}
+        {filteredBookings.length > pageSize && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
+            <span style={{ fontSize: '13px', color: '#64748b' }}>
+              Hiển thị <strong>{startIndex + 1}</strong> - <strong>{endIndex}</strong> / <strong>{filteredBookings.length}</strong> đơn đặt sân
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
               <button
                 type="button"
-                className="btn-page-nav"
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: currentPage === 1 ? '#f1f5f9' : '#fff', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
               >
-                <i className="fa-solid fa-chevron-left"></i> Trước
+                Trước
               </button>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
-                <button
-                  key={pageNumber}
-                  type="button"
-                  className={`page-number-btn ${currentPage === pageNumber ? 'active' : ''}`}
-                  onClick={() => setCurrentPage(pageNumber)}
-                >
-                  {pageNumber}
-                </button>
-              ))}
-
               <button
                 type="button"
-                className="btn-page-nav"
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: currentPage === totalPages ? '#f1f5f9' : '#fff', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
               >
-                Tiếp <i className="fa-solid fa-chevron-right"></i>
+                Sau
               </button>
             </div>
           </div>
