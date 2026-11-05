@@ -408,7 +408,7 @@ export default function AccountModal({
                           </span>
                         </div>
 
-                        {/* Nút thanh toán trực tiếp từ lịch sử */}
+                        {/* Nút tiếp tục thanh toán trực tiếp từ lịch sử đơn hàng */}
                         {ord.status === 'PENDING' && (
                           <button
                             type="button"
@@ -416,22 +416,27 @@ export default function AccountModal({
                             style={{
                               marginTop: '12px',
                               width: '100%',
-                              padding: '9px 14px',
-                              borderRadius: '8px',
+                              padding: '11px 16px',
+                              borderRadius: '10px',
                               border: 'none',
-                              background: '#0284c7',
+                              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
                               color: '#ffffff',
-                              fontSize: '12.5px',
-                              fontWeight: '700',
+                              fontSize: '13px',
+                              fontWeight: '800',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              gap: '6px'
+                              gap: '8px',
+                              boxShadow: '0 4px 12px rgba(2, 132, 199, 0.25)'
                             }}
                           >
-                            <i className="fa-solid fa-qrcode"></i>
-                            <span>{isDepositOrder ? 'Thanh toán tiền cọc 50% ngay' : 'Thanh toán đơn hàng ngay'}</span>
+                            <i className="fa-solid fa-qrcode" style={{ fontSize: '15px' }}></i>
+                            <span>
+                              {isDepositOrder
+                                ? `Tiếp tục thanh toán cọc 50% (${formatVnd(ord.depositAmount || (ord.totalPrice * 0.5))})`
+                                : `Tiếp tục thanh toán (${formatVnd(ord.totalPrice)})`}
+                            </span>
                           </button>
                         )}
 
@@ -442,22 +447,23 @@ export default function AccountModal({
                             style={{
                               marginTop: '12px',
                               width: '100%',
-                              padding: '9px 14px',
-                              borderRadius: '8px',
+                              padding: '11px 16px',
+                              borderRadius: '10px',
                               border: 'none',
-                              background: '#059669',
+                              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                               color: '#ffffff',
-                              fontSize: '12.5px',
-                              fontWeight: '700',
+                              fontSize: '13px',
+                              fontWeight: '800',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              gap: '6px'
+                              gap: '8px',
+                              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)'
                             }}
                           >
-                            <i className="fa-solid fa-hand-holding-dollar"></i>
-                            <span>Thanh toán nốt 50% online ({formatVnd(ord.remainingAmount || (ord.totalPrice * 0.5))})</span>
+                            <i className="fa-solid fa-qrcode" style={{ fontSize: '15px' }}></i>
+                            <span>Tiếp tục thanh toán nốt 50% online ({formatVnd(ord.remainingAmount || (ord.totalPrice * 0.5))})</span>
                           </button>
                         )}
                       </div>

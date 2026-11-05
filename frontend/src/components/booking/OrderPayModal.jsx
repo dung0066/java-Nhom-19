@@ -259,13 +259,59 @@ export default function OrderPayModal({ isOpen, onClose, booking, currentUser, o
                   border: '1px solid #e2e8f0'
                 }}
               />
-              <div style={{ fontSize: '12px', color: '#334155', lineHeight: '1.5' }}>
-                {BANK_NAME}
-                <br />
-                STK: <strong>{BANK_ACCOUNT_NO}</strong> - Tên: <strong>{BANK_ACCOUNT_NAME}</strong>
-                <br />
-                Nội dung CK: <strong style={{ color: '#0284c7' }}>{booking.bookingCode}</strong>
+              <div style={{ fontSize: '12px', color: '#334155', lineHeight: '1.6' }}>
+                <div style={{ fontWeight: '700', color: '#0369a1', marginBottom: '2px' }}>{BANK_NAME}</div>
+                <div>STK: <strong>{BANK_ACCOUNT_NO}</strong> - Tên: <strong>{BANK_ACCOUNT_NAME}</strong></div>
+                <div>Nội dung CK: <strong style={{ color: '#0284c7' }}>{booking.bookingCode}</strong></div>
               </div>
+
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(BANK_ACCOUNT_NO);
+                    setMessage('✓ Đã sao chép số tài khoản: ' + BANK_ACCOUNT_NO);
+                  }}
+                  style={{
+                    padding: '5px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    fontSize: '11.5px',
+                    fontWeight: '600',
+                    color: '#334155',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <i className="fa-solid fa-copy"></i> Chép STK
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(booking.bookingCode);
+                    setMessage('✓ Đã sao chép nội dung: ' + booking.bookingCode);
+                  }}
+                  style={{
+                    padding: '5px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    fontSize: '11.5px',
+                    fontWeight: '600',
+                    color: '#334155',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <i className="fa-solid fa-copy"></i> Chép Nội Dung
+                </button>
+              </div>
+
               <div
                 style={{
                   marginTop: '12px',
@@ -281,6 +327,41 @@ export default function OrderPayModal({ isOpen, onClose, booking, currentUser, o
                 }}
               >
                 <i className="fa-solid fa-spinner fa-spin"></i> Chờ hệ thống tự động xác nhận sau khi chuyển...
+              </div>
+
+              <div style={{ marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setMessage('Đang kiểm tra giao dịch...');
+                    try {
+                      const res = await fetch(`/api/booking/code/${booking.bookingCode}`);
+                      if (res.ok) {
+                        const data = await res.json();
+                        if (data && (data.status === 'CONFIRMED' || (booking.status === 'PENDING' && data.status === 'DEPOSITED'))) {
+                          setIsSuccess(true);
+                          setMessage('🎉 Thanh toán thành công! Giao dịch đã được hệ thống ghi nhận.');
+                          setTimeout(() => { if (onSuccess) onSuccess(); }, 1500);
+                        } else {
+                          setMessage('Hệ thống chưa nhận được tiền từ SePay webhook. Nếu vừa chuyển, vui lòng đợi 5-10 giây để ngân hàng gửi tín hiệu!');
+                        }
+                      }
+                    } catch (e) {
+                      setMessage('Chưa thể kiểm tra trạng thái lúc này. Vui lòng thử lại sau vài giây.');
+                    }
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#0284c7',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  <i className="fa-solid fa-rotate"></i> Tôi đã chuyển tiền, kiểm tra ngay
+                </button>
               </div>
             </div>
           )}

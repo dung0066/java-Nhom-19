@@ -23,8 +23,9 @@ export default function AdminProductsTab({
   onRefresh,
   isLoading
 }) {
-  const isStaff = currentUser?.role === 'ROLE_STAFF' || currentUser?.role === 'STAFF';
-  const staffBranchId = currentUser?.managedBranchId;
+  const isAdmin = currentUser?.role === 'ROLE_ADMIN' || currentUser?.role === 'ADMIN' || currentUser?.username === 'admin';
+  const isStaff = !isAdmin && (currentUser?.role === 'ROLE_STAFF' || currentUser?.role === 'STAFF');
+  const staffBranchId = isStaff ? currentUser?.managedBranchId : null;
 
   // Chế độ xem: 'catalog' (danh mục chung) | 'inventory' (tồn kho chi nhánh)
   const [viewMode, setViewMode] = useState(isStaff ? 'inventory' : 'catalog');

@@ -617,9 +617,9 @@ export default function AdminPage({ onNavigate }) {
     return () => clearInterval(interval);
   }, [adminPayBooking, adminPayMethod]);
 
-  const handleAssignBranchManager = async (branchId, userId) => {
+  const handleAssignBranchManager = async (branchId, userId, role = 'ROLE_ADMIN') => {
     try {
-      await assignBranchManager(branchId, userId);
+      await assignBranchManager(branchId, userId, role);
       alert('Đã ủy quyền Quản lý cửa hàng (Store Manager) thành công!');
       loadData();
     } catch (err) {
@@ -1101,11 +1101,15 @@ export default function AdminPage({ onNavigate }) {
             </h2>
             <p style={{ fontSize: '12px', opacity: 0.9, margin: '4px 0 0 0', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <span>Xin chào, <strong>{currentUser.fullName || currentUser.username}</strong> ({currentUser.role || 'ROLE_ADMIN'})</span>
-              {currentUser?.managedBranchName && (
+              {(currentUser.role === 'ROLE_ADMIN' || currentUser.role === 'ADMIN' || currentUser.username === 'admin') ? (
+                <span style={{ background: '#10b981', color: '#fff', padding: '2px 10px', borderRadius: '6px', fontWeight: 800, fontSize: '11.5px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                  <i className="fa-solid fa-crown"></i> Toàn Quyền Quản Trị Hệ Thống (Tất Cả Chi Nhánh)
+                </span>
+              ) : currentUser?.managedBranchName ? (
                 <span style={{ background: '#f59e0b', color: '#1e293b', padding: '2px 10px', borderRadius: '6px', fontWeight: 800, fontSize: '11.5px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                   <i className="fa-solid fa-shop"></i> Quản Lý Cửa Hàng: {currentUser.managedBranchName} ({currentUser.managedBranchCode})
                 </span>
-              )}
+              ) : null}
             </p>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>

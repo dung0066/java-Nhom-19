@@ -763,6 +763,33 @@ export default function BookingPage({ onNavigate }) {
         setSlotStatusMap((prev) => ({ ...prev, ...existingLocal }));
       } catch (_) {}
 
+      // Lưu đơn vào lịch sử local (d2_user_bookings) để khách có thể xem và tiếp tục thanh toán online bất cứ lúc nào
+      try {
+        const existingBookings = JSON.parse(localStorage.getItem('d2_user_bookings') || '[]');
+        const newRecord = {
+          id: result.bookingId,
+          bookingCode: result.bookingCode,
+          status: result.status,
+          customerName,
+          customerPhone,
+          customerEmail,
+          branchCode: branch,
+          branchName: currentBranchObj.name,
+          branch: { name: currentBranchObj.name, code: branch, address: currentBranchObj.address },
+          bookingDate: date,
+          totalPrice: Number(result.totalPrice) || 0,
+          paidAmount: Number(result.paidAmount) || (depositOption === "DEPOSIT_50" ? depositAmount : totalAmount),
+          remainingAmount: Number(result.remainingAmount) || (depositOption === "DEPOSIT_50" ? remainingAmount : 0),
+          depositAmount: Number(result.depositAmount) || depositAmount,
+          isDeposit: result.isDeposit || depositOption === "DEPOSIT_50",
+          paymentType,
+          paymentStatus: result.paymentStatus,
+          createdAt: new Date().toISOString()
+        };
+        const updatedBookings = [newRecord, ...existingBookings.filter((b) => b.bookingCode !== result.bookingCode)];
+        localStorage.setItem('d2_user_bookings', JSON.stringify(updatedBookings));
+      } catch (_) {}
+
       if (paymentType === "WALLET") notifyMembershipChanged();
       setCurrentStep("success");
       loadMatrix(branch, date);
@@ -2681,6 +2708,15 @@ export default function BookingPage({ onNavigate }) {
                 <button
                   type="button"
                   className="btn-step-prev"
+                  style={{ background: "#f0f9ff", color: "#0284c7", borderColor: "#bae6fd" }}
+                  onClick={() => setIsHistoryModalOpen(true)}
+                >
+                  <i className="fa-solid fa-receipt"></i> Lịch Sử Đơn Đặt
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-step-prev"
                   onClick={() => onNavigate("home")}
                 >
                   <i className="fa-solid fa-house"></i> Về Trang Chủ
@@ -2700,6 +2736,7 @@ export default function BookingPage({ onNavigate }) {
       <OrderHistoryModal
         isOpen={isHistoryModalOpen}
         onClose={() => setIsHistoryModalOpen(false)}
+        currentUser={currentUser}
       />
 
       <GuideModal

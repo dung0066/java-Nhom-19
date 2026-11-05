@@ -569,10 +569,10 @@ export async function fetchBranchDelegations() {
   return await authFetch('/api/admin/branches/delegations');
 }
 
-export async function assignBranchManager(branchId, userId) {
+export async function assignBranchManager(branchId, userId, role = 'ROLE_ADMIN') {
   return await authFetch(`/api/admin/branches/${branchId}/assign-manager`, {
     method: 'POST',
-    body: JSON.stringify({ userId: parseInt(userId, 10) })
+    body: JSON.stringify({ userId: parseInt(userId, 10), role })
   });
 }
 

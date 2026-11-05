@@ -198,9 +198,9 @@ export default function BookingLookupModal({ isOpen, onClose }) {
                               background: '#0284c7',
                               color: '#ffffff',
                               border: 'none',
-                              padding: '7px 12px',
-                              borderRadius: '6px',
-                              fontSize: '12px',
+                              padding: '8px 14px',
+                              borderRadius: '8px',
+                              fontSize: '12.5px',
                               fontWeight: '700',
                               cursor: 'pointer',
                               display: 'inline-flex',
@@ -208,8 +208,8 @@ export default function BookingLookupModal({ isOpen, onClose }) {
                               gap: '6px'
                             }}
                           >
-                            <QrCode size={13} />
-                            <span>{isDepositOrder ? 'Thanh toán tiền cọc 50%' : 'Thanh toán ngay (VietQR)'}</span>
+                            <QrCode size={14} />
+                            <span>{isDepositOrder ? 'Tiếp tục thanh toán cọc 50% (Mã VietQR)' : 'Tiếp tục thanh toán (Mã VietQR)'}</span>
                           </button>
                         )}
 
@@ -221,9 +221,9 @@ export default function BookingLookupModal({ isOpen, onClose }) {
                               background: '#059669',
                               color: '#ffffff',
                               border: 'none',
-                              padding: '7px 12px',
-                              borderRadius: '6px',
-                              fontSize: '12px',
+                              padding: '8px 14px',
+                              borderRadius: '8px',
+                              fontSize: '12.5px',
                               fontWeight: '700',
                               cursor: 'pointer',
                               display: 'inline-flex',
@@ -231,8 +231,8 @@ export default function BookingLookupModal({ isOpen, onClose }) {
                               gap: '6px'
                             }}
                           >
-                            <CreditCard size={13} />
-                            <span>Thanh toán nốt 50% online ({formatVND(b.remainingAmount || (b.totalPrice * 0.5))})</span>
+                            <CreditCard size={14} />
+                            <span>Tiếp tục thanh toán nốt 50% (Mã VietQR)</span>
                           </button>
                         )}
 

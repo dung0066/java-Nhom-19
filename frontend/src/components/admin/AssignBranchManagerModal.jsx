@@ -10,6 +10,7 @@ export default function AssignBranchManagerModal({
   onRevoke
 }) {
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [assignedRole, setAssignedRole] = useState('ROLE_ADMIN');
   const [searchUser, setSearchUser] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -17,8 +18,10 @@ export default function AssignBranchManagerModal({
   useEffect(() => {
     if (currentManager) {
       setSelectedUserId(currentManager.id || '');
+      setAssignedRole(currentManager.role || 'ROLE_ADMIN');
     } else {
       setSelectedUserId('');
+      setAssignedRole('ROLE_ADMIN');
     }
     setSearchUser('');
     setErrorMsg('');
@@ -46,7 +49,7 @@ export default function AssignBranchManagerModal({
     setIsSubmitting(true);
     setErrorMsg('');
     try {
-      await onAssign(branch.id || branch.branchId, Number(selectedUserId));
+      await onAssign(branch.id || branch.branchId, Number(selectedUserId), assignedRole);
       onClose();
     } catch (err) {
       setErrorMsg(err.message || 'Có lỗi xảy ra khi ủy quyền.');
@@ -141,9 +144,73 @@ export default function AssignBranchManagerModal({
             </select>
           </div>
 
+          <div className="form-group-item" style={{ marginBottom: '14px' }}>
+            <label style={{ fontWeight: '700', fontSize: '13.5px', color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <i className="fa-solid fa-shield-halved" style={{ color: '#0284c7' }}></i>
+              Cấp Quyền Hệ Thống Cho Quản Lý
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
+              <label
+                style={{
+                  border: assignedRole === 'ROLE_ADMIN' ? '2px solid #0284c7' : '1px solid #cbd5e1',
+                  background: assignedRole === 'ROLE_ADMIN' ? '#f0f9ff' : '#ffffff',
+                  padding: '10px 12px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '8px'
+                }}
+              >
+                <input
+                  type="radio"
+                  name="assignRole"
+                  value="ROLE_ADMIN"
+                  checked={assignedRole === 'ROLE_ADMIN'}
+                  onChange={() => setAssignedRole('ROLE_ADMIN')}
+                  style={{ marginTop: '3px' }}
+                />
+                <div>
+                  <strong style={{ fontSize: '13px', color: '#0369a1', display: 'block' }}>ROLE_ADMIN (Toàn quyền)</strong>
+                  <span style={{ fontSize: '11.5px', color: '#64748b', lineHeight: 1.3, display: 'block', marginTop: '2px' }}>
+                    Truy cập toàn bộ hệ thống: tất cả chi nhánh, sân đấu, đơn hàng, khách hàng, cấu hình bảng giá.
+                  </span>
+                </div>
+              </label>
+
+              <label
+                style={{
+                  border: assignedRole === 'ROLE_STAFF' ? '2px solid #10b981' : '1px solid #cbd5e1',
+                  background: assignedRole === 'ROLE_STAFF' ? '#ecfdf5' : '#ffffff',
+                  padding: '10px 12px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '8px'
+                }}
+              >
+                <input
+                  type="radio"
+                  name="assignRole"
+                  value="ROLE_STAFF"
+                  checked={assignedRole === 'ROLE_STAFF'}
+                  onChange={() => setAssignedRole('ROLE_STAFF')}
+                  style={{ marginTop: '3px' }}
+                />
+                <div>
+                  <strong style={{ fontSize: '13px', color: '#047857', display: 'block' }}>ROLE_STAFF (Cửa hàng)</strong>
+                  <span style={{ fontSize: '11.5px', color: '#64748b', lineHeight: 1.3, display: 'block', marginTop: '2px' }}>
+                    Phụ trách quản lý đơn đặt sân và kho dụng cụ tại chi nhánh {branch.name}.
+                  </span>
+                </div>
+              </label>
+            </div>
+          </div>
+
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '12px', fontSize: '12.5px', color: '#166534', marginBottom: '20px', lineHeight: 1.5 }}>
-            <i className="fa-solid fa-circle-info" style={{ marginRight: '6px' }}></i>
-            <strong>Quyền hạn Store Manager:</strong> Tài khoản được ủy quyền sẽ tự động được gán quyền <strong>ROLE_STAFF</strong>, chỉ có thể xem đơn hàng và quản lý số lượng tồn kho (qty) tại đúng chi nhánh <strong>{branch.name}</strong> này.
+            <i className="fa-solid fa-circle-check" style={{ marginRight: '6px', color: '#10b981' }}></i>
+            <strong>Quyền hạn tài khoản:</strong> Tài khoản có vai trò <strong>ROLE_ADMIN</strong> luôn được phép truy cập toàn bộ hệ thống D2 BadmintonShop (tất cả 4 chi nhánh, cấu hình giá, tài khoản, doanh thu) mà không bị giới hạn.
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>

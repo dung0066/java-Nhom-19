@@ -175,8 +175,15 @@ public class AdminBranchController {
         com.example.Dat_san_cau_long.model.User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng ID: " + userId));
 
-        // Nâng quyền tài khoản thành ROLE_STAFF (Quản lý cửa hàng) nếu chưa phải admin
-        if (user.getRole() != com.example.Dat_san_cau_long.model.enums.UserRole.ROLE_ADMIN) {
+        // Phân quyền tài khoản: nếu body yêu cầu ROLE_ADMIN hoặc user đã là ROLE_ADMIN thì giữ quyền Admin toàn bộ hệ thống
+        String requestedRole = body.get("role") != null ? String.valueOf(body.get("role")).toUpperCase() : null;
+        if ("ROLE_ADMIN".equals(requestedRole) || "ADMIN".equals(requestedRole)) {
+            user.setRole(com.example.Dat_san_cau_long.model.enums.UserRole.ROLE_ADMIN);
+            userRepository.save(user);
+        } else if ("ROLE_STAFF".equals(requestedRole) || "STAFF".equals(requestedRole)) {
+            user.setRole(com.example.Dat_san_cau_long.model.enums.UserRole.ROLE_STAFF);
+            userRepository.save(user);
+        } else if (user.getRole() != com.example.Dat_san_cau_long.model.enums.UserRole.ROLE_ADMIN) {
             user.setRole(com.example.Dat_san_cau_long.model.enums.UserRole.ROLE_STAFF);
             userRepository.save(user);
         }
