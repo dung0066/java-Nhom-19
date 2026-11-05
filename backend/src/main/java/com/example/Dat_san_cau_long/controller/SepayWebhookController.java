@@ -6,6 +6,8 @@ import com.example.Dat_san_cau_long.model.BookingDetail;
 import com.example.Dat_san_cau_long.model.Payment;
 import com.example.Dat_san_cau_long.model.enums.BookingDetailStatus;
 import com.example.Dat_san_cau_long.model.enums.BookingStatus;
+import com.example.Dat_san_cau_long.model.enums.PaymentMethod;
+import com.example.Dat_san_cau_long.model.enums.PaymentPurpose;
 import com.example.Dat_san_cau_long.model.enums.PaymentStatus;
 import com.example.Dat_san_cau_long.repository.BookingRepository;
 import com.example.Dat_san_cau_long.repository.PaymentRepository;
@@ -17,10 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 /**
  * Controller tiếp nhận Webhook thanh toán tự động từ SePay.
@@ -74,9 +76,12 @@ public class SepayWebhookController {
         String normalizedContent = rawContent.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
         BigDecimal transferAmount = payload.getTransferAmount() != null ? payload.getTransferAmount() : BigDecimal.ZERO;
 
-        // 3. Tìm đơn đặt sân đang chờ thanh toán khớp với nội dung chuyển khoản
+        // 3. Tìm đơn đặt sân đang chờ thanh toán hoặc đã cọc chờ thanh toán nốt
         List<Booking> pendingBookings = bookingRepository.findByStatusOrderByCreatedAtDesc(BookingStatus.PENDING);
+        List<Booking> depositedBookings = bookingRepository.findByStatusOrderByCreatedAtDesc(BookingStatus.DEPOSITED);
+
         Booking matchedBooking = null;
+        boolean isRemainingPayment = false;
 
         for (Booking booking : pendingBookings) {
             String code = booking.getBookingCode();
@@ -84,58 +89,122 @@ public class SepayWebhookController {
                 String normalizedCode = code.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
                 if (!normalizedCode.isEmpty() && normalizedContent.contains(normalizedCode)) {
                     matchedBooking = booking;
+                    isRemainingPayment = false;
                     break;
+                }
+            }
+        }
+
+        if (matchedBooking == null) {
+            for (Booking booking : depositedBookings) {
+                String code = booking.getBookingCode();
+                if (code != null) {
+                    String normalizedCode = code.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
+                    if (!normalizedCode.isEmpty() && normalizedContent.contains(normalizedCode)) {
+                        matchedBooking = booking;
+                        isRemainingPayment = true;
+                        break;
+                    }
                 }
             }
         }
 
         // 4. Nếu tìm thấy đơn đặt sân
         if (matchedBooking != null) {
-            log.info("[SePay Webhook] Tìm thấy đơn đặt sân phù hợp: ID={}, Code={}, Cần thanh toán={}",
-                    matchedBooking.getId(), matchedBooking.getBookingCode(), matchedBooking.getTotalPrice());
+            if (!isRemainingPayment) {
+                // Xử lý đơn PENDING (thanh toán cọc 50% hoặc thanh toán đủ 100%)
+                boolean isDeposit = matchedBooking.isDeposit();
+                BookingStatus targetStatus = isDeposit ? BookingStatus.DEPOSITED : BookingStatus.CONFIRMED;
+                log.info("[SePay Webhook] Tìm thấy đơn PENDING phù hợp: ID={}, Code={}, IsDeposit={}, TargetStatus={}",
+                        matchedBooking.getId(), matchedBooking.getBookingCode(), isDeposit, targetStatus);
 
-            // Cập nhật trạng thái đơn thành ĐÃ XÁC NHẬN (CONFIRMED)
-            matchedBooking.setStatus(BookingStatus.CONFIRMED);
-            matchedBooking.setHoldExpiresAt(null);
+                matchedBooking.setStatus(targetStatus);
+                matchedBooking.setHoldExpiresAt(null);
 
-            if (matchedBooking.getDetails() != null) {
-                for (BookingDetail detail : matchedBooking.getDetails()) {
-                    detail.setStatus(BookingDetailStatus.BOOKED);
+                if (matchedBooking.getDetails() != null) {
+                    for (BookingDetail detail : matchedBooking.getDetails()) {
+                        detail.setStatus(BookingDetailStatus.BOOKED);
+                    }
                 }
-            }
 
-            // Cập nhật Payment thành PAID
-            List<Payment> payments = paymentRepository.findByBookingId(matchedBooking.getId());
-            for (Payment p : payments) {
-                if (p.getStatus() == PaymentStatus.PENDING) {
-                    p.setStatus(PaymentStatus.PAID);
-                    p.setPaidAt(LocalDateTime.now());
-                    p.setProviderTxnCode(payload.getReferenceCode() != null ? payload.getReferenceCode() : String.valueOf(payload.getId()));
-                    paymentRepository.save(p);
+                // Cập nhật Payment thành PAID
+                List<Payment> payments = paymentRepository.findByBookingId(matchedBooking.getId());
+                for (Payment p : payments) {
+                    if (p.getStatus() == PaymentStatus.PENDING) {
+                        p.setStatus(PaymentStatus.PAID);
+                        p.setPaidAt(LocalDateTime.now());
+                        p.setProviderTxnCode(payload.getReferenceCode() != null ? payload.getReferenceCode() : String.valueOf(payload.getId()));
+                        paymentRepository.save(p);
+                    }
                 }
+
+                bookingRepository.save(matchedBooking);
+
+                try {
+                    emailService.sendBookingSuccessEmail(matchedBooking);
+                } catch (Exception ex) {
+                    log.error("[SePay Webhook] Lỗi khi gửi email xác nhận đặt sân: {}", ex.getMessage());
+                }
+
+                Map<String, Object> res = new HashMap<>();
+                res.put("success", true);
+                res.put("message", "Xác nhận thanh toán tự động thành công (" + (isDeposit ? "Cọc 50%" : "Đủ 100%") + ") cho đơn " + matchedBooking.getBookingCode());
+                res.put("bookingCode", matchedBooking.getBookingCode());
+                res.put("status", matchedBooking.getStatus().name());
+                return ResponseEntity.ok(res);
+            } else {
+                // Xử lý đơn DEPOSITED (khách thanh toán nốt 50% còn lại qua VietQR)
+                log.info("[SePay Webhook] Thu nốt phần còn lại qua VietQR cho đơn DEPOSITED: ID={}, Code={}, Nhận={}",
+                        matchedBooking.getId(), matchedBooking.getBookingCode(), transferAmount);
+
+                BigDecimal remaining = matchedBooking.getRemainingAmount();
+                BigDecimal payAmount = (transferAmount != null && transferAmount.compareTo(BigDecimal.ZERO) > 0)
+                        ? transferAmount
+                        : remaining;
+
+                LocalDate date = matchedBooking.getBookingDate() != null ? matchedBooking.getBookingDate() : LocalDate.now();
+                Payment remPayment = Payment.builder()
+                        .paymentCode("PAY-REM-" + date.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-" + (100000 + new Random().nextInt(900000)))
+                        .purpose(PaymentPurpose.BOOKING)
+                        .user(matchedBooking.getUser())
+                        .booking(matchedBooking)
+                        .amount(payAmount)
+                        .method(PaymentMethod.VIETQR)
+                        .status(PaymentStatus.PAID)
+                        .paidAt(LocalDateTime.now())
+                        .providerTxnCode(payload.getReferenceCode() != null ? payload.getReferenceCode() : String.valueOf(payload.getId()))
+                        .build();
+                paymentRepository.save(remPayment);
+
+                matchedBooking.setStatus(BookingStatus.CONFIRMED);
+                matchedBooking.setHoldExpiresAt(null);
+                String noteMsg = "[DA_THU_DU] Đã thanh toán nốt qua VietQR: " + payAmount.toPlainString() + " đ";
+                matchedBooking.setNotes(matchedBooking.getNotes() != null && !matchedBooking.getNotes().isBlank()
+                        ? matchedBooking.getNotes() + " | " + noteMsg
+                        : noteMsg);
+
+                bookingRepository.save(matchedBooking);
+
+                try {
+                    emailService.sendBookingSuccessEmail(matchedBooking);
+                } catch (Exception ex) {
+                    log.error("[SePay Webhook] Lỗi khi gửi email xác nhận thanh toán đủ: {}", ex.getMessage());
+                }
+
+                Map<String, Object> res = new HashMap<>();
+                res.put("success", true);
+                res.put("message", "Xác nhận thu nốt số tiền còn lại thành công cho đơn " + matchedBooking.getBookingCode());
+                res.put("bookingCode", matchedBooking.getBookingCode());
+                res.put("status", matchedBooking.getStatus().name());
+                return ResponseEntity.ok(res);
             }
-
-            bookingRepository.save(matchedBooking);
-
-            // Gửi email xác nhận chi tiết đặt sân kèm giờ chơi, sân số mấy tới khách hàng
-            try {
-                emailService.sendBookingSuccessEmail(matchedBooking);
-            } catch (Exception ex) {
-                log.error("[SePay Webhook] Lỗi khi gửi email xác nhận đặt sân: {}", ex.getMessage());
-            }
-
-            Map<String, Object> res = new HashMap<>();
-            res.put("success", true);
-            res.put("message", "Xác nhận thanh toán tự động thành công cho đơn " + matchedBooking.getBookingCode());
-            res.put("bookingCode", matchedBooking.getBookingCode());
-            return ResponseEntity.ok(res);
         }
 
         // 5. Nếu không khớp đơn đặt sân nào
-        log.warn("[SePay Webhook] Không tìm thấy đơn PENDING nào khớp với nội dung: {}", rawContent);
+        log.warn("[SePay Webhook] Không tìm thấy đơn PENDING hoặc DEPOSITED nào khớp với nội dung: {}", rawContent);
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Đã nhận webhook nhưng không tìm thấy đơn PENDING khớp mã"
+                "message", "Đã nhận webhook nhưng không tìm thấy đơn PENDING hoặc DEPOSITED khớp mã"
         ));
     }
 }

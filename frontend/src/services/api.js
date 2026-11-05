@@ -427,6 +427,25 @@ export async function cancelBooking(bookingId) {
   return await res.json();
 }
 
+/**
+ * Thanh toán phần còn lại (cho đơn đặt cọc 50%) qua ví hoặc online
+ */
+export async function payRemainingBooking(bookingId, paymentMethod = 'WALLET') {
+  return await authFetch(`/api/booking/${bookingId}/pay-remaining`, {
+    method: 'POST',
+    body: JSON.stringify({ paymentMethod })
+  });
+}
+
+/**
+ * Thanh toán cọc / đơn PENDING bằng ví D2 BadmintonShop
+ */
+export async function payPendingBookingWithWallet(bookingId) {
+  return await authFetch(`/api/booking/${bookingId}/pay-pending-wallet`, {
+    method: 'POST'
+  });
+}
+
 // ==========================================
 
 // ==========================================

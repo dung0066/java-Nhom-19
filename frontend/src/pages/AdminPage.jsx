@@ -52,6 +52,7 @@ import {
 } from '../services/api';
 
 import { BRANCHES as DEFAULT_BRANCHES, COURTS_NVL, DEFAULT_D2_PRODUCTS } from '../data/courtData';
+import { buildVietQrUrl, formatVnd, BANK_NAME, BANK_ACCOUNT_NO, BANK_ACCOUNT_NAME } from '../services/payment';
 import '../styles/admin.css';
 
 // Dữ liệu mẫu đơn đặt sân sống động cho đồ án khi DB mới chưa có dữ liệu
@@ -223,6 +224,9 @@ export default function AdminPage({ onNavigate }) {
   const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState(null);
+  const [adminPayBooking, setAdminPayBooking] = useState(null);
+  const [adminPayMethod, setAdminPayMethod] = useState('CASH');
+  const [adminPaySubmitting, setAdminPaySubmitting] = useState(false);
 
   const tabContainerRef = useRef(null);
 
@@ -565,17 +569,53 @@ export default function AdminPage({ onNavigate }) {
     }
   };
 
-  const handlePayRemaining = async (id, method = 'CASH') => {
-    if (!window.confirm(`Xác nhận thu nốt 50% số tiền còn lại của đơn #${id} bằng ${method === 'CASH' ? 'tiền mặt' : method}?`)) return;
+  const handlePayRemaining = (target) => {
+    if (typeof target === 'object' && target !== null) {
+      setAdminPayBooking(target);
+      setAdminPayMethod('CASH');
+    } else {
+      const found = bookings.find((b) => b.id === target);
+      if (found) {
+        setAdminPayBooking(found);
+        setAdminPayMethod('CASH');
+      }
+    }
+  };
+
+  const handleExecuteAdminPayRemaining = async (method = adminPayMethod) => {
+    if (!adminPayBooking) return;
+    setAdminPaySubmitting(true);
     try {
-      await payRemainingBookingAdmin(id, method);
-      alert(`Đã thu nốt số tiền còn lại cho đơn #${id} thành công!`);
+      await payRemainingBookingAdmin(adminPayBooking.id, method);
+      alert(`Đã thu nốt số tiền còn lại cho đơn ${adminPayBooking.bookingCode} thành công!`);
+      setAdminPayBooking(null);
+      loadData();
     } catch (err) {
       alert(`Không thể thu nốt: ${err.message}`);
     } finally {
-      loadData();
+      setAdminPaySubmitting(false);
     }
   };
+
+  // Tự động kiểm tra nếu khách quét VietQR tại quầy
+  useEffect(() => {
+    if (!adminPayBooking || adminPayMethod !== 'VIETQR') return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/booking/code/${adminPayBooking.bookingCode}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.status === 'CONFIRMED') {
+            alert(`🎉 Hệ thống SePay đã nhận tiền chuyển khoản cho đơn ${adminPayBooking.bookingCode}! Đơn đã hoàn tất 100%.`);
+            setAdminPayBooking(null);
+            loadData();
+            clearInterval(interval);
+          }
+        }
+      } catch (e) {}
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [adminPayBooking, adminPayMethod]);
 
   const handleAssignBranchManager = async (branchId, userId) => {
     try {
@@ -1279,6 +1319,228 @@ export default function AdminPage({ onNavigate }) {
         initialIdentifier={currentUser?.email || currentUser?.username || 'admin'}
         onSuccess={() => {}}
       />
+
+      {/* Modal Thu Nốt 50% Tại Quầy (CASH / POS / VIETQR) */}
+      {adminPayBooking && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px'
+          }}
+          onClick={() => setAdminPayBooking(null)}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: '20px',
+              width: '100%',
+              maxWidth: '460px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              overflow: 'hidden'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div
+              style={{
+                padding: '16px 20px',
+                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}
+            >
+              <div>
+                <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '800' }}>
+                  <i className="fa-solid fa-hand-holding-dollar" style={{ marginRight: '8px' }}></i>
+                  Thu Nốt 50% Tiền Sân Tại Quầy
+                </h3>
+                <span style={{ fontSize: '12px', opacity: 0.9 }}>
+                  Đơn #{adminPayBooking.id} - <strong>{adminPayBooking.bookingCode}</strong>
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAdminPayBooking(null)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '30px',
+                  height: '30px',
+                  color: '#ffffff',
+                  fontSize: '16px',
+                  cursor: 'pointer'
+                }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '20px' }}>
+              {/* Order Info */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
+                  <span style={{ color: '#64748b' }}>Khách hàng:</span>
+                  <strong style={{ color: '#0f172a' }}>{adminPayBooking.customerName} ({adminPayBooking.customerPhone})</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
+                  <span style={{ color: '#64748b' }}>Tổng giá trị:</span>
+                  <strong style={{ color: '#0f172a' }}>{formatVnd(adminPayBooking.totalPrice ?? adminPayBooking.totalAmount ?? 0)}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
+                  <span style={{ color: '#059669' }}>Đã thanh toán cọc 50%:</span>
+                  <strong style={{ color: '#059669' }}>{formatVnd(adminPayBooking.paidAmount || ((adminPayBooking.totalPrice ?? adminPayBooking.totalAmount ?? 0) * 0.5))}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px dashed #cbd5e1', fontSize: '14px' }}>
+                  <span style={{ color: '#dc2626', fontWeight: '700' }}>Cần thu nốt:</span>
+                  <strong style={{ color: '#dc2626', fontSize: '18px' }}>
+                    {formatVnd(adminPayBooking.remainingAmount != null ? adminPayBooking.remainingAmount : ((adminPayBooking.totalPrice ?? adminPayBooking.totalAmount ?? 0) - (adminPayBooking.paidAmount || ((adminPayBooking.totalPrice ?? adminPayBooking.totalAmount ?? 0) * 0.5))))}
+                  </strong>
+                </div>
+              </div>
+
+              {/* 3 Payment Methods Tabs */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+                <button
+                  type="button"
+                  onClick={() => setAdminPayMethod('CASH')}
+                  style={{
+                    padding: '10px 4px',
+                    borderRadius: '10px',
+                    border: adminPayMethod === 'CASH' ? '2px solid #059669' : '1px solid #cbd5e1',
+                    background: adminPayMethod === 'CASH' ? '#ecfdf5' : '#ffffff',
+                    color: adminPayMethod === 'CASH' ? '#047857' : '#475569',
+                    fontSize: '12.5px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <i className="fa-solid fa-money-bill-wave" style={{ fontSize: '16px' }}></i>
+                  Tiền Mặt
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAdminPayMethod('POS')}
+                  style={{
+                    padding: '10px 4px',
+                    borderRadius: '10px',
+                    border: adminPayMethod === 'POS' ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                    background: adminPayMethod === 'POS' ? '#eff6ff' : '#ffffff',
+                    color: adminPayMethod === 'POS' ? '#1d4ed8' : '#475569',
+                    fontSize: '12.5px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <i className="fa-solid fa-credit-card" style={{ fontSize: '16px' }}></i>
+                  Thẻ POS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAdminPayMethod('VIETQR')}
+                  style={{
+                    padding: '10px 4px',
+                    borderRadius: '10px',
+                    border: adminPayMethod === 'VIETQR' ? '2px solid #7c3aed' : '1px solid #cbd5e1',
+                    background: adminPayMethod === 'VIETQR' ? '#f5f3ff' : '#ffffff',
+                    color: adminPayMethod === 'VIETQR' ? '#6d28d9' : '#475569',
+                    fontSize: '12.5px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <i className="fa-solid fa-qrcode" style={{ fontSize: '16px' }}></i>
+                  VietQR
+                </button>
+              </div>
+
+              {/* Detail view by method */}
+              {adminPayMethod === 'CASH' && (
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', textAlign: 'center', marginBottom: '16px', fontSize: '13px', color: '#334155' }}>
+                  <i className="fa-solid fa-hand-holding-dollar" style={{ fontSize: '24px', color: '#059669', marginBottom: '8px', display: 'block' }}></i>
+                  Thu tiền mặt trực tiếp từ khách tại quầy lễ tân.
+                </div>
+              )}
+
+              {adminPayMethod === 'POS' && (
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', textAlign: 'center', marginBottom: '16px', fontSize: '13px', color: '#334155' }}>
+                  <i className="fa-solid fa-credit-card" style={{ fontSize: '24px', color: '#2563eb', marginBottom: '8px', display: 'block' }}></i>
+                  Khách quẹt thẻ qua máy POS ngân hàng tại quầy.
+                </div>
+              )}
+
+              {adminPayMethod === 'VIETQR' && (
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', textAlign: 'center', marginBottom: '16px' }}>
+                  <img
+                    src={buildVietQrUrl(
+                      adminPayBooking.remainingAmount != null ? adminPayBooking.remainingAmount : ((adminPayBooking.totalPrice ?? adminPayBooking.totalAmount ?? 0) - (adminPayBooking.paidAmount || ((adminPayBooking.totalPrice ?? adminPayBooking.totalAmount ?? 0) * 0.5))),
+                      adminPayBooking.bookingCode
+                    )}
+                    alt="VietQR code"
+                    style={{ width: '180px', height: '180px', margin: '0 auto 8px auto', display: 'block', borderRadius: '8px' }}
+                  />
+                  <div style={{ fontSize: '12px', color: '#334155', lineHeight: 1.4 }}>
+                    ACB - STK: <strong>18900291</strong>
+                    <br />
+                    Tên: <strong>DAO DUY DUNG</strong> - ND: <strong>{adminPayBooking.bookingCode}</strong>
+                  </div>
+                  <div style={{ marginTop: '8px', fontSize: '11.5px', color: '#7c3aed', fontWeight: 600 }}>
+                    <i className="fa-solid fa-spinner fa-spin"></i> Khách quét QR xong, hệ thống tự động cập nhật hoặc bấm nút bên dưới!
+                  </div>
+                </div>
+              )}
+
+              {/* Action Button */}
+              <button
+                type="button"
+                disabled={adminPaySubmitting}
+                onClick={() => handleExecuteAdminPayRemaining(adminPayMethod)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: adminPayMethod === 'CASH' ? '#059669' : adminPayMethod === 'POS' ? '#2563eb' : '#7c3aed',
+                  color: '#ffffff',
+                  fontSize: '14px',
+                  fontWeight: '800',
+                  cursor: adminPaySubmitting ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {adminPaySubmitting ? (
+                  <span><i className="fa-solid fa-spinner fa-spin"></i> Đang xử lý...</span>
+                ) : (
+                  <span>
+                    Xác nhận đã thu nốt bằng {adminPayMethod === 'CASH' ? 'Tiền Mặt' : adminPayMethod === 'POS' ? 'Thẻ POS' : 'VietQR'}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

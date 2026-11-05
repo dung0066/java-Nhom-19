@@ -166,6 +166,9 @@ public class Booking {
     @Transient
     @com.fasterxml.jackson.annotation.JsonProperty("isDeposit")
     public boolean isDeposit() {
+        if (status == BookingStatus.DEPOSITED) {
+            return true;
+        }
         if (notes != null && (notes.contains("Đặt cọc 50%") || notes.contains("[COC_50%]"))) {
             return true;
         }
@@ -175,8 +178,18 @@ public class Booking {
     }
 
     @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("depositAmount")
+    public BigDecimal getDepositAmount() {
+        if (isDeposit()) {
+            return getTotalPrice().multiply(BigDecimal.valueOf(0.5)).setScale(0, java.math.RoundingMode.HALF_UP);
+        }
+        return getTotalPrice();
+    }
+
+    @Transient
     @com.fasterxml.jackson.annotation.JsonProperty("depositOption")
     public String getDepositOption() {
         return isDeposit() ? "DEPOSIT_50" : "FULL";
     }
 }
+

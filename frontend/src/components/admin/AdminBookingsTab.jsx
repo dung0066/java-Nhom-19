@@ -222,7 +222,10 @@ export default function AdminBookingsTab({
 
                   if (b.status === 'PAID' || b.status === 'CONFIRMED') {
                     badgeClass = 'badge-active';
-                    statusText = 'Đã xác nhận';
+                    statusText = 'Đã thanh toán đủ';
+                  } else if (b.status === 'DEPOSITED') {
+                    badgeClass = 'badge-active';
+                    statusText = 'Đã cọc 50%';
                   } else if (b.status === 'COMPLETED') {
                     badgeClass = 'badge-active';
                     statusText = 'Đã nhận sân';
@@ -295,7 +298,7 @@ export default function AdminBookingsTab({
                               className="btn-tbl"
                               style={{ background: '#10b981', color: '#fff', border: 'none' }}
                               title="Khách thanh toán nốt 50% còn lại tại quầy"
-                              onClick={() => onPayRemaining && onPayRemaining(b.id, 'CASH')}
+                              onClick={() => onPayRemaining && onPayRemaining(b)}
                             >
                               <i className="fa-solid fa-hand-holding-dollar"></i> Thu nốt 50%
                             </button>

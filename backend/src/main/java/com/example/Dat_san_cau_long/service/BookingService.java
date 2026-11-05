@@ -228,7 +228,7 @@ public class BookingService {
                 throw new IllegalStateException("Số dư ví không đủ để thanh toán " + (isDeposit ? "tiền cọc 50% (" : "") + payAmount.toPlainString()
                         + " đ" + (isDeposit ? ")" : "") + ". Hãy nạp thêm hoặc chọn cách thanh toán khác!");
             }
-            booking.setStatus(BookingStatus.CONFIRMED);
+            booking.setStatus(isDeposit ? BookingStatus.DEPOSITED : BookingStatus.CONFIRMED);
             booking.setHoldExpiresAt(null);
             paidNow = true;
         }
@@ -587,7 +587,8 @@ public class BookingService {
         if (booking.getStatus() == BookingStatus.CANCELLED || booking.getStatus() == BookingStatus.EXPIRED) {
             throw new IllegalStateException("Đơn này đã bị hủy hoặc hết hạn giữ chỗ nên không thể xác nhận!");
         }
-        booking.setStatus(BookingStatus.CONFIRMED);
+        boolean isDeposit = booking.isDeposit();
+        booking.setStatus(isDeposit ? BookingStatus.DEPOSITED : BookingStatus.CONFIRMED);
         booking.setHoldExpiresAt(null);
         if (booking.getDetails() != null) {
             booking.getDetails().forEach(d -> d.setStatus(BookingDetailStatus.BOOKED));
@@ -690,7 +691,10 @@ public class BookingService {
             throw new IllegalStateException("Đơn đặt sân này đã thanh toán đủ 100%!");
         }
         PaymentMethod payMethod = method != null ? method : PaymentMethod.CASH;
-        if (payMethod == PaymentMethod.WALLET && booking.getUser() != null) {
+        if (payMethod == PaymentMethod.WALLET) {
+            if (booking.getUser() == null) {
+                throw new IllegalStateException("Đơn này không có tài khoản người dùng để trừ ví!");
+            }
             if (walletRepository.deductBalanceAtomic(booking.getUser().getId(), remaining) == 0) {
                 throw new IllegalStateException("Số dư ví không đủ để thanh toán phần còn lại " + remaining.toPlainString() + " đ!");
             }
@@ -708,9 +712,85 @@ public class BookingService {
                 .build();
         Payment saved = paymentRepository.save(payment);
         booking.setStatus(BookingStatus.CONFIRMED);
+        booking.setHoldExpiresAt(null);
+        String noteMsg = "[DA_THU_DU] Đã thanh toán nốt (" + payMethod.name() + "): " + remaining.toPlainString() + " đ";
+        booking.setNotes(booking.getNotes() != null && !booking.getNotes().isBlank()
+                ? booking.getNotes() + " | " + noteMsg
+                : noteMsg);
         bookingRepository.save(booking);
+
+        try {
+            emailService.sendBookingSuccessEmail(booking);
+        } catch (Exception ex) {
+            log.error("Không thể gửi email xác nhận thu nốt: {}", ex.getMessage());
+        }
+
         log.info("Đã thanh toán nốt phần còn lại {} đ cho đơn {}", remaining, booking.getBookingCode());
         return saved;
+    }
+
+    /**
+     * Khách hàng thanh toán đơn PENDING bằng ví D2 BadmintonShop sau khi đã tạo đơn.
+     */
+    @Transactional
+    public Payment payPendingBookingWithWallet(Long bookingId, User user) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn đặt sân ID: " + bookingId));
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new IllegalStateException("Đơn đặt sân này không ở trạng thái chờ thanh toán!");
+        }
+        boolean isDeposit = booking.isDeposit();
+        BigDecimal payAmount = isDeposit
+                ? booking.getTotalPrice().multiply(BigDecimal.valueOf(0.5)).setScale(0, java.math.RoundingMode.HALF_UP)
+                : booking.getTotalPrice();
+
+        if (walletRepository.deductBalanceAtomic(user.getId(), payAmount) == 0) {
+            throw new IllegalStateException("Số dư ví không đủ để thanh toán " + payAmount.toPlainString() + " đ!");
+        }
+
+        booking.setStatus(isDeposit ? BookingStatus.DEPOSITED : BookingStatus.CONFIRMED);
+        booking.setHoldExpiresAt(null);
+        if (booking.getUser() == null) {
+            booking.setUser(user);
+        }
+        if (booking.getDetails() != null) {
+            booking.getDetails().forEach(d -> d.setStatus(BookingDetailStatus.BOOKED));
+        }
+
+        List<Payment> payments = paymentRepository.findByBookingId(bookingId);
+        Payment payment = null;
+        for (Payment p : payments) {
+            if (p.getStatus() == PaymentStatus.PENDING) {
+                p.setStatus(PaymentStatus.PAID);
+                p.setPaidAt(LocalDateTime.now());
+                p.setMethod(PaymentMethod.WALLET);
+                payment = paymentRepository.save(p);
+                break;
+            }
+        }
+        if (payment == null) {
+            LocalDate date = booking.getBookingDate() != null ? booking.getBookingDate() : LocalDate.now();
+            payment = paymentRepository.save(Payment.builder()
+                    .paymentCode(generateBookingPaymentCode(date))
+                    .purpose(PaymentPurpose.BOOKING)
+                    .user(user)
+                    .booking(booking)
+                    .amount(payAmount)
+                    .method(PaymentMethod.WALLET)
+                    .status(PaymentStatus.PAID)
+                    .paidAt(LocalDateTime.now())
+                    .build());
+        }
+
+        bookingRepository.save(booking);
+
+        try {
+            emailService.sendBookingSuccessEmail(booking);
+        } catch (Exception ex) {
+            log.error("Không thể gửi email xác nhận đặt sân: {}", ex.getMessage());
+        }
+
+        return payment;
     }
 
     public List<Booking> getAllBookings() {

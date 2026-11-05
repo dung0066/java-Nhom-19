@@ -207,7 +207,7 @@ export default function BookingPage({ onNavigate }) {
 
   // Tự động kiểm tra trạng thái thanh toán đơn hàng (SePay webhook auto-update)
   useEffect(() => {
-    if (!bookingResult || bookingResult.status === "CONFIRMED" || bookingResult.paymentType !== "VIETQR") {
+    if (!bookingResult || bookingResult.status === "CONFIRMED" || bookingResult.status === "DEPOSITED" || bookingResult.paymentType !== "VIETQR") {
       return;
     }
     const interval = setInterval(async () => {
@@ -215,10 +215,13 @@ export default function BookingPage({ onNavigate }) {
         const res = await fetch(`/api/booking/code/${bookingResult.bookingCode}`);
         if (res.ok) {
           const data = await res.json();
-          if (data && data.status === "CONFIRMED") {
+          if (data && (data.status === "CONFIRMED" || data.status === "DEPOSITED")) {
             setBookingResult((prev) => ({
               ...prev,
-              status: "CONFIRMED"
+              status: data.status,
+              paidAmount: data.paidAmount != null ? data.paidAmount : (prev.isDeposit ? prev.depositAmount : prev.totalPrice),
+              remainingAmount: data.remainingAmount != null ? data.remainingAmount : (prev.isDeposit ? (prev.totalPrice - prev.depositAmount) : 0),
+              paymentStatus: "PAID"
             }));
           }
         }
@@ -2460,11 +2463,17 @@ export default function BookingPage({ onNavigate }) {
                 <i className="fa-solid fa-check"></i>
               </div>
               <h2 className="success-main-title">
-                {bookingResult.status === "CONFIRMED" ? "Đặt Sân Thành Công!" : "Đã Giữ Chỗ, Chờ Thanh Toán"}
+                {bookingResult.status === "CONFIRMED"
+                  ? "Đặt Sân Thành Công (Đã Thanh Toán Đủ 100%)!"
+                  : bookingResult.status === "DEPOSITED"
+                  ? "Đặt Cọc 50% Giữ Chỗ Thành Công!"
+                  : "Đã Giữ Chỗ, Chờ Thanh Toán"}
               </h2>
               <p className="success-sub-desc">
                 {bookingResult.status === "CONFIRMED"
-                  ? "Đơn đã được xác nhận và lưu vào hệ thống của D2 BadmintonShop."
+                  ? "Đơn đã được xác nhận thanh toán đủ 100% và bảo đảm lịch chơi tại D2 BadmintonShop."
+                  : bookingResult.status === "DEPOSITED"
+                  ? "Đơn đã nhận đủ tiền đặt cọc 50% và xác nhận giữ chỗ. Số tiền còn lại sẽ thanh toán khi quý khách tới nhận sân."
                   : `Sân được giữ cho bạn${bookingResult.holdExpiresAt ? ` đến ${new Date(bookingResult.holdExpiresAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}` : ""}. Quá giờ này mà chưa thanh toán, đơn sẽ tự hủy.`}
               </p>
 
@@ -2477,10 +2486,21 @@ export default function BookingPage({ onNavigate }) {
                 </div>
               </div>
 
-              {bookingResult.paymentType === "VIETQR" && bookingResult.status === "CONFIRMED" && (
-                <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "14px", padding: "16px 20px", maxWidth: "380px", margin: "0 auto 20px auto", color: "#166534", textAlign: "center" }}>
-                  <div style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "6px" }}>🎉 ĐÃ THANH TOÁN THÀNH CÔNG!</div>
-                  <div style={{ fontSize: "13px" }}>Hệ thống SePay đã tự động xác nhận giao dịch chuyển khoản ACB.</div>
+              {bookingResult.status === "DEPOSITED" && (
+                <div style={{ background: "#ecfdf5", border: "1.5px solid #10b981", borderRadius: "14px", padding: "16px 20px", maxWidth: "420px", margin: "0 auto 20px auto", color: "#065f46", textAlign: "center" }}>
+                  <div style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "6px" }}>🎉 ĐÃ THANH TOÁN TIỀN CỌC 50% THÀNH CÔNG!</div>
+                  <div style={{ fontSize: "13.5px", lineHeight: "1.5" }}>
+                    Hệ thống đã nhận <strong>{formatVnd(bookingResult.paidAmount || bookingResult.depositAmount)}</strong> tiền cọc giữ sân.
+                    <br />
+                    Số tiền còn lại <strong>{formatVnd(bookingResult.remainingAmount || (bookingResult.totalPrice - (bookingResult.paidAmount || bookingResult.depositAmount)))}</strong> sẽ thanh toán khi bạn tới nhận sân (tiền mặt / POS / VietQR).
+                  </div>
+                </div>
+              )}
+
+              {bookingResult.status === "CONFIRMED" && (
+                <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "14px", padding: "16px 20px", maxWidth: "420px", margin: "0 auto 20px auto", color: "#166534", textAlign: "center" }}>
+                  <div style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "6px" }}>🎉 ĐÃ THANH TOÁN ĐỦ 100% THÀNH CÔNG!</div>
+                  <div style={{ fontSize: "13.5px" }}>Hệ thống đã xác nhận thanh toán đủ {formatVnd(bookingResult.totalPrice)}. Chúc bạn có buổi chơi vui vẻ!</div>
                 </div>
               )}
 
@@ -2545,9 +2565,9 @@ export default function BookingPage({ onNavigate }) {
                   <i className="fa-solid fa-money-bill-wave"></i> Vui lòng thanh toán {bookingResult.isDeposit ? "tiền cọc 50%" : "toàn bộ 100%"} ({formatVnd(bookingResult.isDeposit ? (bookingResult.paidAmount || bookingResult.depositAmount) : bookingResult.totalPrice)}) tại quầy trước giờ giữ chỗ nêu trên, kèm mã đặt sân <strong>{bookingResult.bookingCode}</strong>.
                 </div>
               )}
-              {bookingResult.paymentType === "WALLET" && bookingResult.status === "CONFIRMED" && (
-                <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "14px", padding: "14px 18px", maxWidth: "380px", margin: "0 auto 20px auto", color: "#166534", fontSize: "13.5px" }}>
-                  <i className="fa-solid fa-wallet"></i> Đã thanh toán {formatVnd(bookingResult.isDeposit ? (bookingResult.paidAmount || bookingResult.depositAmount) : bookingResult.totalPrice)} {bookingResult.isDeposit ? "(Cọc 50%)" : "(Toàn bộ 100%)"} bằng ví D2 BadmintonShop.
+              {bookingResult.paymentType === "WALLET" && (bookingResult.status === "CONFIRMED" || bookingResult.status === "DEPOSITED") && (
+                <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "14px", padding: "12px 18px", maxWidth: "420px", margin: "0 auto 20px auto", color: "#166534", fontSize: "13.5px", textAlign: "center" }}>
+                  <i className="fa-solid fa-wallet"></i> Đã thanh toán {formatVnd(bookingResult.paidAmount || bookingResult.depositAmount)} {bookingResult.isDeposit ? "(Cọc 50%)" : "(Toàn bộ 100%)"} bằng ví D2 BadmintonShop.
                 </div>
               )}
 
@@ -2616,15 +2636,17 @@ export default function BookingPage({ onNavigate }) {
                 {bookingResult.isDeposit ? (
                   <>
                     <div className="info-table-row">
-                      <span className="info-table-label" style={{ color: "#059669" }}>Tiền cọc (50%):</span>
+                      <span className="info-table-label" style={{ color: "#059669" }}>Đã cọc 50%:</span>
                       <span className="info-table-value" style={{ color: "#059669", fontWeight: "700" }}>
-                        {(bookingResult.paidAmount || bookingResult.depositAmount).toLocaleString("vi-VN")} đ ({bookingResult.paymentStatus === "PAID" || bookingResult.status === "CONFIRMED" ? "Đã thanh toán" : "Cần thanh toán"})
+                        {(bookingResult.paidAmount || bookingResult.depositAmount).toLocaleString("vi-VN")} đ ({bookingResult.status === "DEPOSITED" || bookingResult.status === "CONFIRMED" || bookingResult.paymentStatus === "PAID" ? "Đã thanh toán" : "Cần thanh toán"})
                       </span>
                     </div>
                     <div className="info-table-row">
                       <span className="info-table-label" style={{ color: "#ea580c" }}>Còn lại thu tại quầy:</span>
                       <span className="info-table-value" style={{ color: "#ea580c", fontWeight: "700" }}>
-                        {(bookingResult.remainingAmount || (bookingResult.totalPrice - (bookingResult.paidAmount || bookingResult.depositAmount))).toLocaleString("vi-VN")} đ
+                        {(bookingResult.status === "CONFIRMED" && ((bookingResult.paidAmount || 0) >= bookingResult.totalPrice))
+                          ? "0 đ (Đã thanh toán đủ 100%)"
+                          : `${(bookingResult.remainingAmount != null ? bookingResult.remainingAmount : (bookingResult.totalPrice - (bookingResult.paidAmount || bookingResult.depositAmount))).toLocaleString("vi-VN")} đ`}
                       </span>
                     </div>
                   </>

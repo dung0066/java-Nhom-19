@@ -4,6 +4,7 @@ import useMembershipStatus from '../../hooks/useMembershipStatus';
 import PendingMembershipBanner from './PendingMembershipBanner';
 import { formatVnd } from '../../services/payment';
 import AccountWalletTab from './AccountWalletTab';
+import OrderPayModal from '../booking/OrderPayModal';
 import '../../styles/membership.css';
 
 export default function AccountModal({
@@ -18,6 +19,7 @@ export default function AccountModal({
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');
+  const [payingBooking, setPayingBooking] = useState(null);
   const { membership, pending, balance, refresh: loadAccount } = useMembershipStatus(isOpen ? user : null);
 
   useEffect(() => {
@@ -337,8 +339,24 @@ export default function AccountModal({
                 <div className="acc-list">
                   {orders.map((ord) => {
                     const discount = Number(ord.discountAmount) || 0;
-                    const statusClass = ord.status === 'CONFIRMED' || ord.status === 'COMPLETED' ? 'ok'
-                      : ord.status === 'PENDING' ? 'wait' : 'bad';
+                    const isDeposited = ord.status === 'DEPOSITED';
+                    const isDepositOrder = ord.isDeposit || isDeposited || (ord.notes && ord.notes.includes('COC_50%'));
+
+                    let statusBadge;
+                    if (ord.status === 'CONFIRMED' || ord.status === 'COMPLETED') {
+                      statusBadge = <span className="acc-status ok"><i className="fa-solid fa-circle-check" style={{ marginRight: '4px' }}></i>{isVietnamese ? 'Đã thanh toán đủ' : 'Fully Paid'}</span>;
+                    } else if (isDeposited) {
+                      statusBadge = (
+                        <span className="acc-status" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>
+                          <i className="fa-solid fa-shield-halved" style={{ marginRight: '4px' }}></i>{isVietnamese ? 'Đã đặt cọc 50%' : '50% Deposited'}
+                        </span>
+                      );
+                    } else if (ord.status === 'PENDING') {
+                      statusBadge = <span className="acc-status wait"><i className="fa-solid fa-clock" style={{ marginRight: '4px' }}></i>{isVietnamese ? 'Chờ thanh toán' : 'Pending'}</span>;
+                    } else {
+                      statusBadge = <span className="acc-status bad">{ord.status}</span>;
+                    }
+
                     return (
                       <div key={ord.id} style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', gap: '8px', flexWrap: 'wrap' }}>
@@ -346,7 +364,7 @@ export default function AccountModal({
                             <i className="fa-solid fa-ticket" style={{ marginRight: '4px' }}></i>
                             {ord.bookingCode}
                           </span>
-                          <span className={`acc-status ${statusClass}`}>{ord.status}</span>
+                          {statusBadge}
                         </div>
                         <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', margin: '0 0 6px 0' }}>
                           {ord.branch?.name || ''}
@@ -356,6 +374,25 @@ export default function AccountModal({
                           <strong>{ord.bookingDate ? new Date(ord.bookingDate).toLocaleDateString('vi-VN') : ''}</strong>
                           {' · '}{ord.totalHours || 0} {isVietnamese ? 'ca' : 'slots'}
                         </div>
+
+                        {/* Chi tiết cọc nếu là đơn đặt cọc */}
+                        {isDepositOrder && (
+                          <div style={{ margin: '8px 0', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px', fontSize: '12px', border: '1px solid #e2e8f0' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', color: '#059669', fontWeight: '700' }}>
+                              <span>Đã cọc 50%:</span>
+                              <span>
+                                {formatVnd(ord.paidAmount || (ord.totalPrice * 0.5))} {isDeposited || ord.status === 'CONFIRMED' ? '(Đã thanh toán)' : '(Chưa trả)'}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ea580c', fontWeight: '700' }}>
+                              <span>Còn lại thu tại quầy:</span>
+                              <span>
+                                {ord.status === 'CONFIRMED' || ord.status === 'COMPLETED' ? '0 đ (Đã thanh toán đủ)' : formatVnd(ord.remainingAmount || (ord.totalPrice * 0.5))}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid #f1f5f9', gap: '8px', flexWrap: 'wrap' }}>
                           <div>
                             <span style={{ fontSize: '11px', color: '#94a3b8' }}>{isVietnamese ? 'Tổng tiền' : 'Total'}:</span>
@@ -370,6 +407,59 @@ export default function AccountModal({
                             {ord.createdAt ? new Date(ord.createdAt).toLocaleDateString('vi-VN') : ''}
                           </span>
                         </div>
+
+                        {/* Nút thanh toán trực tiếp từ lịch sử */}
+                        {ord.status === 'PENDING' && (
+                          <button
+                            type="button"
+                            onClick={() => setPayingBooking(ord)}
+                            style={{
+                              marginTop: '12px',
+                              width: '100%',
+                              padding: '9px 14px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              background: '#0284c7',
+                              color: '#ffffff',
+                              fontSize: '12.5px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            <i className="fa-solid fa-qrcode"></i>
+                            <span>{isDepositOrder ? 'Thanh toán tiền cọc 50% ngay' : 'Thanh toán đơn hàng ngay'}</span>
+                          </button>
+                        )}
+
+                        {ord.status === 'DEPOSITED' && (
+                          <button
+                            type="button"
+                            onClick={() => setPayingBooking(ord)}
+                            style={{
+                              marginTop: '12px',
+                              width: '100%',
+                              padding: '9px 14px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              background: '#059669',
+                              color: '#ffffff',
+                              fontSize: '12.5px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            <i className="fa-solid fa-hand-holding-dollar"></i>
+                            <span>Thanh toán nốt 50% online ({formatVnd(ord.remainingAmount || (ord.totalPrice * 0.5))})</span>
+                          </button>
+                        )}
                       </div>
                     );
                   })}
@@ -379,6 +469,20 @@ export default function AccountModal({
           )}
         </div>
       </div>
+
+      {payingBooking && (
+        <OrderPayModal
+          isOpen={!!payingBooking}
+          onClose={() => setPayingBooking(null)}
+          booking={payingBooking}
+          currentUser={user}
+          onSuccess={() => {
+            setPayingBooking(null);
+            loadOrders();
+            loadAccount();
+          }}
+        />
+      )}
     </div>
   );
 }

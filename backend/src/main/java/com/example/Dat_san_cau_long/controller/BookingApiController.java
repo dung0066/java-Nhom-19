@@ -78,8 +78,16 @@ public class BookingApiController {
         }
         boolean isDepositFlag = booking.isDeposit() || request.isDeposit50();
         BigDecimal depositAmount = payment != null ? payment.getAmount() : (isDepositFlag ? booking.getTotalPrice().divide(BigDecimal.valueOf(2), 0, java.math.RoundingMode.HALF_UP) : booking.getTotalPrice());
-        BigDecimal remainingAmount = booking.getTotalPrice().subtract(paidAmount);
-        if (remainingAmount.compareTo(BigDecimal.ZERO) < 0) remainingAmount = BigDecimal.ZERO;
+        BigDecimal remainingAmount;
+        if (isDepositFlag) {
+            if (paidAmount.compareTo(depositAmount) >= 0) {
+                remainingAmount = booking.getTotalPrice().subtract(paidAmount).max(BigDecimal.ZERO);
+            } else {
+                remainingAmount = booking.getTotalPrice().subtract(depositAmount);
+            }
+        } else {
+            remainingAmount = booking.getTotalPrice().subtract(paidAmount).max(BigDecimal.ZERO);
+        }
 
         res.put("paymentCode", payment != null ? payment.getPaymentCode() : null);
         res.put("paymentMethod", payment != null ? payment.getMethod().name() : null);
@@ -95,6 +103,40 @@ public class BookingApiController {
         res.put("totalHours", booking.getTotalHours());
         res.put("customerName", booking.getCustomerName());
         res.put("bookingDate", booking.getBookingDate() != null ? booking.getBookingDate().toString() : null);
+        return ResponseEntity.ok(res);
+    }
+
+    @PostMapping("/{id}/pay-remaining")
+    public ResponseEntity<Map<String, Object>> payRemainingBooking(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, String> body,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        String methodStr = body != null ? body.get("paymentMethod") : "WALLET";
+        com.example.Dat_san_cau_long.model.enums.PaymentMethod method =
+                com.example.Dat_san_cau_long.model.enums.PaymentMethod.fromStringOrDefault(methodStr);
+
+        Payment payment = bookingService.payRemainingBooking(id, method);
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", true);
+        res.put("message", "Đã thanh toán nốt số tiền " + payment.getAmount().toPlainString() + " đ thành công!");
+        res.put("paymentCode", payment.getPaymentCode());
+        res.put("amount", payment.getAmount());
+        return ResponseEntity.ok(res);
+    }
+
+    @PostMapping("/{id}/pay-pending-wallet")
+    public ResponseEntity<Map<String, Object>> payPendingWallet(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "Vui lòng đăng nhập để thanh toán bằng ví!"));
+        }
+        Payment payment = bookingService.payPendingBookingWithWallet(id, principal.getUser());
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", true);
+        res.put("message", "Đã thanh toán cọc/đơn thành công bằng ví!");
+        res.put("paymentCode", payment.getPaymentCode());
+        res.put("amount", payment.getAmount());
         return ResponseEntity.ok(res);
     }
 
