@@ -61,7 +61,7 @@ const SAMPLE_BOOKINGS = [
     bookingCode: 'D2B-2401',
     customerName: 'Nguyễn Văn Hùng',
     customerPhone: '0912 345 678',
-    branch: { code: 'NVL', name: 'D2 Shop NVL - Gò Vấp' },
+    branch: { code: 'NVL', name: 'D2 BadmintonShop NVL - Gò Vấp' },
     branchCode: 'NVL',
     bookingDate: '2026-10-28',
     timeSlotStr: 'Sân 2: 17:30 - 18:30 (2 ca)',
@@ -77,7 +77,7 @@ const SAMPLE_BOOKINGS = [
     bookingCode: 'D2B-2402',
     customerName: 'Trần Mai Linh',
     customerPhone: '0988 765 432',
-    branch: { code: 'DQII', name: 'D2 Shop DQII - Gò Vấp' },
+    branch: { code: 'DQII', name: 'D2 BadmintonShop DQII - Gò Vấp' },
     branchCode: 'DQII',
     bookingDate: '2026-10-28',
     timeSlotStr: 'Sân 1: 19:00 - 20:00 (2 ca)',
@@ -93,7 +93,7 @@ const SAMPLE_BOOKINGS = [
     bookingCode: 'D2B-2403',
     customerName: 'Lê Quốc Bảo',
     customerPhone: '0903 112 233',
-    branch: { code: 'NQA', name: 'D2 Shop NQA - Tân Phú' },
+    branch: { code: 'NQA', name: 'D2 BadmintonShop NQA - Tân Phú' },
     branchCode: 'NQA',
     bookingDate: '2026-10-28',
     timeSlotStr: 'Sân 3: 06:00 - 07:30 (3 ca)',
@@ -108,7 +108,7 @@ const SAMPLE_BOOKINGS = [
     bookingCode: 'D2B-2404',
     customerName: 'Phạm Thu Hương',
     customerPhone: '0977 445 566',
-    branch: { code: 'HB', name: 'D2 Shop HB - TP. Thủ Đức' },
+    branch: { code: 'HB', name: 'D2 BadmintonShop HB - TP. Thủ Đức' },
     branchCode: 'HB',
     bookingDate: '2026-10-29',
     timeSlotStr: 'Sân 1 VIP: 18:00 - 19:00 (2 ca)',
@@ -143,12 +143,12 @@ const INITIAL_USERS = [
   { id: 5, username: 'baole', fullName: 'Lê Quốc Bảo', email: 'baole.badminton@gmail.com', phone: '0903112233', role: 'ROLE_USER', status: 'LOCKED' }
 ];
 
-// Chi nhánh hệ thống chuẩn thương hiệu D2 Shop
+// Chi nhánh hệ thống chuẩn thương hiệu D2 BadmintonShop
 const D2_BRANCHES = [
-  { id: 1, code: 'NVL', name: 'D2 Shop NVL - Gò Vấp', address: '70 Nguyễn Văn Lượng, P. 10, Q. Gò Vấp, TP.HCM', phone: '0914977030', totalCourts: 7 },
-  { id: 2, code: 'DQII', name: 'D2 Shop DQII - Gò Vấp', address: '262 Dương Quảng Hàm, P. 5, Q. Gò Vấp, TP.HCM', phone: '0914977030', totalCourts: 4 },
-  { id: 3, code: 'NQA', name: 'D2 Shop NQA - Tân Phú', address: '86 Nguyễn Quý Anh, P. Tân Sơn Nhì, Q. Tân Phú, TP.HCM', phone: '0914977030', totalCourts: 6 },
-  { id: 4, code: 'HB', name: 'D2 Shop HB - TP. Thủ Đức', address: '135 Hiệp Bình, P. Hiệp Bình Chánh, TP. Thủ Đức, TP.HCM', phone: '0914977030', totalCourts: 2 }
+  { id: 1, code: 'NVL', name: 'D2 BadmintonShop NVL - Gò Vấp', address: '70 Nguyễn Văn Lượng, P. 10, Q. Gò Vấp, TP.HCM', phone: '0914977030', totalCourts: 7 },
+  { id: 2, code: 'DQII', name: 'D2 BadmintonShop DQII - Gò Vấp', address: '262 Dương Quảng Hàm, P. 5, Q. Gò Vấp, TP.HCM', phone: '0914977030', totalCourts: 4 },
+  { id: 3, code: 'NQA', name: 'D2 BadmintonShop NQA - Tân Phú', address: '86 Nguyễn Quý Anh, P. Tân Sơn Nhì, Q. Tân Phú, TP.HCM', phone: '0914977030', totalCourts: 6 },
+  { id: 4, code: 'HB', name: 'D2 BadmintonShop HB - TP. Thủ Đức', address: '135 Hiệp Bình, P. Hiệp Bình Chánh, TP. Thủ Đức, TP.HCM', phone: '0914977030', totalCourts: 2 }
 ];
 
 /** Tải lần lượt các trang đơn đặt (100 đơn/trang, tối đa 20 trang) và gộp thành một mảng. */
@@ -362,8 +362,8 @@ export default function AdminPage({ onNavigate }) {
           const defaultArticles = [
             { id: 1, title: 'Khởi Động Cầu Lông Chuẩn Cho Người Mới Tránh Chấn Thương', summary: 'Hướng dẫn bài tập khởi động cầu lông chuẩn cho người mới chơi giúp bảo vệ cổ chân, khớp gối...', image: '/news/news1.png', category: 'KY_THUAT', categoryLabel: 'Kỹ Thuật & Sức Khỏe', author: 'D2 Coach Team', published: true },
             { id: 2, title: 'Sân Cầu Lông Đạt Chuẩn Giúp Tránh Chấn Thương Cho Lông Thủ', summary: 'Tìm hiểu 5 tiêu chuẩn chọn sân cầu lông đạt chuẩn giúp bảo vệ khớp, độ nảy thảm Taraflex BWF 7.5mm...', image: '/news/news2.png', category: 'TIEU_CHUAN', categoryLabel: 'Tiêu Chuẩn Sân', author: 'Ban Quản Lý D2', published: true },
-            { id: 3, title: 'Giải Cầu Lông New Academy Lần 2 – Chào Mừng 30/4 Tại D2 Shop', summary: 'Tham gia Giải Cầu Lông New Academy Lần 2 tại Sân D2 Shop với cơ cấu giải thưởng hấp dẫn...', image: '/news/news3.png', category: 'GIAI_DAU', categoryLabel: 'Giải Đấu Mở Rộng', author: 'BTC Giải Đấu', published: true },
-            { id: 4, title: 'CLB Cầu Lông D2 Shop – Sân Chơi Chuyên Nghiệp & Đặt Lịch Giao Lưu', summary: 'Bài viết giới thiệu chi tiết về CLB Cầu Lông D2 Shop, một địa điểm tập luyện và giao lưu sôi nổi...', image: '/news/news4.png', category: 'SU_KIEN', categoryLabel: 'Sự Kiện & CLB', author: 'D2 Club Leader', published: true }
+            { id: 3, title: 'Giải Cầu Lông New Academy Lần 2 – Chào Mừng 30/4 Tại D2 BadmintonShop', summary: 'Tham gia Giải Cầu Lông New Academy Lần 2 tại Sân D2 BadmintonShop với cơ cấu giải thưởng hấp dẫn...', image: '/news/news3.png', category: 'GIAI_DAU', categoryLabel: 'Giải Đấu Mở Rộng', author: 'BTC Giải Đấu', published: true },
+            { id: 4, title: 'CLB Cầu Lông D2 BadmintonShop – Sân Chơi Chuyên Nghiệp & Đặt Lịch Giao Lưu', summary: 'Bài viết giới thiệu chi tiết về CLB Cầu Lông D2 BadmintonShop, một địa điểm tập luyện và giao lưu sôi nổi...', image: '/news/news4.png', category: 'SU_KIEN', categoryLabel: 'Sự Kiện & CLB', author: 'D2 Club Leader', published: true }
           ];
           setArticles(defaultArticles);
           localStorage.setItem('d2_admin_articles', JSON.stringify(defaultArticles));
@@ -409,7 +409,7 @@ export default function AdminPage({ onNavigate }) {
     } catch (err) {
       // Cho phép đăng nhập admin demo mượt mà nếu backend offline
       if (loginForm.username === 'admin') {
-        const demoAdmin = { id: 1, username: 'admin', fullName: 'Quản Trị Viên D2 Shop', role: 'ROLE_ADMIN' };
+        const demoAdmin = { id: 1, username: 'admin', fullName: 'Quản Trị Viên D2 BadmintonShop', role: 'ROLE_ADMIN' };
         localStorage.setItem('user', JSON.stringify(demoAdmin));
         setCurrentUser(demoAdmin);
       } else {
@@ -932,7 +932,7 @@ export default function AdminPage({ onNavigate }) {
     return (
       <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
         <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: '32px', color: '#0284c7' }}></i>
-        <p style={{ color: '#64748b', fontWeight: 600 }}>Đang xác thực quyền truy cập Quản Trị D2 SHOP...</p>
+        <p style={{ color: '#64748b', fontWeight: 600 }}>Đang xác thực quyền truy cập Quản Trị D2 BADMINTONSHOP...</p>
       </div>
     );
   }
@@ -946,7 +946,7 @@ export default function AdminPage({ onNavigate }) {
               <i className="fa-solid fa-lock"></i>
             </div>
             <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: '0 0 6px 0' }}>
-              CỔNG QUẢN TRỊ D2 SHOP
+              CỔNG QUẢN TRỊ D2 BADMINTONSHOP
             </h2>
             <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
               Đăng nhập tài khoản Quản trị để quản lý sân và đơn đặt sân
@@ -1057,7 +1057,7 @@ export default function AdminPage({ onNavigate }) {
         <div className="admin-top-title-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', padding: '16px 24px', borderRadius: '12px', boxShadow: '0 4px 16px rgba(2, 132, 199, 0.2)' }}>
           <div>
             <h2 style={{ fontSize: '18px', fontWeight: 800, margin: 0, letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <i className="fa-solid fa-shield-halved"></i> BẢNG ĐIỀU KHIỂN QUẢN TRỊ HỆ THỐNG D2 SHOP
+              <i className="fa-solid fa-shield-halved"></i> BẢNG ĐIỀU KHIỂN QUẢN TRỊ HỆ THỐNG D2 BADMINTONSHOP
             </h2>
             <p style={{ fontSize: '12px', opacity: 0.9, margin: '4px 0 0 0', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <span>Xin chào, <strong>{currentUser.fullName || currentUser.username}</strong> ({currentUser.role || 'ROLE_ADMIN'})</span>

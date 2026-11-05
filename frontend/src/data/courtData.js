@@ -4,7 +4,7 @@ export const BRANCHES = [
   {
     id: 1,
     code: 'NVL',
-    name: 'Ways Station NVL',
+    name: 'D2 BadmintonShop NVL',
     address: '70 Nguyễn Văn Lượng, P. 10, Q. Gò Vấp, TP.HCM',
     phone: '0889 555 559',
     totalCourts: 7,
@@ -14,7 +14,7 @@ export const BRANCHES = [
   {
     id: 2,
     code: 'DQII',
-    name: 'Ways Station DQII',
+    name: 'D2 BadmintonShop DQII',
     address: '262 Dương Quảng Hàm, Q. Gò Vấp, TP.HCM',
     phone: '0889 555 559',
     totalCourts: 4,
@@ -24,7 +24,7 @@ export const BRANCHES = [
   {
     id: 3,
     code: 'NQA',
-    name: 'Ways Station NQA',
+    name: 'D2 BadmintonShop NQA',
     address: '86 Nguyễn Quý Anh, Q. Tân Phú, TP.HCM',
     phone: '0889 555 559',
     totalCourts: 6,
@@ -34,7 +34,7 @@ export const BRANCHES = [
   {
     id: 4,
     code: 'HB',
-    name: 'Ways Station HB',
+    name: 'D2 BadmintonShop HB',
     address: '135 Hiệp Bình, TP. Thủ Đức, TP.HCM',
     phone: '0889 555 559',
     totalCourts: 2,
@@ -286,7 +286,7 @@ export const SERVICES_CATEGORIES = [
 
 export const ALL_ADDONS = SERVICES_CATEGORIES.flatMap((c) => c.items);
 
-// 13 Sản phẩm & Dịch vụ chuẩn hệ thống D2 Shop đồng bộ giữa Admin SQL và Giao diện Đặt Sân / Trang Chủ
+// 13 Sản phẩm & Dịch vụ chuẩn hệ thống D2 BadmintonShop đồng bộ giữa Admin SQL và Giao diện Đặt Sân / Trang Chủ
 export const DEFAULT_D2_PRODUCTS = [
   {
     id: 1,
@@ -389,7 +389,7 @@ export const DEFAULT_D2_PRODUCTS = [
   {
     id: 8,
     name: 'Khăn Lạnh Kháng Khuẩn Bạc Hà',
-    brand: 'D2 Shop',
+    brand: 'D2 BadmintonShop',
     category: 'REFRESHMENTS',
     price: 5000,
     priceUnit: '/ cái',

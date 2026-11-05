@@ -37,10 +37,10 @@ public class EmailService {
      * Gửi Email chứa mã xác thực OTP 6 số để đổi / đặt lại mật khẩu
      */
     public boolean sendOtpEmail(String toEmail, String recipientName, String otpCode) {
-        String subject = "[D2 SHOP] Mã xác thực OTP: " + otpCode;
+        String subject = "[D2 BADMINTONSHOP] Mã xác thực OTP: " + otpCode;
         String htmlContent = buildOtpHtmlContent(recipientName, otpCode);
 
-        log.info(">>> [D2 SHOP EMAIL] Đang gửi mã OTP [{}] tới: {}", otpCode, toEmail);
+        log.info(">>> [D2 BADMINTONSHOP EMAIL] Đang gửi mã OTP [{}] tới: {}", otpCode, toEmail);
 
         if (mailSender == null) {
             log.warn("JavaMailSender chưa được cấu hình. Mã OTP [{}] được ghi nhận vào hệ thống.", otpCode);
@@ -51,7 +51,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom(fromEmail, "D2 SHOP");
+            helper.setFrom(fromEmail, "D2 BADMINTONSHOP");
             helper.setTo(toEmail);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
@@ -76,14 +76,14 @@ public class EmailService {
             }
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail, "D2 SHOP");
+            helper.setFrom(fromEmail, "D2 BADMINTONSHOP");
             helper.setTo(testEmail);
-            helper.setSubject("[D2 SHOP] Kiểm tra cấu hình Gmail SMTP thành công!");
+            helper.setSubject("[D2 BADMINTONSHOP] Kiểm tra cấu hình Gmail SMTP thành công!");
 
             String html = """
                 <div style="font-family: Arial, sans-serif; padding: 20px; color: #1e293b; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; max-width: 480px; margin: 0 auto;">
                     <div style="background-color: #0284c7; color: #ffffff; padding: 14px; border-radius: 6px; text-align: center; margin-bottom: 14px;">
-                        <h2 style="margin: 0; font-size: 18px;">D2 SHOP</h2>
+                        <h2 style="margin: 0; font-size: 18px;">D2 BADMINTONSHOP</h2>
                         <p style="margin: 2px 0 0; font-size: 13px; opacity: 0.9;">Kết Nối Google SMTP Thành Công</p>
                     </div>
                     <p>Hệ thống đã kết nối thành công tới máy chủ <b>smtp.gmail.com:587</b>.</p>
@@ -115,7 +115,7 @@ public class EmailService {
             return false;
         }
 
-        String subject = "[WAYS STATION] Xác nhận thanh toán & đặt sân thành công - " + booking.getBookingCode();
+        String subject = "[D2 BADMINTONSHOP] Xác nhận thanh toán & đặt sân thành công - " + booking.getBookingCode();
         String htmlContent = buildBookingSuccessHtmlContent(booking);
 
         log.info(">>> [EMAIL ĐẶT SÂN] Đang gửi xác nhận đơn [{}] tới: {}", booking.getBookingCode(), toEmail);
@@ -129,7 +129,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom(fromEmail, "Ways Station Badminton");
+            helper.setFrom(fromEmail, "D2 BadmintonShop");
             helper.setTo(toEmail);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
@@ -147,7 +147,7 @@ public class EmailService {
         String customerName = booking.getCustomerName() != null ? booking.getCustomerName() : "Quý khách";
         String customerPhone = booking.getCustomerPhone() != null ? booking.getCustomerPhone() : "Chưa cập nhật";
         String bookingCode = booking.getBookingCode() != null ? booking.getBookingCode() : "N/A";
-        String branchName = booking.getBranch() != null ? booking.getBranch().getName() : "Ways Station Badminton";
+        String branchName = booking.getBranch() != null ? booking.getBranch().getName() : "D2 BadmintonShop";
         String branchAddress = (booking.getBranch() != null && booking.getBranch().getAddress() != null)
                 ? booking.getBranch().getAddress() : "";
 
@@ -202,7 +202,7 @@ public class EmailService {
                     <!-- Header -->
                     <tr>
                         <td style="background: linear-gradient(135deg, #16a34a, #15803d); padding: 22px 24px; text-align: center;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">WAYS STATION BADMINTON</h1>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">D2 BADMINTONSHOP</h1>
                             <p style="margin: 6px 0 0; color: #dcfce7; font-size: 14px; font-weight: 600;">✓ ĐÃ THANH TOÁN & ĐẶT SÂN THÀNH CÔNG</p>
                         </td>
                     </tr>
@@ -257,7 +257,7 @@ public class EmailService {
                     <!-- Footer -->
                     <tr>
                         <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 16px 24px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
-                            <b>WAYS STATION BADMINTON</b><br/>
+                            <b>D2 BADMINTONSHOP</b><br/>
                             Chúc quý khách có những trận cầu thật sảng khoái và vui vẻ!
                         </td>
                     </tr>
@@ -277,14 +277,14 @@ public class EmailService {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Mã OTP - D2 SHOP</title>
+                <title>Mã OTP - D2 BADMINTONSHOP</title>
             </head>
             <body style="margin: 0; padding: 24px 12px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; -webkit-font-smoothing: antialiased;">
                 <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 480px; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05); margin: 0 auto;">
                     <!-- Header -->
                     <tr>
                         <td style="background-color: #0284c7; padding: 18px 24px; text-align: center;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 800; letter-spacing: 0.5px;">D2 SHOP</h1>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 800; letter-spacing: 0.5px;">D2 BADMINTONSHOP</h1>
                             <p style="margin: 3px 0 0; color: #e0f2fe; font-size: 12.5px;">Xác thực tài khoản</p>
                         </td>
                     </tr>
@@ -294,7 +294,7 @@ public class EmailService {
                         <td style="padding: 26px 24px 20px;">
                             <p style="margin: 0 0 12px; font-size: 15px; color: #0f172a;">Xin chào <b>{{NAME}}</b>,</p>
                             <p style="margin: 0 0 18px; font-size: 14px; color: #475569; line-height: 1.5;">
-                                Bạn vừa yêu cầu mã xác thực để đặt lại mật khẩu tại <b>D2 SHOP</b>. Mã OTP của bạn là:
+                                Bạn vừa yêu cầu mã xác thực để đặt lại mật khẩu tại <b>D2 BADMINTONSHOP</b>. Mã OTP của bạn là:
                             </p>
 
                             <!-- Khối Mã OTP Bôi Đậm Nổi Bật -->
@@ -320,7 +320,7 @@ public class EmailService {
                     <!-- Footer -->
                     <tr>
                         <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 24px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
-                            <b>D2 SHOP</b> &bull; Hotline: <b>0914 977 030</b><br/>
+                            <b>D2 BADMINTONSHOP</b> &bull; Hotline: <b>0914 977 030</b><br/>
                             <span style="color: #94a3b8; font-size: 11px;">Email tự động, vui lòng không phản hồi thư này.</span>
                         </td>
                     </tr>

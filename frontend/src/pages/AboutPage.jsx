@@ -78,15 +78,15 @@ export default function AboutPage({ onNavigate }) {
         <div className="subpage-hero-overlay"></div>
         <div className="subpage-hero-content">
           <span className="subpage-hero-badge">
-            <i className="fa-solid fa-medal"></i> {isVietnamese ? 'D2 SHOP BADMINTON CLUB' : 'ABOUT D2 SHOP'}
+            <i className="fa-solid fa-medal"></i> {isVietnamese ? 'D2 BADMINTONSHOP' : 'ABOUT D2 BADMINTONSHOP'}
           </span>
           <h1 className="subpage-hero-title">
             {isVietnamese ? 'Hành Trình Kiến Tạo Sân Đấu Đẳng Cấp' : 'Crafting World-Class Badminton Arenas'}
           </h1>
           <p className="subpage-hero-desc">
             {isVietnamese
-              ? 'D2 Shop tự hào là hệ thống sân cầu lông tiêu chuẩn thi đấu quốc tế BWF hàng đầu tại TP. Hồ Chí Minh, mang lại không gian tập luyện chuyên nghiệp và kết nối đam mê cho mọi lông thủ.'
-              : 'D2 Shop is proud to be a premier international BWF standard badminton court network in Ho Chi Minh City, offering a professional arena and vibrant community for all enthusiasts.'}
+              ? 'D2 BadmintonShop tự hào là hệ thống sân cầu lông tiêu chuẩn thi đấu quốc tế BWF hàng đầu tại TP. Hồ Chí Minh, mang lại không gian tập luyện chuyên nghiệp và kết nối đam mê cho mọi lông thủ.'
+              : 'D2 BadmintonShop is proud to be a premier international BWF standard badminton court network in Ho Chi Minh City, offering a professional arena and vibrant community for all enthusiasts.'}
           </p>
         </div>
       </section>
@@ -95,7 +95,7 @@ export default function AboutPage({ onNavigate }) {
       <section className="subpage-section">
         <div className="about-story-grid">
           <div className="about-story-image-wrap">
-            <img src="/banners/banner3.jpg" alt="D2 Shop Court" className="about-story-img" />
+            <img src="/banners/banner3.jpg" alt="D2 BadmintonShop Court" className="about-story-img" />
             <div className="about-story-badge">
               <i className="fa-solid fa-trophy"></i>
               <div>
@@ -120,13 +120,13 @@ export default function AboutPage({ onNavigate }) {
             </h3>
             <p>
               {isVietnamese
-                ? 'Xuất phát từ niềm đam mê cháy bỏng với bộ môn cầu lông và thấu hiểu nhu cầu tìm kiếm một mặt sân an toàn, chất lượng cao của các lông thủ, D2 Shop đã ra đời với sứ mệnh xây dựng chuỗi sân chơi đạt chuẩn quốc tế ngay giữa lòng TP.HCM.'
-                : 'Born from a deep passion for badminton and understanding players’ need for safe, premium courts, D2 Shop was founded with a mission to develop international-standard court facilities in Ho Chi Minh City.'}
+                ? 'Xuất phát từ niềm đam mê cháy bỏng với bộ môn cầu lông và thấu hiểu nhu cầu tìm kiếm một mặt sân an toàn, chất lượng cao của các lông thủ, D2 BadmintonShop đã ra đời với sứ mệnh xây dựng chuỗi sân chơi đạt chuẩn quốc tế ngay giữa lòng TP.HCM.'
+                : 'Born from a deep passion for badminton and understanding players’ need for safe, premium courts, D2 BadmintonShop was founded with a mission to develop international-standard court facilities in Ho Chi Minh City.'}
             </p>
             <p>
               {isVietnamese
-                ? 'Chúng tôi đầu tư đồng bộ từ thảm thi đấu Gerflor Taraflex cao cấp của Pháp, hệ thống đèn LED chống lóa đạt chuẩn 600 Lux đến quy trình đặt lịch số hóa thông minh thời gian thực. Mỗi ca chơi tại D2 Shop là một trải nghiệm trọn vẹn và tràn đầy năng lượng.'
-                : 'We invest comprehensively in French Gerflor Taraflex mats, 600 Lux glare-free LED lighting, and real-time digital booking. Every match at D2 Shop delivers an exhilarating, high-energy experience.'}
+                ? 'Chúng tôi đầu tư đồng bộ từ thảm thi đấu Gerflor Taraflex cao cấp của Pháp, hệ thống đèn LED chống lóa đạt chuẩn 600 Lux đến quy trình đặt lịch số hóa thông minh thời gian thực. Mỗi ca chơi tại D2 BadmintonShop là một trải nghiệm trọn vẹn và tràn đầy năng lượng.'
+                : 'We invest comprehensively in French Gerflor Taraflex mats, 600 Lux glare-free LED lighting, and real-time digital booking. Every match at D2 BadmintonShop delivers an exhilarating, high-energy experience.'}
             </p>
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
               <button
@@ -178,7 +178,7 @@ export default function AboutPage({ onNavigate }) {
               {isVietnamese ? 'TIÊU CHUẨN VƯỢT TRỘI' : 'OUR CORE PILLARS'}
             </span>
             <h2 className="section-main-title">
-              {isVietnamese ? 'Tại Sao Nên Chọn Sân D2 Shop?' : 'Why Choose D2 Shop Arenas?'}
+              {isVietnamese ? 'Tại Sao Nên Chọn Sân D2 BadmintonShop?' : 'Why Choose D2 BadmintonShop Arenas?'}
             </h2>
             <p className="section-sub-desc">
               {isVietnamese
@@ -222,7 +222,7 @@ export default function AboutPage({ onNavigate }) {
           </h2>
           <p className="section-sub-desc">
             {isVietnamese
-              ? 'Chiêm ngưỡng toàn cảnh không gian sân thi đấu, khu dịch vụ tiện ích và trang thiết bị hiện đại tại D2 Shop.'
+              ? 'Chiêm ngưỡng toàn cảnh không gian sân thi đấu, khu dịch vụ tiện ích và trang thiết bị hiện đại tại D2 BadmintonShop.'
               : 'Take a visual tour through our tournament courts, amenities, and modern sports equipment.'}
           </p>
         </div>

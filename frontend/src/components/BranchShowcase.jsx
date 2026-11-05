@@ -16,7 +16,7 @@ export default function BranchShowcase({ branches, selectedBranch, onSelectBranc
           <MapPin size={13} className="text-emerald" />
           <span>Hệ Thống Sân Toàn Thành Phố</span>
         </div>
-        <h2 className="section-main-title">4 Chi Nhánh Tiêu Chuẩn Quốc Tế Ways Station</h2>
+        <h2 className="section-main-title">4 Chi Nhánh Tiêu Chuẩn Quốc Tế D2 BadmintonShop</h2>
         <p className="section-desc">
           Tất cả chi nhánh đều sử dụng thảm thi đấu chính hãng, đèn LED chống chói 500 Lux, máy lạnh và tiện ích quầy nước, giặt giày UV.
         </p>

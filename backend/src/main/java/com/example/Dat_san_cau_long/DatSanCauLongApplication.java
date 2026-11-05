@@ -8,7 +8,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
 
-// Hệ thống Đặt sân cầu lông Ways Station Badminton Backend
+// Hệ thống Đặt sân cầu lông D2 BadmintonShop Backend
 @SpringBootApplication
 @EnableScheduling
 public class DatSanCauLongApplication {

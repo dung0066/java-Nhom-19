@@ -1,4 +1,4 @@
-# 🏸 Ways Station Badminton - Hệ Thống Đặt Sân & Quản Lý Chuỗi Cầu Lông Trực Tuyến
+# 🏸 D2 BadmintonShop - Hệ Thống Đặt Sân & Quản Lý Chuỗi Cầu Lông Trực Tuyến
 
 <p align="center">
   <img src="https://img.shields.io/badge/Java-17%20%7C%2021%20LTS-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java Version" />
@@ -10,7 +10,7 @@
 </p>
 
 > **Đồ Án Môn Học - Nhóm 19**  
-> Dự án phần mềm quản lý chuỗi 4 cụm cơ sở sân cầu lông tiêu chuẩn quốc tế BWF tại TP.HCM (`Ways Station NVL`, `Ways Station DQII`, `Ways Station NQA`, `Ways Station HB`).  
+> Dự án phần mềm quản lý chuỗi 4 cụm cơ sở sân cầu lông tiêu chuẩn quốc tế BWF tại TP.HCM (`D2 BadmintonShop NVL`, `D2 BadmintonShop DQII`, `D2 BadmintonShop NQA`, `D2 BadmintonShop HB`).  
 > Hệ thống hỗ trợ đa nền tảng: Cổng đặt sân & thanh toán linh hoạt cho khách hàng, Cổng quản trị phân cấp cho **Quản trị viên toàn hệ thống (Admin)** và **Quản lý cửa hàng từng chi nhánh (Store Manager)**.
 
 ---
@@ -33,7 +33,7 @@
 
 ## 1. Giới Thiệu Chung & Nghiệp Vụ Cốt Lõi
 
-**Ways Station Badminton** giải quyết bài toán vận hành thực tế cho chuỗi sân cầu lông quy mô lớn:
+**D2 BadmintonShop** giải quyết bài toán vận hành thực tế cho chuỗi sân cầu lông quy mô lớn:
 - **Dành Cho Khách Hàng**:
   - Tra cứu trực quan sơ đồ sân và ma trận slot trống theo thời gian thực tại 4 cụm chi nhánh.
   - Đặt sân linh hoạt (đặt lẻ theo giờ, đặt cố định dài hạn theo tháng).
@@ -385,8 +385,8 @@ npm run dev
 
 | Tên Đăng Nhập | Mật Khẩu | Email | Vai Trò (Role) | Chi Nhánh Phụ Trách / Ghi Chú |
 | :--- | :--- | :--- | :--- | :--- |
-| **`admin`** | `123456` | `admin@waysstation.vn` | `ROLE_ADMIN` | Toàn quyền kiểm soát hệ thống & cả 4 chi nhánh |
-| **`hoivien_gold`** | `123456` | `tuan.badminton@gmail.com` | `ROLE_STAFF` | **Store Manager** được ủy quyền chi nhánh **Ways Station DQII** |
+| **`admin`** | `123456` | `admin@d2badmintonshop.vn` | `ROLE_ADMIN` | Toàn quyền kiểm soát hệ thống & cả 4 chi nhánh |
+| **`hoivien_gold`** | `123456` | `tuan.badminton@gmail.com` | `ROLE_STAFF` | **Store Manager** được ủy quyền chi nhánh **D2 BadmintonShop DQII** |
 | **`khachhang1`** | `123456` | `duc.tm@gmail.com` | `ROLE_USER` | Khách hàng thông thường, tài khoản ví sẵn sàng |
 
 ---
@@ -458,6 +458,6 @@ npm run dev
 ---
 
 ## 👥 Thành Viên Thực Hiện (Nhóm 19)
-- **Đề Tài**: Hệ Thống Quản Lý & Đặt Sân Cầu Lông Trực Tuyến Ways Station Badminton.
+- **Đề Tài**: Hệ Thống Quản Lý & Đặt Sân Cầu Lông Trực Tuyến D2 BadmintonShop.
 - **Học Phần**: Công Nghệ Phần Mềm / Phát Triển Ứng Dụng Hướng Dịch Vụ.
 - Bản quyền thuộc về **Nhóm 19** © 2026. Mọi quyền được bảo lưu.

@@ -89,7 +89,7 @@ export default function PassSlotMarket({
           <Flame size={20} className="text-purple" />
         </div>
         <div className="notice-text">
-          <strong>Lưu ý giao dịch an toàn:</strong> Người nhận ca có thể bấm "Nhận Ca Ngay" để thanh toán bảo đảm trực tiếp qua hệ thống Ways Station, hoặc liên hệ trực tiếp số điện thoại chủ slot bên dưới để giao lưu.
+          <strong>Lưu ý giao dịch an toàn:</strong> Người nhận ca có thể bấm "Nhận Ca Ngay" để thanh toán bảo đảm trực tiếp qua hệ thống D2 BadmintonShop, hoặc liên hệ trực tiếp số điện thoại chủ slot bên dưới để giao lưu.
         </div>
       </div>
 
@@ -121,7 +121,7 @@ export default function PassSlotMarket({
                 <div className="pass-slot-meta">
                   <div className="meta-line">
                     <MapPin size={13} className="text-emerald" />
-                    <span>{selectedBranch?.name || 'Ways Station NVL'}</span>
+                    <span>{selectedBranch?.name || 'D2 BadmintonShop NVL'}</span>
                   </div>
                   <div className="meta-line">
                     <User size={13} className="text-muted" />

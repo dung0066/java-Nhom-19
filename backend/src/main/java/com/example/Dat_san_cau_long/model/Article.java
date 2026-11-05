@@ -9,7 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 /**
- * Entity Quản Lý Tin Tức & Bài Viết Cầu Lông D2 SHOP
+ * Entity Quản Lý Tin Tức & Bài Viết Cầu Lông D2 BADMINTONSHOP
  * Lưu trữ trong SQL Database
  */
 @Entity

@@ -54,7 +54,7 @@ export default function Header({
         </div>
       </div>
 
-      {/* 2. MARQUEE YELLOW BAR (MATCHING THE ORIGINAL WAYS STATION TEMPLATE) */}
+      {/* 2. MARQUEE YELLOW BAR (MATCHING THE ORIGINAL D2 BADMINTONSHOP TEMPLATE) */}
       <div className="top-yellow-marquee-bar">
         <div className="marquee-track">
           <span className="marquee-item">
@@ -82,7 +82,7 @@ export default function Header({
           </div>
           <div className="brand-text">
             <div className="brand-name">
-              WAYS STATION <span className="brand-tag">BADMINTON</span>
+              D2 BADMINTONSHOP <span className="brand-tag">BADMINTON</span>
             </div>
             <div className="brand-sub">Đặt Sân Tiêu Chuẩn Quốc Tế BWF</div>
           </div>
@@ -106,7 +106,7 @@ export default function Header({
                 />
                 <span className="dot-radio"></span>
                 <span className="radio-label-txt">
-                  <strong>{b.code}</strong> = {b.name.replace('Ways Station ', '')}
+                  <strong>{b.code}</strong> = {b.name.replace('D2 BadmintonShop ', '')}
                 </span>
               </label>
             );

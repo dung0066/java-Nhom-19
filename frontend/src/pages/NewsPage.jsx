@@ -5,7 +5,7 @@ import { fetchArticles } from '../services/api';
 import '../styles/subpages.css';
 
 /**
- * Trang Tin Tức Cầu Lông D2 SHOP (Dành Cho Khách Hàng)
+ * Trang Tin Tức Cầu Lông D2 BADMINTONSHOP (Dành Cho Khách Hàng)
  * Dữ liệu thật 100% kết nối SQL Database (/api/articles), đồng bộ thời gian thực với Admin!
  */
 export default function NewsPage({ onNavigate }) {
@@ -82,15 +82,15 @@ export default function NewsPage({ onNavigate }) {
         <div className="subpage-hero-overlay"></div>
         <div className="subpage-hero-content">
           <span className="subpage-hero-badge">
-            <i className="fa-solid fa-newspaper"></i> {isVietnamese ? 'BẢN TIN CẦU LÔNG D2 SHOP' : 'D2 BADMINTON NEWS'}
+            <i className="fa-solid fa-newspaper"></i> {isVietnamese ? 'BẢN TIN CẦU LÔNG D2 BADMINTONSHOP' : 'D2 BADMINTON NEWS'}
           </span>
           <h1 className="subpage-hero-title">
             {isVietnamese ? 'Tin Tức, Giải Đấu & Kỹ Thuật Đỉnh Cao' : 'News, Tournaments & Pro Badminton Skills'}
           </h1>
           <p className="subpage-hero-desc">
             {isVietnamese
-              ? 'Dữ liệu tin tức cập nhật trực tiếp từ hệ thống D2 Shop. Cung cấp cẩm nang chọn vợt, bài tập thể lực và những giải đấu phong trào mới nhất.'
-              : 'Live badminton articles and tournament updates synchronized with D2 Shop database.'}
+              ? 'Dữ liệu tin tức cập nhật trực tiếp từ hệ thống D2 BadmintonShop. Cung cấp cẩm nang chọn vợt, bài tập thể lực và những giải đấu phong trào mới nhất.'
+              : 'Live badminton articles and tournament updates synchronized with D2 BadmintonShop database.'}
           </p>
         </div>
       </section>

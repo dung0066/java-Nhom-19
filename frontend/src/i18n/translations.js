@@ -1,8 +1,8 @@
-// Bilingual Translation Dictionary (Vietnamese & English) for Ways Station Badminton
+// Bilingual Translation Dictionary (Vietnamese & English) for D2 BadmintonShop
 export const translations = {
   vi: {
     // Brand
-    brandName: 'D2 SHOP',
+    brandName: 'D2 BADMINTONSHOP',
     brandSub: 'BADMINTON CLUB',
 
     // Navbar
@@ -17,7 +17,7 @@ export const translations = {
     langSelectTitle: 'Chọn ngôn ngữ / Language',
 
     // Top Ticker
-    ticker1: 'WAYS STATION BADMINTON: Hệ thống 25+ sân thảm thi đấu chuẩn BWF tại TP.HCM - Mở cửa 24/7',
+    ticker1: 'D2 BADMINTONSHOP: Hệ thống 25+ sân thảm thi đấu chuẩn BWF tại TP.HCM - Mở cửa 24/7',
     ticker2: 'Dịch vụ cho thuê vợt Yonex / Victor / Lining & Giày khử khuẩn UV - Đặt lịch nhận sân tức thì!',
     ticker3: 'Hotline CSKH & Đặt lịch cố định: 0889 555 559',
 
@@ -51,7 +51,7 @@ export const translations = {
     },
     slide4: {
       badge: '👑 CHƯƠNG TRÌNH KHÁCH HÀNG THÂN THIẾT',
-      title: 'Hội Viên Ways Station VIP - Đặc Quyền Tiết Kiệm 20%',
+      title: 'Hội Viên D2 BadmintonShop VIP - Đặc Quyền Tiết Kiệm 20%',
       desc: 'Tích điểm đổi giờ chơi miễn phí, ưu đãi cố định khung giờ vàng, tặng lượt căng vợt định kỳ và ưu tiên giữ sân trước giờ cao điểm.',
       btnPrimary: 'QUYỀN LỢI HỘI VIÊN VIP',
       btnSecondary: 'ĐĂNG KÝ HỘI VIÊN',
@@ -105,13 +105,13 @@ export const translations = {
 
     // Footer
     footer: {
-      aboutTitle: 'VỀ WAYS STATION',
+      aboutTitle: 'VỀ D2 BADMINTONSHOP',
       aboutDesc: 'Hệ thống sân cầu lông tiêu chuẩn quốc tế BWF hàng đầu tại TP.HCM, kết hợp dịch vụ toàn diện từ cho thuê dụng cụ, căng cước đến đồ uống giải khát.',
       openHours: 'Mở cửa: 24/7 tất cả các ngày trong tuần',
       quickLinks: 'LIÊN KẾT NHANH',
       system: 'HỆ THỐNG SÂN',
       contact: 'LIÊN HỆ & CSKH',
-      copyright: 'Bản quyền thuộc về Ways Station Badminton Club. Bảo lưu mọi quyền.'
+      copyright: 'Bản quyền thuộc về D2 BadmintonShop. Bảo lưu mọi quyền.'
     },
 
     // Off-Peak Combo
@@ -188,7 +188,7 @@ export const translations = {
 
   en: {
     // Brand
-    brandName: 'D2 SHOP',
+    brandName: 'D2 BADMINTONSHOP',
     brandSub: 'BADMINTON CLUB',
 
     // Navbar
@@ -203,7 +203,7 @@ export const translations = {
     langSelectTitle: 'Choose Language',
 
     // Top Ticker
-    ticker1: 'WAYS STATION BADMINTON: Network of 25+ BWF tournament mats in HCMC - Open 24/7',
+    ticker1: 'D2 BADMINTONSHOP: Network of 25+ BWF tournament mats in HCMC - Open 24/7',
     ticker2: 'Yonex / Victor / Lining racket rental & UV-sterilized shoes - Instant court confirmation!',
     ticker3: 'Customer Care & Permanent Booking Hotline: 0889 555 559',
 
@@ -237,7 +237,7 @@ export const translations = {
     },
     slide4: {
       badge: '👑 LOYALTY REWARDS PROGRAM',
-      title: 'Ways Station VIP Club - Save Up to 20%',
+      title: 'D2 BadmintonShop VIP Club - Save Up to 20%',
       desc: 'Earn points for free court hours, golden-hour discounts, complimentary periodic stringing and priority booking.',
       btnPrimary: 'VIP PRIVILEGES',
       btnSecondary: 'JOIN VIP CLUB',
@@ -291,13 +291,13 @@ export const translations = {
 
     // Footer
     footer: {
-      aboutTitle: 'ABOUT WAYS STATION',
+      aboutTitle: 'ABOUT D2 BADMINTONSHOP',
       aboutDesc: 'Leading BWF-standard badminton system in HCMC offering full services: equipment rental, pro stringing and refreshments.',
       openHours: 'Open: 24/7 every day of the week',
       quickLinks: 'QUICK LINKS',
       system: 'BRANCH LOCATIONS',
       contact: 'CONTACT & CARE',
-      copyright: 'Copyright Ways Station Badminton Club. All rights reserved.'
+      copyright: 'Copyright D2 BadmintonShop. All rights reserved.'
     },
 
     // Off-Peak Combo

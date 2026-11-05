@@ -1,5 +1,5 @@
 -- ==========================================================================
--- WAYS STATION BADMINTON - DATABASE V2 (MySQL 8.0.16+)
+-- D2 BADMINTONSHOP - DATABASE V2 (MySQL 8.0.16+)
 -- Chuan hoa 3NF, tien = DECIMAL, mat khau BCrypt, co thanh toan / kho / gia dong
 --
 -- LUU Y KHI DUNG VOI SPRING BOOT / JPA:
@@ -286,7 +286,7 @@ CREATE TABLE `products` (
     CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `product_categories` (`id`)
 ) ENGINE=InnoDB;
 
--- Bang quan ly tin tuc & bai viet D2 Shop
+-- Bang quan ly tin tuc & bai viet D2 BadmintonShop
 CREATE TABLE IF NOT EXISTS `articles` (
     `id`             BIGINT AUTO_INCREMENT PRIMARY KEY,
     `title`          VARCHAR(250) NOT NULL,
@@ -417,10 +417,10 @@ LEFT JOIN (
 
 -- 1. Chi nhanh
 INSERT INTO `branches` (`id`, `code`, `name`, `address`, `phone`) VALUES
-(1, 'NVL',  'Ways Station NVL',  '70 Nguyễn Văn Lượng, P. 10, Gò Vấp, TP.HCM', '0889555559'),
-(2, 'DQII', 'Ways Station DQII', '262 Dương Quảng Hàm, P. 6, Gò Vấp, TP.HCM', '0889555559'),
-(3, 'NQA',  'Ways Station NQA',  '86 Nguyễn Quý Anh, P. Tân Sơn Nhì, Tân Phú, TP.HCM', '0889555559'),
-(4, 'HB',   'Ways Station HB',   '135 Hiệp Bình, TP. Thủ Đức, TP.HCM', '0889555559');
+(1, 'NVL',  'D2 BadmintonShop NVL',  '70 Nguyễn Văn Lượng, P. 10, Gò Vấp, TP.HCM', '0889555559'),
+(2, 'DQII', 'D2 BadmintonShop DQII', '262 Dương Quảng Hàm, P. 6, Gò Vấp, TP.HCM', '0889555559'),
+(3, 'NQA',  'D2 BadmintonShop NQA',  '86 Nguyễn Quý Anh, P. Tân Sơn Nhì, Tân Phú, TP.HCM', '0889555559'),
+(4, 'HB',   'D2 BadmintonShop HB',   '135 Hiệp Bình, TP. Thủ Đức, TP.HCM', '0889555559');
 
 -- 2. San (NVL 7, DQII 6, NQA 6, HB 8 - khop so luong khai bao truoc day)
 
@@ -460,7 +460,7 @@ INSERT INTO `membership_packages`
 (`id`, `code`, `name`, `price`, `duration_days`, `discount_percent`, `discount_from_time`, `discount_to_time`, `student_only`, `description`, `badge_color`, `icon`) VALUES
 (1, 'SILVER',  'Hội Viên Bạc (Silver)',     199000,  30,  5.00,  NULL, NULL, FALSE, 'Gói khởi đầu tiết kiệm dành cho người chơi thể thao hàng tuần', '#0284c7', 'fa-solid fa-medal'),
 (2, 'GOLD',    'Hội Viên Vàng (Gold)',      499000,  90,  12.00, NULL, NULL, FALSE, 'Gói phổ biến nhất, tối ưu chi phí cho các cơ thủ và nhóm bạn chơi thường xuyên', '#f59e0b', 'fa-solid fa-crown'),
-(3, 'DIAMOND', 'Kim Cương VIP (Diamond)',   1290000, 365, 20.00, NULL, NULL, FALSE, 'Đặc quyền đẳng cấp nhất hệ thống Ways Station Badminton', '#10b981', 'fa-solid fa-gem'),
+(3, 'DIAMOND', 'Kim Cương VIP (Diamond)',   1290000, 365, 20.00, NULL, NULL, FALSE, 'Đặc quyền đẳng cấp nhất hệ thống D2 BadmintonShop', '#10b981', 'fa-solid fa-gem'),
 (4, 'STUDENT', 'Gói Sinh Viên Thần Tốc',    99000,   30,  10.00, '00:00', '16:30', TRUE, 'Gói tiếp sức đam mê thể thao trẻ học đường (áp dụng slot bắt đầu trước 16:30)', '#8b5cf6', 'fa-solid fa-graduation-cap');
 
 INSERT INTO `package_benefits` (`package_id`, `benefit_type`, `value`, `quota_limit`, `quota_period`, `branch_id`, `time_from`, `time_to`, `description`) VALUES
@@ -475,7 +475,7 @@ INSERT INTO `package_benefits` (`package_id`, `benefit_type`, `value`, `quota_li
 
 -- 6. Nguoi dung (mat khau '123456' - BCrypt)
 INSERT INTO `users` (`id`, `username`, `password`, `full_name`, `email`, `phone`, `role`, `status`) VALUES
-(1, 'admin',        '$2a$10$7Jc5UoKPUfmL/MnAMk3f.OtRfR1BWxjjNm2dtPTMzc1lcV/Yv.tFq', 'Quản Trị Viên Hệ Thống', 'admin@waysstation.vn',      '0889555559', 'ROLE_ADMIN', 'ACTIVE'),
+(1, 'admin',        '$2a$10$7Jc5UoKPUfmL/MnAMk3f.OtRfR1BWxjjNm2dtPTMzc1lcV/Yv.tFq', 'Quản Trị Viên Hệ Thống', 'admin@d2badmintonshop.vn',      '0889555559', 'ROLE_ADMIN', 'ACTIVE'),
 (2, 'hoivien_gold', '$2a$10$7Jc5UoKPUfmL/MnAMk3f.OtRfR1BWxjjNm2dtPTMzc1lcV/Yv.tFq', 'Nguyễn Văn Tuấn',        'tuan.badminton@gmail.com', '0909123456', 'ROLE_USER',  'ACTIVE'),
 (3, 'khachhang1',   '$2a$10$7Jc5UoKPUfmL/MnAMk3f.OtRfR1BWxjjNm2dtPTMzc1lcV/Yv.tFq', 'Trần Minh Đức',          'duc.tm@gmail.com',         '0912345678', 'ROLE_USER',  'ACTIVE');
 

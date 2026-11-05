@@ -38,15 +38,15 @@ export default function AppFooter({ onNavigate }) {
       title: isVietnamese ? 'Quy chế Hoạt động ứng dụng' : 'Platform Operating Regulations',
       content: isVietnamese ? (
         <>
-          <p>D2 Shop cung cấp nền tảng số hỗ trợ người chơi thể thao và các câu lạc bộ cầu lông:</p>
+          <p>D2 BadmintonShop cung cấp nền tảng số hỗ trợ người chơi thể thao và các câu lạc bộ cầu lông:</p>
           <h4>1. Nguyên tắc hoạt động</h4>
-          <p>Tất cả khách hàng tham gia đặt sân tại D2 Shop cần tuân thủ thời gian thi đấu đã đăng ký, sử dụng giày chuyên dụng thể thao đế không để lại vệt màu trên thảm thi đấu chuẩn BWF.</p>
+          <p>Tất cả khách hàng tham gia đặt sân tại D2 BadmintonShop cần tuân thủ thời gian thi đấu đã đăng ký, sử dụng giày chuyên dụng thể thao đế không để lại vệt màu trên thảm thi đấu chuẩn BWF.</p>
           <h4>2. Quy tắc giữ sân</h4>
           <p>Lịch đặt được bảo lưu 100% khi thanh toán trực tuyến hoặc giữ chỗ thành công theo quy định hệ thống.</p>
         </>
       ) : (
         <>
-          <p>D2 Shop provides a smart digital platform supporting badminton players and clubs:</p>
+          <p>D2 BadmintonShop provides a smart digital platform supporting badminton players and clubs:</p>
           <h4>1. Operating Principles</h4>
           <p>All players must adhere to their reserved time slots and wear non-marking indoor court shoes on BWF-certified tournament mats.</p>
           <h4>2. Reservation Guarantee</h4>
@@ -82,7 +82,7 @@ export default function AppFooter({ onNavigate }) {
       title: isVietnamese ? 'Chính sách bảo mật thông tin cá nhân' : 'Privacy Policy',
       content: isVietnamese ? (
         <>
-          <p>D2 Shop cam kết bảo vệ tuyệt đối thông tin riêng tư của khách hàng:</p>
+          <p>D2 BadmintonShop cam kết bảo vệ tuyệt đối thông tin riêng tư của khách hàng:</p>
           <h4>1. Thu thập dữ liệu</h4>
           <p>Hệ thống chỉ lưu trữ các thông tin cần thiết: Họ tên, số điện thoại, email phục vụ việc xác nhận mã đặt sân và gửi thông báo dịch vụ.</p>
           <h4>2. Bảo mật thông tin</h4>
@@ -90,7 +90,7 @@ export default function AppFooter({ onNavigate }) {
         </>
       ) : (
         <>
-          <p>D2 Shop is fully dedicated to safeguarding personal customer data:</p>
+          <p>D2 BadmintonShop is fully dedicated to safeguarding personal customer data:</p>
           <h4>1. Data Collection</h4>
           <p>We only collect essential details: Full Name, Phone Number, and Email for reservation verification and automated notifications.</p>
           <h4>2. Privacy Protection</h4>
@@ -102,7 +102,7 @@ export default function AppFooter({ onNavigate }) {
       title: isVietnamese ? 'Thông tin chăm sóc khách hàng' : 'Customer Support & Care',
       content: isVietnamese ? (
         <>
-          <p>Đội ngũ CSKH D2 Shop sẵn sàng phục vụ và giải đáp mọi thắc mắc của bạn:</p>
+          <p>Đội ngũ CSKH D2 BadmintonShop sẵn sàng phục vụ và giải đáp mọi thắc mắc của bạn:</p>
           <h4>Hotline tư vấn & hỗ trợ đặt lịch 24/7</h4>
           <p><strong>Điện thoại:</strong> 0914977030</p>
           <p><strong>Email:</strong> d2shop.badminton@gmail.com</p>
@@ -110,7 +110,7 @@ export default function AppFooter({ onNavigate }) {
         </>
       ) : (
         <>
-          <p>The D2 Shop customer care team is dedicated to assisting you 24/7:</p>
+          <p>The D2 BadmintonShop customer care team is dedicated to assisting you 24/7:</p>
           <h4>24/7 Booking & Support Hotline</h4>
           <p><strong>Phone:</strong> 0914977030</p>
           <p><strong>Email:</strong> d2shop.badminton@gmail.com</p>
@@ -122,7 +122,7 @@ export default function AppFooter({ onNavigate }) {
       title: isVietnamese ? 'Điều khoản dịch vụ' : 'Terms of Service',
       content: isVietnamese ? (
         <>
-          <p>Điều khoản sử dụng dịch vụ tại toàn bộ cụm sân D2 Shop:</p>
+          <p>Điều khoản sử dụng dịch vụ tại toàn bộ cụm sân D2 BadmintonShop:</p>
           <h4>1. Hủy & Đổi giờ đặt sân</h4>
           <p>Khách hàng được quyền đổi giờ hoặc dời lịch trước ít nhất 4 tiếng so với giờ bắt đầu ca chơi mà không mất phí.</p>
           <h4>2. Trách nhiệm người chơi</h4>
@@ -130,7 +130,7 @@ export default function AppFooter({ onNavigate }) {
         </>
       ) : (
         <>
-          <p>Service conditions across all D2 Shop court complexes:</p>
+          <p>Service conditions across all D2 BadmintonShop court complexes:</p>
           <h4>1. Rescheduling & Cancellations</h4>
           <p>Players can reschedule or postpone reservations at least 4 hours before slot start time free of charge.</p>
           <h4>2. Player Responsibilities</h4>
@@ -214,8 +214,8 @@ export default function AppFooter({ onNavigate }) {
                 <i className="fa-solid fa-circle-check"></i>
                 <span>
                   {isVietnamese
-                    ? 'Cảm ơn bạn! D2 Shop đã ghi nhận email ưu đãi của bạn.'
-                    : 'Thank you! D2 Shop has saved your email successfully.'}
+                    ? 'Cảm ơn bạn! D2 BadmintonShop đã ghi nhận email ưu đãi của bạn.'
+                    : 'Thank you! D2 BadmintonShop has saved your email successfully.'}
                 </span>
               </div>
             )}
@@ -227,16 +227,16 @@ export default function AppFooter({ onNavigate }) {
       <div className="d2-footer-main">
         <div className="d2-footer-grid">
           
-          {/* CỘT 1: THƯƠNG HIỆU & THÔNG TIN LIÊN HỆ D2 SHOP */}
+          {/* CỘT 1: THƯƠNG HIỆU & THÔNG TIN LIÊN HỆ D2 BADMINTONSHOP */}
           <div className="d2-footer-col-brand">
             <div
               className="d2-footer-brand-header"
               onClick={() => handleNavClick('home')}
-              title="D2 Shop - Badminton"
+              title="D2 BadmintonShop - Badminton"
             >
               <img
                 src="/logo-d2.png"
-                alt="D2 Shop"
+                alt="D2 BadmintonShop"
                 style={{
                   height: '62px',
                   width: 'auto',
@@ -368,7 +368,7 @@ export default function AppFooter({ onNavigate }) {
                   onClick={() => handleNavClick('about')}
                 >
                   <i className="fa-solid fa-chevron-right"></i>
-                  {isVietnamese ? 'Giới thiệu về D2 Shop' : 'About D2 Shop'}
+                  {isVietnamese ? 'Giới thiệu về D2 BadmintonShop' : 'About D2 BadmintonShop'}
                 </button>
               </li>
               <li>
@@ -519,7 +519,7 @@ export default function AppFooter({ onNavigate }) {
 
       {/* 3. COPYRIGHT BAR */}
       <div className="d2-footer-copyright">
-        Copyright © 2026 – <strong>D2 Shop</strong>. All rights reserved. {isVietnamese ? 'Nền tảng đặt sân & dịch vụ cầu lông hàng đầu.' : 'Leading badminton court booking & services portal.'}
+        Copyright © 2026 – <strong>D2 BadmintonShop</strong>. All rights reserved. {isVietnamese ? 'Nền tảng đặt sân & dịch vụ cầu lông hàng đầu.' : 'Leading badminton court booking & services portal.'}
       </div>
 
       {/* 4. MODAL HIỂN THỊ CHÍNH SÁCH */}

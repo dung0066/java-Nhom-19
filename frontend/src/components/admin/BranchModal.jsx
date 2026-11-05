@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 /**
- * Modal Thêm / Chỉnh Sửa Chi Nhánh Cơ Sở D2 SHOP
+ * Modal Thêm / Chỉnh Sửa Chi Nhánh Cơ Sở D2 BADMINTONSHOP
  * Code ngắn gọn, trực quan, kết nối SQL Database
  */
 export default function BranchModal({ isOpen, onClose, initialData, onSave }) {
@@ -109,7 +109,7 @@ export default function BranchModal({ isOpen, onClose, initialData, onSave }) {
                 maxLength={100}
                 type="text"
                 required
-                placeholder="VD: D2 Shop NVL - Gò Vấp..."
+                placeholder="VD: D2 BadmintonShop NVL - Gò Vấp..."
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}

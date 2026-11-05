@@ -52,7 +52,7 @@ export default function AdminViewModal({ isOpen, onClose }) {
         <div className="modal-header-section">
           <div className="admin-badge-row">
             <span className="admin-tag">
-              <Shield size={13} /> QUẢN TRỊ VIÊN WAYS STATION
+              <Shield size={13} /> QUẢN TRỊ VIÊN D2 BADMINTONSHOP
             </span>
             <button type="button" onClick={loadBookings} className="btn-refresh-admin" title="Tải lại dữ liệu">
               <RefreshCw size={13} className={isLoading ? 'spin-icon' : ''} />
@@ -94,10 +94,10 @@ export default function AdminViewModal({ isOpen, onClose }) {
             <span>Lọc chi nhánh:</span>
             <select value={filterBranch} onChange={(e) => setFilterBranch(e.target.value)}>
               <option value="ALL">Tất cả chi nhánh</option>
-              <option value="NVL">Ways Station NVL</option>
-              <option value="DQII">Ways Station DQII</option>
-              <option value="NQA">Ways Station NQA</option>
-              <option value="HB">Ways Station HB</option>
+              <option value="NVL">D2 BadmintonShop NVL</option>
+              <option value="DQII">D2 BadmintonShop DQII</option>
+              <option value="NQA">D2 BadmintonShop NQA</option>
+              <option value="HB">D2 BadmintonShop HB</option>
             </select>
           </div>
         </div>

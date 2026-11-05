@@ -293,7 +293,7 @@ export default function BookingPage({ onNavigate }) {
               grouped[catKey].push({
                 id: `prod_${p.id}`,
                 name: p.name,
-                desc: p.description || p.spec1 || (p.brand ? `Thương hiệu: ${p.brand}` : 'Chính hãng D2 Shop'),
+                desc: p.description || p.spec1 || (p.brand ? `Thương hiệu: ${p.brand}` : 'Chính hãng D2 BadmintonShop'),
                 price: Number(p.price) || 0,
                 unit: p.priceUnit ? p.priceUnit.replace('/', '').trim() : 'cái',
                 badge: p.badge
@@ -968,7 +968,7 @@ export default function BookingPage({ onNavigate }) {
                     Chọn Cơ Sở Sân Cầu Lông
                   </h2>
                   <p>
-                    Hệ thống 4 cụm sân Ways Station đạt chuẩn BWF thi đấu quốc
+                    Hệ thống 4 cụm sân D2 BadmintonShop đạt chuẩn BWF thi đấu quốc
                     tế
                   </p>
                 </div>
@@ -983,7 +983,7 @@ export default function BookingPage({ onNavigate }) {
                 </button>
               </div>
 
-              {/* CARDS LIST OF BRANCHES (HIỆN ĐẠI, GẮN LOGO WAYS STATION) */}
+              {/* CARDS LIST OF BRANCHES (HIỆN ĐẠI, GẮN LOGO D2 BADMINTONSHOP) */}
               <div className="branch-cards-grid">
                 {BRANCHES.map((b) => {
                   const isSelected = branch === b.code;
@@ -1014,7 +1014,7 @@ export default function BookingPage({ onNavigate }) {
                           <div className="branch-logo-box">
                             <img
                               src="/logo-d2.png"
-                              alt="D2 Shop"
+                              alt="D2 BadmintonShop"
                               className="branch-logo-img"
                             />
                           </div>
@@ -2196,7 +2196,7 @@ export default function BookingPage({ onNavigate }) {
                           className="fa-solid fa-wallet"
                           style={{ color: "#f59e0b" }}
                         ></i>
-                        <span>Ví Ways Station</span>
+                        <span>Ví D2 BadmintonShop</span>
                       </div>
                       <span className="pay-card-desc">
                         Trừ trực tiếp từ ví, đơn được xác nhận ngay.
@@ -2414,7 +2414,7 @@ export default function BookingPage({ onNavigate }) {
               </h2>
               <p className="success-sub-desc">
                 {bookingResult.status === "CONFIRMED"
-                  ? "Đơn đã được xác nhận và lưu vào hệ thống của Ways Station Badminton Club."
+                  ? "Đơn đã được xác nhận và lưu vào hệ thống của D2 BadmintonShop."
                   : `Sân được giữ cho bạn${bookingResult.holdExpiresAt ? ` đến ${new Date(bookingResult.holdExpiresAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}` : ""}. Quá giờ này mà chưa thanh toán, đơn sẽ tự hủy.`}
               </p>
 
@@ -2497,7 +2497,7 @@ export default function BookingPage({ onNavigate }) {
               )}
               {bookingResult.paymentType === "WALLET" && bookingResult.status === "CONFIRMED" && (
                 <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "14px", padding: "14px 18px", maxWidth: "380px", margin: "0 auto 20px auto", color: "#166534", fontSize: "13.5px" }}>
-                  <i className="fa-solid fa-wallet"></i> Đã thanh toán {formatVnd(bookingResult.isDeposit ? (bookingResult.paidAmount || bookingResult.depositAmount) : bookingResult.totalPrice)} {bookingResult.isDeposit ? "(Cọc 50%)" : ""} bằng ví Ways Station.
+                  <i className="fa-solid fa-wallet"></i> Đã thanh toán {formatVnd(bookingResult.isDeposit ? (bookingResult.paidAmount || bookingResult.depositAmount) : bookingResult.totalPrice)} {bookingResult.isDeposit ? "(Cọc 50%)" : ""} bằng ví D2 BadmintonShop.
                 </div>
               )}
 

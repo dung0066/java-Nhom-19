@@ -116,7 +116,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, titleNotice 
       showToast(
         'success',
         'Đăng nhập thành công!',
-        `Chào mừng ${user?.fullName || user?.username || 'bạn'} trở lại D2 SHOP!`,
+        `Chào mừng ${user?.fullName || user?.username || 'bạn'} trở lại D2 BADMINTONSHOP!`,
         3800
       );
       if (onAuthSuccess) onAuthSuccess(user);
@@ -175,7 +175,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, titleNotice 
       showToast(
         'success',
         'Đăng ký tài khoản thành công!',
-        `Chào mừng ${user?.fullName || user?.username || 'bạn'} gia nhập D2 SHOP!`,
+        `Chào mừng ${user?.fullName || user?.username || 'bạn'} gia nhập D2 BADMINTONSHOP!`,
         4000
       );
       if (onAuthSuccess) onAuthSuccess(user);

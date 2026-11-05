@@ -216,7 +216,7 @@ export default function AdminResetPasswordModal({
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="VD: admin hoặc admin@waysstation.vn"
+                    placeholder="VD: admin hoặc admin@d2badmintonshop.vn"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     style={{ paddingLeft: '36px' }}

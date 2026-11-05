@@ -30,12 +30,12 @@ export default function BookingLookupModal({ isOpen, onClose }) {
   };
 
   const handleCancelBooking = async (bookingId) => {
-    if (!window.confirm('Quý khách có chắc chắn muốn hủy đơn đặt sân này không?\n\nLƯU Ý: Toàn bộ số tiền quý khách đã thanh toán (bao gồm cả tiền đặt cọc 50%) sẽ được hoàn trả 100% trực tiếp vào Ví Ways Station ngay lập tức!')) return;
+    if (!window.confirm('Quý khách có chắc chắn muốn hủy đơn đặt sân này không?\n\nLƯU Ý: Toàn bộ số tiền quý khách đã thanh toán (bao gồm cả tiền đặt cọc 50%) sẽ được hoàn trả 100% trực tiếp vào Ví D2 BadmintonShop ngay lập tức!')) return;
     try {
       const res = await cancelBooking(bookingId);
       const refunded = res?.refundedAmount;
       const msg = refunded && refunded > 0
-        ? `Đã hủy đơn thành công! Hệ thống đã hoàn trả ${formatVND(refunded)} về Ví Ways Station của bạn.`
+        ? `Đã hủy đơn thành công! Hệ thống đã hoàn trả ${formatVND(refunded)} về Ví D2 BadmintonShop của bạn.`
         : (res?.message || 'Đã hủy đơn đặt sân thành công! Tiền thanh toán đã được hoàn về ví.');
       setCancelMsg(msg);
       setSearchResults((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: 'CANCELLED' } : b)));
@@ -129,7 +129,7 @@ export default function BookingLookupModal({ isOpen, onClose }) {
                     </div>
                     <div className="detail-item">
                       <MapPin size={13} className="text-emerald" />
-                      <span>{b.branch?.name || 'Ways Station NVL'}</span>
+                      <span>{b.branch?.name || 'D2 BadmintonShop NVL'}</span>
                     </div>
                     <div className="detail-item">
                       <Calendar size={13} className="text-cyan" />
@@ -150,7 +150,7 @@ export default function BookingLookupModal({ isOpen, onClose }) {
                   {b.status === 'CANCELLED' && (
                     <div style={{ marginTop: '8px', padding: '6px 10px', background: '#ecfdf5', borderRadius: '6px', color: '#065f46', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <CheckCircle2 size={13} />
-                      <span>Đơn đã hủy - Toàn bộ tiền đã thanh toán được hoàn về Ví Ways Station</span>
+                      <span>Đơn đã hủy - Toàn bộ tiền đã thanh toán được hoàn về Ví D2 BadmintonShop</span>
                     </div>
                   )}
 

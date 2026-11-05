@@ -29,7 +29,7 @@ export default function GuidePriceModal({ isOpen, onClose }) {
             <HelpCircle size={13} className="text-emerald" />
             <span>Thông Tin Dịch Vụ</span>
           </div>
-          <h3 className="modal-heading">Bảng Giá & Quy Định Đặt Sân Ways Station</h3>
+          <h3 className="modal-heading">Bảng Giá & Quy Định Đặt Sân D2 BadmintonShop</h3>
         </div>
 
         <div className="guide-content-body">

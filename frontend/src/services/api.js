@@ -1,5 +1,5 @@
 /**
- * Ways Station Badminton - API Client
+ * D2 BadmintonShop - API Client
  * Kết nối REST API Spring Boot (Database V2)
  * Tự động gắn JWT Authorization header từ localStorage.
  * TUYỆT ĐỐI KHÔNG DÙNG MOCK FALLBACK trên các thao tác ghi dữ liệu (createBooking, cancel, buy, topup, transfer).

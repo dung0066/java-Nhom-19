@@ -1,4 +1,4 @@
-# PROMPT: Refactor đồ án "Ways Station Badminton" sang Database v2 (27 bảng)
+# PROMPT: Refactor đồ án "D2 BadmintonShop" sang Database v2 (27 bảng)
 
 > **Chuẩn bị trước khi dán prompt:**
 > 1. Mở thư mục project `java-Nhom-19` làm workspace.

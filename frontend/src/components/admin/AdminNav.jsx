@@ -8,7 +8,7 @@ export default function AdminNav({ onNavigate }) {
           <i className="fa-solid fa-feather"></i>
         </div>
         <div className="nav-title-group">
-          <h1>WAYS STATION BADMINTON - ADMIN PANEL</h1>
+          <h1>D2 BADMINTONSHOP - ADMIN PANEL</h1>
           <span>
             HỆ THỐNG QUẢN TRỊ TOÀN DIỆN: SÂN ĐẤU, ĐƠN HÀNG, GIÁ VÀ DỤNG CỤ CHO THUÊ
           </span>

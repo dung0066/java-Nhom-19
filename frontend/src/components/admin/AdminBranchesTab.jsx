@@ -46,7 +46,7 @@ export default function AdminBranchesTab({
         <div className="card-header-flex">
           <div>
             <h3>
-              <i className="fa-solid fa-building"></i> Danh Sách Chi Nhánh Hệ Thống D2 SHOP
+              <i className="fa-solid fa-building"></i> Danh Sách Chi Nhánh Hệ Thống D2 BADMINTONSHOP
             </h3>
             <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
               Thêm mới cơ sở, cập nhật địa chỉ hotline hoặc quản lý chi nhánh

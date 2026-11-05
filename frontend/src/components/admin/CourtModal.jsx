@@ -127,10 +127,10 @@ export default function CourtModal({ isOpen, onClose, initialData, branches = []
                   ))
                 ) : (
                   <>
-                    <option value="NVL">D2 Shop NVL - Gò Vấp</option>
-                    <option value="DQII">D2 Shop DQII - Gò Vấp</option>
-                    <option value="NQA">D2 Shop NQA - Tân Phú</option>
-                    <option value="HB">D2 Shop HB - TP. Thủ Đức</option>
+                    <option value="NVL">D2 BadmintonShop NVL - Gò Vấp</option>
+                    <option value="DQII">D2 BadmintonShop DQII - Gò Vấp</option>
+                    <option value="NQA">D2 BadmintonShop NQA - Tân Phú</option>
+                    <option value="HB">D2 BadmintonShop HB - TP. Thủ Đức</option>
                   </>
                 )}
               </select>

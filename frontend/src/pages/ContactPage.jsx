@@ -46,7 +46,7 @@ export default function ContactPage({ onNavigate }) {
             <i className="fa-solid fa-headset"></i> {isVietnamese ? 'HỖ TRỢ KHÁCH HÀNG 24/7' : '24/7 CUSTOMER SERVICE'}
           </span>
           <h1 className="subpage-hero-title">
-            {isVietnamese ? 'Liên Hệ Với Đội Ngũ D2 Shop' : 'Get in Touch with D2 Shop'}
+            {isVietnamese ? 'Liên Hệ Với Đội Ngũ D2 BadmintonShop' : 'Get in Touch with D2 BadmintonShop'}
           </h1>
           <p className="subpage-hero-desc">
             {isVietnamese
@@ -67,7 +67,7 @@ export default function ContactPage({ onNavigate }) {
             </h3>
             <p className="contact-form-sub">
               {isVietnamese
-                ? 'Điền thông tin bên dưới, nhân viên CSKH D2 Shop sẽ liên hệ phản hồi bạn trong vòng 15 phút.'
+                ? 'Điền thông tin bên dưới, nhân viên CSKH D2 BadmintonShop sẽ liên hệ phản hồi bạn trong vòng 15 phút.'
                 : 'Fill out the form below and our customer support team will get back to you within 15 minutes.'}
             </p>
 
@@ -86,8 +86,8 @@ export default function ContactPage({ onNavigate }) {
                 </h4>
                 <p style={{ fontSize: '14px', margin: 0, color: '#047857' }}>
                   {isVietnamese
-                    ? 'Cảm ơn bạn đã liên hệ. Đội ngũ D2 Shop sẽ gọi điện hoặc gửi email phản hồi sớm nhất.'
-                    : 'Thank you for reaching out. The D2 Shop team will contact you shortly.'}
+                    ? 'Cảm ơn bạn đã liên hệ. Đội ngũ D2 BadmintonShop sẽ gọi điện hoặc gửi email phản hồi sớm nhất.'
+                    : 'Thank you for reaching out. The D2 BadmintonShop team will contact you shortly.'}
                 </p>
               </div>
             ) : (
@@ -145,10 +145,10 @@ export default function ContactPage({ onNavigate }) {
                       value={formData.branch}
                       onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
                     >
-                      <option value="NVL">D2 Shop NVL - Gò Vấp</option>
-                      <option value="DQII">D2 Shop DQII - Gò Vấp</option>
-                      <option value="NQA">D2 Shop NQA - Tân Phú</option>
-                      <option value="HB">D2 Shop HB - Thủ Đức</option>
+                      <option value="NVL">D2 BadmintonShop NVL - Gò Vấp</option>
+                      <option value="DQII">D2 BadmintonShop DQII - Gò Vấp</option>
+                      <option value="NQA">D2 BadmintonShop NQA - Tân Phú</option>
+                      <option value="HB">D2 BadmintonShop HB - Thủ Đức</option>
                     </select>
                   </div>
 
@@ -257,7 +257,7 @@ export default function ContactPage({ onNavigate }) {
         {/* 3. INTERACTIVE GOOGLE MAPS EMBED */}
         <div className="contact-map-wrapper">
           <iframe
-            title="D2 Shop Badminton Map"
+            title="D2 BadmintonShop Map"
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.1245785054173!2d106.70921097480525!3d10.801773089348633!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317528a49c9eb1a9%3A0x6b4efd8c1be1a141!2zODE4LzM0IFjDtCBWaeG6v3QgTmdo4buHIFTEqW5oLCBQaMaw4budbmcgMjUsIELDrG5oIFRo4bqhbmgsIEjhu5MgQ2jDrSBNaW5oLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1700000000000!5m2!1svi!2s"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"

@@ -200,10 +200,10 @@ export default function HomePage({ onNavigate }) {
                 onChange={(e) => setActiveBranchKey(e.target.value)}
                 style={{ width: '100%', padding: '12px 14px', borderRadius: '12px', border: '1.5px solid #cbd5e1', fontSize: '14px', fontWeight: '700', color: '#0f172a', background: '#f8fafc', outline: 'none', cursor: 'pointer' }}
               >
-                <option value="NVL">D2 Shop NVL - Gò Vấp (7 Sân)</option>
-                <option value="DQII">D2 Shop DQII - Gò Vấp (4 Sân)</option>
-                <option value="NQA">D2 Shop NQA - Tân Phú (6 Sân)</option>
-                <option value="HB">D2 Shop HB - Thủ Đức (2 Sân)</option>
+                <option value="NVL">D2 BadmintonShop NVL - Gò Vấp (7 Sân)</option>
+                <option value="DQII">D2 BadmintonShop DQII - Gò Vấp (4 Sân)</option>
+                <option value="NQA">D2 BadmintonShop NQA - Tân Phú (6 Sân)</option>
+                <option value="HB">D2 BadmintonShop HB - Thủ Đức (2 Sân)</option>
               </select>
             </div>
 
@@ -285,7 +285,7 @@ export default function HomePage({ onNavigate }) {
               const el = document.getElementById('branchesSection');
               if (el) el.scrollIntoView({ behavior: 'smooth' });
             }}
-            title={isVietnamese ? 'Xem các cụm sân D2 Shop' : 'View D2 Shop branches'}
+            title={isVietnamese ? 'Xem các cụm sân D2 BadmintonShop' : 'View D2 BadmintonShop branches'}
           >
             <div className="home-feature-icon-wrap">
               <img src="/icons/icon-court.png" alt="Tìm kiếm vị trí sân" className="home-feature-icon-img" />
@@ -345,12 +345,12 @@ export default function HomePage({ onNavigate }) {
       </section>
 
 
-      {/* 4. CÁC CƠ SỞ SÂN CẦU LÔNG D2 SHOP */}
+      {/* 4. CÁC CƠ SỞ SÂN CẦU LÔNG D2 BADMINTONSHOP */}
       <section className="d2-section d2-section-gray" id="branchesSection">
         <div className="d2-container">
           <div className="d2-section-header">
             <span className="d2-pill-badge d2-pill-blue">
-              <i className="fa-solid fa-location-dot"></i> {isVietnamese ? 'Hệ Thống Sân D2 Shop' : 'D2 Shop Court System'}
+              <i className="fa-solid fa-location-dot"></i> {isVietnamese ? 'Hệ Thống Sân D2 BadmintonShop' : 'D2 BadmintonShop Court System'}
             </span>
             <h2 className="d2-section-title">
               {isVietnamese ? 'Cơ Sở Sân Cầu Lông Hiện Đại' : 'Modern Badminton Court Clusters'}
@@ -366,7 +366,7 @@ export default function HomePage({ onNavigate }) {
             {[
               {
                 id: 'NVL',
-                name: 'D2 Shop Nguyễn Văn Lượng',
+                name: 'D2 BadmintonShop Nguyễn Văn Lượng',
                 district: isVietnamese ? 'Quận Gò Vấp' : 'Go Vap Dist.',
                 address: '70 Nguyễn Văn Lượng, Phường 10, Gò Vấp',
                 courts: isVietnamese ? '7 Sân BWF' : '7 BWF Courts',
@@ -376,7 +376,7 @@ export default function HomePage({ onNavigate }) {
               },
               {
                 id: 'DQII',
-                name: 'D2 Shop Dương Quảng Hàm',
+                name: 'D2 BadmintonShop Dương Quảng Hàm',
                 district: isVietnamese ? 'Quận Gò Vấp' : 'Go Vap Dist.',
                 address: '262 Dương Quảng Hàm, Phường 5, Gò Vấp',
                 courts: isVietnamese ? '4 Sân VIP' : '4 VIP Courts',
@@ -386,7 +386,7 @@ export default function HomePage({ onNavigate }) {
               },
               {
                 id: 'NQA',
-                name: 'D2 Shop Nguyễn Quý Anh',
+                name: 'D2 BadmintonShop Nguyễn Quý Anh',
                 district: isVietnamese ? 'Quận Tân Phú' : 'Tan Phu Dist.',
                 address: '86 Nguyễn Quý Anh, P. Tân Sơn Nhì, Tân Phú',
                 courts: isVietnamese ? '6 Sân đấu' : '6 Match Courts',
@@ -396,7 +396,7 @@ export default function HomePage({ onNavigate }) {
               },
               {
                 id: 'HB',
-                name: 'D2 Shop Hiệp Bình',
+                name: 'D2 BadmintonShop Hiệp Bình',
                 district: isVietnamese ? 'TP. Thủ Đức' : 'Thu Duc City',
                 address: '135 Hiệp Bình, P. Hiệp Bình Chánh, Thủ Đức',
                 courts: isVietnamese ? '2 Sân VIP' : '2 VIP Courts',
@@ -474,8 +474,8 @@ export default function HomePage({ onNavigate }) {
               <h3 className="d2-step-title">{isVietnamese ? 'Chọn Sân & Giờ Chơi' : 'Pick Court & Time'}</h3>
               <p className="d2-step-text">
                 {isVietnamese
-                  ? 'Tra cứu 4 cụm sân D2 Shop và chọn ca 30 phút thuận tiện nhất với bạn và đồng đội.'
-                  : 'Browse 4 D2 Shop court clusters and select the most convenient 30-min time slot.'}
+                  ? 'Tra cứu 4 cụm sân D2 BadmintonShop và chọn ca 30 phút thuận tiện nhất với bạn và đồng đội.'
+                  : 'Browse 4 D2 BadmintonShop court clusters and select the most convenient 30-min time slot.'}
               </p>
             </div>
 
@@ -673,7 +673,7 @@ export default function HomePage({ onNavigate }) {
                 <i className="fa-solid fa-bolt"></i> {isVietnamese ? 'Đặt Lịch Tức Thì' : 'Instant Reservation'}
               </span>
               <h2 className="d2-cta-title">
-                {isVietnamese ? 'Sẵn Sàng Ra Sân Cùng D2 Shop?' : 'Ready To Play At D2 Shop?'}
+                {isVietnamese ? 'Sẵn Sàng Ra Sân Cùng D2 BadmintonShop?' : 'Ready To Play At D2 BadmintonShop?'}
               </h2>
               <p className="d2-cta-desc">
                 {isVietnamese

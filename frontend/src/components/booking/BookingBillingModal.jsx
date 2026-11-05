@@ -238,7 +238,7 @@ export default function BookingBillingModal({
           <div className="billing-title-meta">
             <span className="step-tag">{isVietnamese ? 'QUY TRÌNH ĐẶT SÂN & TÍNH ĐƠN TRỌN GÓI' : 'FULL-SERVICE BOOKING & BILLING WIZARD'}</span>
             <h2>
-              <i className="fa-solid fa-file-invoice-dollar"></i> {isVietnamese ? 'Hệ Thống Đặt Sân & Dịch Vụ Ways Station' : 'Ways Station Booking & Service Portal'}
+              <i className="fa-solid fa-file-invoice-dollar"></i> {isVietnamese ? 'Hệ Thống Đặt Sân & Dịch Vụ D2 BadmintonShop' : 'D2 BadmintonShop Booking & Service Portal'}
             </h2>
           </div>
           <button type="button" className="billing-close-btn" onClick={onClose} title={t.wizard.btnClose}>
@@ -531,7 +531,7 @@ export default function BookingBillingModal({
               <div className="invoice-review-box">
                 <div className="invoice-header">
                   <div className="inv-brand">
-                    <h4>WAYS STATION BADMINTON CLUB</h4>
+                    <h4>D2 BADMINTONSHOP</h4>
                     <span>BẢNG KÊ CHI TIẾT TÍNH ĐƠN ĐẶT SÂN & DỊCH VỤ</span>
                   </div>
                   <div className="inv-date">

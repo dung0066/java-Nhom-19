@@ -182,7 +182,7 @@ export default function SuccessReceiptModal({
                 <div className="bank-sub-info" style={{ fontSize: '12px', textAlign: 'left', background: '#f8fafc', padding: '10px 14px', borderRadius: '8px', margin: '10px 0' }}>
                   <p style={{ margin: '2px 0' }}>Ngân hàng: <strong>MB Bank (Quân Đội)</strong></p>
                   <p style={{ margin: '2px 0' }}>Số tài khoản: <strong>0889555559</strong></p>
-                  <p style={{ margin: '2px 0' }}>Chủ TK: <strong>WAYS STATION BADMINTON</strong></p>
+                  <p style={{ margin: '2px 0' }}>Chủ TK: <strong>D2 BADMINTONSHOP</strong></p>
                   <p style={{ margin: '2px 0' }}>Nội dung CK: <strong style={{ color: '#0284c7' }}>{bookingCode}</strong></p>
                 </div>
 

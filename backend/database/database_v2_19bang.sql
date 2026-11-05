@@ -1,5 +1,5 @@
 -- ==========================================================================
--- WAYS STATION BADMINTON - DATABASE V2 (MySQL 8.0.16+)
+-- D2 BADMINTONSHOP - DATABASE V2 (MySQL 8.0.16+)
 -- Chuan hoa 3NF, tien = DECIMAL, mat khau BCrypt, co thanh toan / kho / gia dong
 --
 -- LUU Y KHI DUNG VOI SPRING BOOT / JPA:
@@ -286,7 +286,7 @@ CREATE TABLE `products` (
     CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `product_categories` (`id`)
 ) ENGINE=InnoDB;
 
--- Bang quan ly tin tuc & bai viet D2 Shop
+-- Bang quan ly tin tuc & bai viet D2 BadmintonShop
 CREATE TABLE IF NOT EXISTS `articles` (
     `id`             BIGINT AUTO_INCREMENT PRIMARY KEY,
     `title`          VARCHAR(250) NOT NULL,
@@ -417,10 +417,10 @@ LEFT JOIN (
 
 -- 1. Chi nhanh
 INSERT INTO `branches` (`id`, `code`, `name`, `address`, `phone`) VALUES
-(1, 'NVL',  'Ways Station NVL',  '70 Nguyễn Văn Lượng, P. 10, Gò Vấp, TP.HCM', '0889555559'),
-(2, 'DQII', 'Ways Station DQII', '262 Dương Quảng Hàm, P. 6, Gò Vấp, TP.HCM', '0889555559'),
-(3, 'NQA',  'Ways Station NQA',  '86 Nguyễn Quý Anh, P. Tân Sơn Nhì, Tân Phú, TP.HCM', '0889555559'),
-(4, 'HB',   'Ways Station HB',   '135 Hiệp Bình, TP. Thủ Đức, TP.HCM', '0889555559');
+(1, 'NVL',  'D2 BadmintonShop NVL',  '70 Nguyễn Văn Lượng, P. 10, Gò Vấp, TP.HCM', '0889555559'),
+(2, 'DQII', 'D2 BadmintonShop DQII', '262 Dương Quảng Hàm, P. 6, Gò Vấp, TP.HCM', '0889555559'),
+(3, 'NQA',  'D2 BadmintonShop NQA',  '86 Nguyễn Quý Anh, P. Tân Sơn Nhì, Tân Phú, TP.HCM', '0889555559'),
+(4, 'HB',   'D2 BadmintonShop HB',   '135 Hiệp Bình, TP. Thủ Đức, TP.HCM', '0889555559');
 
 -- 2. San (NVL 7, DQII 6, NQA 6, HB 8 - khop so luong khai bao truoc day)
 
@@ -460,7 +460,7 @@ INSERT INTO `membership_packages`
 (`id`, `code`, `name`, `price`, `duration_days`, `discount_percent`, `discount_from_time`, `discount_to_time`, `student_only`, `description`, `badge_color`, `icon`) VALUES
 (1, 'SILVER',  'Hội Viên Bạc (Silver)',     199000,  30,  5.00,  NULL, NULL, FALSE, 'Gói khởi đầu tiết kiệm dành cho người chơi thể thao hàng tuần', '#0284c7', 'fa-solid fa-medal'),
 (2, 'GOLD',    'Hội Viên Vàng (Gold)',      499000,  90,  12.00, NULL, NULL, FALSE, 'Gói phổ biến nhất, tối ưu chi phí cho các cơ thủ và nhóm bạn chơi thường xuyên', '#f59e0b', 'fa-solid fa-crown'),
-(3, 'DIAMOND', 'Kim Cương VIP (Diamond)',   1290000, 365, 20.00, NULL, NULL, FALSE, 'Đặc quyền đẳng cấp nhất hệ thống Ways Station Badminton', '#10b981', 'fa-solid fa-gem'),
+(3, 'DIAMOND', 'Kim Cương VIP (Diamond)',   1290000, 365, 20.00, NULL, NULL, FALSE, 'Đặc quyền đẳng cấp nhất hệ thống D2 BadmintonShop', '#10b981', 'fa-solid fa-gem'),
 (4, 'STUDENT', 'Gói Sinh Viên Thần Tốc',    99000,   30,  10.00, '00:00', '16:30', TRUE, 'Gói tiếp sức đam mê thể thao trẻ học đường (áp dụng slot bắt đầu trước 16:30)', '#8b5cf6', 'fa-solid fa-graduation-cap');
 
 INSERT INTO `package_benefits` (`package_id`, `benefit_type`, `value`, `quota_limit`, `quota_period`, `branch_id`, `time_from`, `time_to`, `description`) VALUES
@@ -475,7 +475,7 @@ INSERT INTO `package_benefits` (`package_id`, `benefit_type`, `value`, `quota_li
 
 -- 6. Nguoi dung (mat khau '123456' - BCrypt)
 INSERT INTO `users` (`id`, `username`, `password`, `full_name`, `email`, `phone`, `role`, `status`) VALUES
-(1, 'admin',        '$2a$10$7Jc5UoKPUfmL/MnAMk3f.OtRfR1BWxjjNm2dtPTMzc1lcV/Yv.tFq', 'Quản Trị Viên Hệ Thống', 'admin@waysstation.vn',      '0889555559', 'ROLE_ADMIN', 'ACTIVE'),
+(1, 'admin',        '$2a$10$7Jc5UoKPUfmL/MnAMk3f.OtRfR1BWxjjNm2dtPTMzc1lcV/Yv.tFq', 'Quản Trị Viên Hệ Thống', 'admin@d2badmintonshop.vn',      '0889555559', 'ROLE_ADMIN', 'ACTIVE'),
 (2, 'hoivien_gold', '$2a$10$7Jc5UoKPUfmL/MnAMk3f.OtRfR1BWxjjNm2dtPTMzc1lcV/Yv.tFq', 'Nguyễn Văn Tuấn',        'tuan.badminton@gmail.com', '0909123456', 'ROLE_USER',  'ACTIVE'),
 (3, 'khachhang1',   '$2a$10$7Jc5UoKPUfmL/MnAMk3f.OtRfR1BWxjjNm2dtPTMzc1lcV/Yv.tFq', 'Trần Minh Đức',          'duc.tm@gmail.com',         '0912345678', 'ROLE_USER',  'ACTIVE');
 
@@ -494,7 +494,7 @@ INSERT INTO `payments`
 ('PAY-SUB-0001', 'MEMBERSHIP', 2, 1, 499000,  'VIETQR', 'PAID', 'TXN-QR-889922',  '2026-10-01 08:00:00'),
 ('PAY-SUB-0002', 'MEMBERSHIP', 1, 2, 1290000, 'SYSTEM', 'PAID', 'TXN-ADMIN-SYS',  '2026-01-01 00:00:00');
 
--- 9. Danh muc & San pham/Dich vu he thong D2 Shop dong bo User Booking & Admin
+-- 9. Danh muc & San pham/Dich vu he thong D2 BadmintonShop dong bo User Booking & Admin
 INSERT INTO `product_categories` (`id`, `code`, `name`) VALUES
 (1, 'RACKET', 'Vợt cầu lông'),
 (2, 'SHOES', 'Giày thi đấu'),
@@ -510,7 +510,7 @@ INSERT INTO `products` (`id`, `category_id`, `name`, `brand`, `product_type`, `p
 (5, 3, 'Revive Chanh Muối 500ml', 'Revive', 'RETAIL', 18000, '/ chai', 'Ướp lạnh', 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?q=80&w=600&auto=format&fit=crop', 'Ướp lạnh sâu, bổ sung muối khoáng và năng lượng cho cơ thể', JSON_OBJECT('Hương vị', 'Chanh muối', 'Nhiệt độ', 'Ướp lạnh 4 độ C')),
 (6, 3, 'Nước khoáng thiên nhiên LaVie 500ml', 'LaVie', 'RETAIL', 10000, '/ chai', 'Khoáng tự nhiên', 'https://images.unsplash.com/photo-1560023907-5f339617ea30?q=80&w=600&auto=format&fit=crop', 'Nước khoáng thiên nhiên thanh khiết, giải tỏa cơn khát sảng khoái', JSON_OBJECT('Nguồn gốc', 'Khoáng tự nhiên', 'Đóng chai', '500ml')),
 (7, 3, 'Bò Húc Red Bull Thái', 'Red Bull', 'RETAIL', 22000, '/ lon', 'Tăng lực', 'https://images.unsplash.com/photo-1622543925917-763c34d1a86e?q=80&w=600&auto=format&fit=crop', 'Tỉnh táo, bùng nổ sức mạnh cho set đấu quyết định', JSON_OBJECT('Xuất xứ', 'Thái Lan', 'Quy cách', 'Lon 250ml')),
-(8, 3, 'Khăn Lạnh Kháng Khuẩn Bạc Hà', 'D2 Shop', 'RETAIL', 5000, '/ cái', 'Mát lạnh', 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?q=80&w=600&auto=format&fit=crop', 'Khăn ướt tiệt trùng cao cấp, lau mồ hôi và hạ nhiệt tức thì', JSON_OBJECT('Mùi hương', 'Bạc hà dịu mát', 'Đặc tính', 'Kháng khuẩn')),
+(8, 3, 'Khăn Lạnh Kháng Khuẩn Bạc Hà', 'D2 BadmintonShop', 'RETAIL', 5000, '/ cái', 'Mát lạnh', 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?q=80&w=600&auto=format&fit=crop', 'Khăn ướt tiệt trùng cao cấp, lau mồ hôi và hạ nhiệt tức thì', JSON_OBJECT('Mùi hương', 'Bạc hà dịu mát', 'Đặc tính', 'Kháng khuẩn')),
 (9, 5, 'Thuê Khăn Bông Yonex Cotton', 'Yonex', 'RENTAL', 25000, '/ buổi', 'Cotton 100%', 'https://images.unsplash.com/photo-1616627547584-bf28cee262db?q=80&w=600&auto=format&fit=crop', 'Khăn bông 100% cotton Yonex chuyên dụng thể thao, giặt sấy UV thơm tho', JSON_OBJECT('Chất liệu', '100% Cotton', 'Vệ sinh', 'Giặt sấy tiệt trùng')),
 (10, 4, 'Ký Gửi Tủ Locker Mã PIN', 'D2 Locker', 'RENTAL', 20000, '/ buổi', 'Bảo mật', 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=600&auto=format&fit=crop', 'Tủ riêng biệt bảo quản đồ an toàn tuyệt đối suốt buổi tập luyện', JSON_OBJECT('Khóa', 'Mã PIN điện tử', 'Kích thước', 'Để trọn vẹn balo vợt')),
 (11, 4, 'Giặt Sấy & Khử Khuẩn Giày UV', 'D2 Care', 'RENTAL', 60000, '/ đôi', 'Khử khuẩn UV', 'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?q=80&w=600&auto=format&fit=crop', 'Vệ sinh sạch sâu đế giày cao su, sấy khô tiệt trùng bằng đèn UV thơm tho 15 phút', JSON_OBJECT('Thời gian', '15 phút lấy ngay', 'Công nghệ', 'Khử khuẩn đèn UV')),

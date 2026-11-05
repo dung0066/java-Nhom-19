@@ -65,7 +65,7 @@ export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
     showToast(
       'info',
       'Đã đăng xuất tài khoản',
-      oldName ? `Tài khoản ${oldName} đã đăng xuất thành công khỏi D2 SHOP!` : 'Bạn đã đăng xuất khỏi D2 SHOP!',
+      oldName ? `Tài khoản ${oldName} đã đăng xuất thành công khỏi D2 BADMINTONSHOP!` : 'Bạn đã đăng xuất khỏi D2 BADMINTONSHOP!',
       3500
     );
   };
@@ -166,15 +166,15 @@ export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
       <div className="coida-main-nav">
         <div className="coida-nav-inner">
           
-          {/* Brand Logo & Name - D2 SHOP */}
+          {/* Brand Logo & Name - D2 BADMINTONSHOP */}
           <div
             className="coida-brand d2-brand"
             onClick={() => handleNavClick('home')}
-            title="D2 Shop - Badminton & Sports"
+            title="D2 BadmintonShop - Badminton & Sports"
           >
             <img
               src="/logo-d2.png"
-              alt="D2 Shop"
+              alt="D2 BadmintonShop"
               className="d2-navbar-logo-img"
             />
           </div>

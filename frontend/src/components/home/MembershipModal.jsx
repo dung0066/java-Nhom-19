@@ -114,7 +114,7 @@ export default function MembershipModal({ isOpen, onClose }) {
         <div className="modal-head mem-head">
           <h3>
             <i className="fa-solid fa-crown" style={{ marginRight: '8px' }}></i>
-            Đặc Quyền Hội Viên Ways Station Badminton
+            Đặc Quyền Hội Viên D2 BadmintonShop
           </h3>
           <button className="close-x" onClick={closeAndReset} style={{ color: '#fff' }} aria-label="Đóng">
             &times;
@@ -202,7 +202,7 @@ export default function MembershipModal({ isOpen, onClose }) {
                       <input type="radio" name="mem-method" checked={method === 'WALLET'} disabled={!walletEnough}
                         onChange={() => setMethod('WALLET')} />
                       <span>
-                        <strong>Ví Ways Station</strong>
+                        <strong>Ví D2 BadmintonShop</strong>
                         <small>
                           {!user ? 'Đăng nhập để dùng ví'
                             : balance === null ? 'Không tải được số dư ví'

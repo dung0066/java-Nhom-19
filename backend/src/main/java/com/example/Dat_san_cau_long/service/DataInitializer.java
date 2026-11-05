@@ -61,7 +61,7 @@ public class DataInitializer implements CommandLineRunner {
                 Article.builder()
                         .title("Sân Cầu Lông Đạt Chuẩn Giúp Tránh Chấn Thương Cho Lông Thủ")
                         .summary("Tìm hiểu 5 tiêu chuẩn chọn sân cầu lông đạt chuẩn giúp bảo vệ khớp, độ nảy thảm Taraflex BWF 7.5mm và hệ thống đèn chống chói.")
-                        .content("Hệ thống sân tại D2 Shop sử dụng thảm thi đấu Taraflex BWF 5 lớp giảm chấn cao cấp giúp triệt tiêu 40% lực phản hồi lên khớp gối khi bật nhảy đập cầu. Đồng thời, độ rọi sáng 600 Lux đạt chuẩn châu Âu bố trí dọc theo hai biên hông sân giúp các lông thủ không bị lóa mắt khi ngước nhìn đón cầu bổng.")
+                        .content("Hệ thống sân tại D2 BadmintonShop sử dụng thảm thi đấu Taraflex BWF 5 lớp giảm chấn cao cấp giúp triệt tiêu 40% lực phản hồi lên khớp gối khi bật nhảy đập cầu. Đồng thời, độ rọi sáng 600 Lux đạt chuẩn châu Âu bố trí dọc theo hai biên hông sân giúp các lông thủ không bị lóa mắt khi ngước nhìn đón cầu bổng.")
                         .image("/news/news2.png")
                         .category("TIEU_CHUAN")
                         .categoryLabel("Tiêu Chuẩn Sân")
@@ -71,9 +71,9 @@ public class DataInitializer implements CommandLineRunner {
                         .build(),
 
                 Article.builder()
-                        .title("Giải Cầu Lông New Academy Lần 2 – Chào Mừng 30/4 Tại D2 Shop")
-                        .summary("Tham gia Giải Cầu Lông New Academy Lần 2 tại Sân D2 Shop với cơ cấu giải thưởng hấp dẫn lên tới 30 triệu đồng.")
-                        .content("Nhân dịp chào mừng đại lễ 30/4 và 1/5, CLB Cầu Lông D2 Shop phối hợp cùng New Academy tổ chức giải đấu phong trào mở rộng dành cho tất cả các tay vợt nghiệp dư tại TP. Hồ Chí Minh. Các nội dung thi đấu: Đôi Nam, Đôi Nữ và Đôi Nam Nữ phối hợp với cúp vô địch và các phần thưởng vợt, giày Yonex chính hãng.")
+                        .title("Giải Cầu Lông New Academy Lần 2 – Chào Mừng 30/4 Tại D2 BadmintonShop")
+                        .summary("Tham gia Giải Cầu Lông New Academy Lần 2 tại Sân D2 BadmintonShop với cơ cấu giải thưởng hấp dẫn lên tới 30 triệu đồng.")
+                        .content("Nhân dịp chào mừng đại lễ 30/4 và 1/5, CLB Cầu Lông D2 BadmintonShop phối hợp cùng New Academy tổ chức giải đấu phong trào mở rộng dành cho tất cả các tay vợt nghiệp dư tại TP. Hồ Chí Minh. Các nội dung thi đấu: Đôi Nam, Đôi Nữ và Đôi Nam Nữ phối hợp với cúp vô địch và các phần thưởng vợt, giày Yonex chính hãng.")
                         .image("/news/news3.png")
                         .category("GIAI_DAU")
                         .categoryLabel("Giải Đấu Mở Rộng")
@@ -83,9 +83,9 @@ public class DataInitializer implements CommandLineRunner {
                         .build(),
 
                 Article.builder()
-                        .title("CLB Cầu Lông D2 Shop – Sân Chơi Chuyên Nghiệp & Đặt Lịch Giao Lưu")
-                        .summary("Bài viết giới thiệu chi tiết về CLB Cầu Lông D2 Shop, một địa điểm tập luyện và giao lưu cầu lông phong trào sôi nổi hàng tuần.")
-                        .content("CLB Cầu Lông D2 Shop sinh hoạt định kỳ vào các buổi tối thứ 3, 5, 7 và sáng Chủ Nhật tại cụm sân Gò Vấp và Tân Phú. Tại đây, các thành viên được chia nhóm trình độ từ cơ bản đến nâng cao, có huấn luyện viên hướng dẫn kỹ thuật bộ chân và các trận đấu giao lưu gắn kết tinh thần thể thao năng động.")
+                        .title("CLB Cầu Lông D2 BadmintonShop – Sân Chơi Chuyên Nghiệp & Đặt Lịch Giao Lưu")
+                        .summary("Bài viết giới thiệu chi tiết về CLB Cầu Lông D2 BadmintonShop, một địa điểm tập luyện và giao lưu cầu lông phong trào sôi nổi hàng tuần.")
+                        .content("CLB Cầu Lông D2 BadmintonShop sinh hoạt định kỳ vào các buổi tối thứ 3, 5, 7 và sáng Chủ Nhật tại cụm sân Gò Vấp và Tân Phú. Tại đây, các thành viên được chia nhóm trình độ từ cơ bản đến nâng cao, có huấn luyện viên hướng dẫn kỹ thuật bộ chân và các trận đấu giao lưu gắn kết tinh thần thể thao năng động.")
                         .image("/news/news4.png")
                         .category("SU_KIEN")
                         .categoryLabel("Câu Lạc Bộ")
@@ -204,7 +204,7 @@ public class DataInitializer implements CommandLineRunner {
                 Product.builder()
                         .name("Khăn Lạnh Kháng Khuẩn Bạc Hà")
                         .category(catDrinks)
-                        .brand("D2 Shop")
+                        .brand("D2 BadmintonShop")
                         .productType(ProductType.RETAIL)
                         .price(BigDecimal.valueOf(5000))
                         .priceUnit("/ cái")
@@ -281,7 +281,7 @@ public class DataInitializer implements CommandLineRunner {
         );
 
         productRepository.saveAll(products);
-        log.info("Đã khởi tạo thành công 13 danh mục & sản phẩm D2 Shop vào SQL Database!");
+        log.info("Đã khởi tạo thành công 13 danh mục & sản phẩm D2 BadmintonShop vào SQL Database!");
     }
 
     private ProductCategory getOrCreateCategory(String code, String name, int sortOrder) {

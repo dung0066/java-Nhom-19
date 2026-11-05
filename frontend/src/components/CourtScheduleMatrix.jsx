@@ -68,7 +68,7 @@ export default function CourtScheduleMatrix({
         <div className="toolbar-left-info">
           <Clock size={16} className="text-emerald" />
           <h3 className="toolbar-facility-title">
-            Bảng Lịch Ma Trận {selectedBranch?.name || 'Ways Station'}
+            Bảng Lịch Ma Trận {selectedBranch?.name || 'D2 BadmintonShop'}
           </h3>
           <span className="toolbar-date-badge">
             {selectedDate.dayTitle} ({String(selectedDate.dayNumber).padStart(2, '0')}/{String(selectedDate.month).padStart(2, '0')})
@@ -157,7 +157,7 @@ export default function CourtScheduleMatrix({
         </div>
       </div>
 
-      {/* 3. GROUPED BLOCKS MATRIX (Matching the exact Ways Station Layout) */}
+      {/* 3. GROUPED BLOCKS MATRIX (Matching the exact D2 BadmintonShop Layout) */}
       <div className="matrix-scroll-wrapper">
         <div className="matrix-blocks-list">
           {courtBlocks.map((pair, blockIdx) => (

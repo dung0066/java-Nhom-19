@@ -185,7 +185,7 @@ export default function AccountModal({
                   </h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ background: isAdmin ? '#fee2e2' : '#e0f2fe', color: isAdmin ? '#dc2626' : '#009fe3', fontSize: '11px', fontWeight: '800', padding: '2px 8px', borderRadius: '6px' }}>
-                      {isAdmin ? 'Quản Trị Viên (Admin)' : 'Thành Viên D2 Shop'}
+                      {isAdmin ? 'Quản Trị Viên (Admin)' : 'Thành Viên D2 BadmintonShop'}
                     </span>
                     <span style={{ fontSize: '12px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '700' }}>
                       <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
