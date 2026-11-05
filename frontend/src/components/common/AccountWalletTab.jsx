@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { fetchMyWalletTransactions, topupWallet } from '../../services/api';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { fetchMyWalletTransactions, fetchTopupStatus, topupWallet } from '../../services/api';
 import { buildVietQrUrl, formatVnd } from '../../services/payment';
 import { showToast } from './ToastNotification';
 import PendingMembershipBanner from './PendingMembershipBanner';
@@ -20,9 +20,11 @@ export default function AccountWalletTab({ balance, membership, pending, onChang
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [topup, setTopup] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(900); // 15 phút
   const [history, setHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [historyError, setHistoryError] = useState('');
+  const pollTimerRef = useRef(null);
 
   const loadHistory = useCallback(async () => {
     setLoadingHistory(true);
@@ -41,6 +43,53 @@ export default function AccountWalletTab({ balance, membership, pending, onChang
     loadHistory();
   }, [loadHistory]);
 
+  // Polling tự động kiểm tra trạng thái thanh toán nạp tiền
+  useEffect(() => {
+    if (!topup || !topup.paymentCode) return;
+
+    setTimeLeft(900);
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetchTopupStatus(topup.paymentCode);
+        if (res && res.status === 'PAID') {
+          clearInterval(interval);
+          setTopup(null);
+          showToast('success', 'Nạp tiền vào ví thành công!', `Đã tự động cộng ${formatVnd(res.amount || topup.amount)} vào số dư ví của bạn!`, 5000);
+          onChanged?.();
+          notifyMembershipChanged();
+          loadHistory();
+        } else if (res && res.status === 'FAILED') {
+          clearInterval(interval);
+          setTopup(null);
+          showToast('error', 'Lệnh nạp tiền thất bại', 'Lệnh nạp tiền đã bị hủy hoặc hết hạn.');
+          loadHistory();
+        }
+      } catch (e) {
+        // Lỗi mạng hoặc polling tạm thời, bỏ qua để lần sau thử lại
+      }
+    }, 3000);
+
+    const countdown = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdown);
+          clearInterval(interval);
+          setTopup(null);
+          showToast('warning', 'Hết thời gian giữ mã nạp', 'Mã QR nạp tiền đã hết hạn 15 phút. Vui lòng tạo mã nạp mới!');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    pollTimerRef.current = { interval, countdown };
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(countdown);
+    };
+  }, [topup, onChanged, loadHistory]);
+
   const handleTopup = async (e) => {
     e.preventDefault();
     const value = Number(amount);
@@ -57,7 +106,7 @@ export default function AccountWalletTab({ balance, membership, pending, onChang
     try {
       const res = await topupWallet(value, 'VIETQR');
       setTopup(res);
-      showToast('info', 'Đã tạo yêu cầu nạp ví', 'Vui lòng chuyển khoản theo mã QR, tiền sẽ vào ví sau khi được xác nhận.');
+      showToast('info', 'Đã tạo mã QR nạp tiền', 'Vui lòng quét mã và chuyển khoản đúng nội dung. Tiền sẽ vào ví tự động ngay khi ngân hàng nhận được!');
       setAmount('');
       loadHistory();
       onChanged?.();
@@ -68,6 +117,10 @@ export default function AccountWalletTab({ balance, membership, pending, onChang
       setSubmitting(false);
     }
   };
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  const timeFormatted = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
   return (
     <div>
@@ -125,12 +178,16 @@ export default function AccountWalletTab({ balance, membership, pending, onChang
       </form>
 
       {topup && (
-        <div className="mem-panel mem-qr" style={{ marginBottom: '16px' }}>
-          <h4>Quét mã để chuyển khoản {formatVnd(topup.amount)}</h4>
-          <img src={buildVietQrUrl(topup.amount, topup.paymentCode)} alt="Mã VietQR nạp ví" />
+        <div className="mem-panel mem-qr" style={{ marginBottom: '16px', textAlign: 'center' }}>
+          <h4>Quét mã VietQR để nạp {formatVnd(topup.amount)}</h4>
+          <img src={buildVietQrUrl(topup.amount, topup.paymentCode)} alt="Mã VietQR nạp ví" style={{ maxWidth: '220px', margin: '0 auto 10px auto', display: 'block' }} />
           <p className="mem-meta">
-            Nội dung chuyển khoản: <strong>{topup.paymentCode}</strong>. Tiền sẽ được cộng vào ví sau khi quản trị viên xác nhận.
+            Nội dung chuyển khoản: <strong>{topup.paymentCode}</strong>
           </p>
+          <div style={{ marginTop: '10px', padding: '8px 12px', background: '#eff6ff', borderRadius: '8px', color: '#1d4ed8', fontSize: '13px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <i className="fa-solid fa-spinner fa-spin"></i>
+            <span>Đang chờ nhận tiền chuyển khoản tự động... (Hết hạn sau <strong>{timeFormatted}</strong>)</span>
+          </div>
         </div>
       )}
 

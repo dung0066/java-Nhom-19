@@ -66,4 +66,21 @@ public class WalletApiController {
         List<Payment> list = walletService.getWalletPayments(userDetails.getUser().getId());
         return ResponseEntity.ok(list);
     }
+
+    /**
+     * Tra cứu trạng thái lệnh nạp ví (dành cho frontend polling thời gian thực)
+     */
+    @GetMapping("/topup/{paymentCode}/status")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> getTopupStatus(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                                              @PathVariable String paymentCode) {
+        Payment payment = walletService.getPaymentByCodeForUser(userDetails.getUser().getId(), paymentCode);
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", true);
+        res.put("paymentCode", payment.getPaymentCode());
+        res.put("status", payment.getStatus().name());
+        res.put("amount", payment.getAmount());
+        res.put("paidAt", payment.getPaidAt());
+        return ResponseEntity.ok(res);
+    }
 }

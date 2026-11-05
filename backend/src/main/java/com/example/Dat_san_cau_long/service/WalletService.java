@@ -106,6 +106,48 @@ public class WalletService {
         return paymentRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
+    public Payment getPaymentByCodeForUser(Long userId, String paymentCode) {
+        Payment payment = paymentRepository.findByPaymentCode(paymentCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giao dịch: " + paymentCode));
+        if (payment.getUser() == null || !payment.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Bạn không có quyền truy cập giao dịch này!");
+        }
+        return payment;
+    }
+
+    /**
+     * Tự động cộng tiền vào ví khi nạp tiền thành công (qua SePay Webhook hoặc Admin xác nhận).
+     * Đảm bảo tính Idempotent và chống cộng tiền 2 lần (kể cả khi chạy đồng thời nhiều luồng).
+     */
+    @Transactional
+    public Payment creditTopup(Payment payment, String providerTxnCode) {
+        if (payment.getPurpose() != PaymentPurpose.WALLET_TOPUP) {
+            throw new IllegalArgumentException("Giao dịch không phải là nạp tiền vào ví!");
+        }
+
+        if (payment.getStatus() == PaymentStatus.PAID) {
+            throw new IllegalStateException("Giao dịch thanh toán này đã được xác nhận trước đó!");
+        }
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            throw new IllegalStateException("Giao dịch này không ở trạng thái PENDING!");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        int rowsUpdated = paymentRepository.markPaidIfPending(payment.getId(), now, providerTxnCode);
+        if (rowsUpdated == 1) {
+            walletRepository.addBalanceAtomic(payment.getUser().getId(), payment.getAmount());
+            payment.setStatus(PaymentStatus.PAID);
+            payment.setPaidAt(now);
+            payment.setProviderTxnCode(providerTxnCode);
+            log.info("Xác nhận nạp ví thành công: Cộng {} vào ví user {} (Payment ID: {}, Txn: {})",
+                    payment.getAmount(), payment.getUser().getId(), payment.getId(), providerTxnCode);
+            return payment;
+        } else {
+            log.warn("Bỏ qua nạp ví: Payment ID {} đã được luồng khác xử lý trước đó", payment.getId());
+            throw new IllegalStateException("Giao dịch thanh toán này đã được xác nhận trước đó!");
+        }
+    }
+
     /**
      * Admin xác nhận đã nhận tiền. Tùy mục đích của giao dịch:
      * nạp ví thì cộng tiền, mua hội viên thì kích hoạt gói, đặt sân thì chuyển đơn sang CONFIRMED.
@@ -122,14 +164,15 @@ public class WalletService {
             throw new IllegalStateException("Giao dịch này đã bị hủy hoặc hoàn tiền nên không thể xác nhận!");
         }
 
+        if (payment.getPurpose() == PaymentPurpose.WALLET_TOPUP) {
+            return creditTopup(payment, "MANUAL_ADMIN_" + System.currentTimeMillis());
+        }
+
         LocalDateTime now = LocalDateTime.now();
         payment.setStatus(PaymentStatus.PAID);
         payment.setPaidAt(now);
 
-        if (payment.getPurpose() == PaymentPurpose.WALLET_TOPUP) {
-            walletRepository.addBalanceAtomic(payment.getUser().getId(), payment.getAmount());
-            log.info("Admin đã xác nhận nạp tiền: cộng {} vào ví user {}", payment.getAmount(), payment.getUser().getId());
-        } else if (payment.getPurpose() == PaymentPurpose.MEMBERSHIP) {
+        if (payment.getPurpose() == PaymentPurpose.MEMBERSHIP) {
             if (payment.getUserMembership() != null) {
                 payment.getUserMembership().setStatus(MembershipStatus.ACTIVE);
                 userMembershipRepository.save(payment.getUserMembership());
