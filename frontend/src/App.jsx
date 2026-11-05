@@ -93,12 +93,14 @@ export default function App() {
 
   return (
     <div className="ways-station-application-root" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* 1. UNIFIED APP NAVBAR */}
-      <AppNavbar
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        isBackendLive={isBackendLive}
-      />
+      {/* 1. GIAO DIỆN KHÁCH HÀNG: THANH NAVBAR (TÁCH BIỆT HOÀN TOÀN KHỎI CỔNG ADMIN) */}
+      {currentPage !== 'admin' && (
+        <AppNavbar
+          currentPage={currentPage}
+          onNavigate={handleNavigate}
+          isBackendLive={isBackendLive}
+        />
+      )}
 
       {/* 2. MAIN ACTIVE VIEW WITH GSAP TRANSITION */}
       <main ref={mainRef} style={{ flex: 1 }}>

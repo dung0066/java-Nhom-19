@@ -41,7 +41,6 @@
   - Tích hợp cổng thanh toán đa kênh: **Ví điện tử nội bộ**, **VietQR động**, **Chuyển khoản**, **Tiền mặt**.
   - Đăng ký và gia hạn các gói Hội viên VIP (Silver, Gold, Diamond, Student) với mức giảm giá tự động.
   - Tra cứu đơn đặt sân nhanh chóng qua mã đơn (`WAY-YYYYMMDD-xxxx`) hoặc số điện thoại.
-  - Sàn giao dịch chuyển nhượng suất chơi (Slot Transfer) khi khách bận lịch đột xuất.
 - **Dành Cho Quản Trị Viên & Cửa Hàng (Admin & Staff)**:
   - Bảng điều khiển (Admin Dashboard) thống kê doanh thu, tỷ lệ lấp đầy sân và lượng khách theo ngày/tuần/tháng.
   - Quản lý cơ sở sân, danh mục sản phẩm, bảng giá giờ cao điểm/thấp điểm.

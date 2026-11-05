@@ -220,14 +220,6 @@ export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
             >
               {isVietnamese ? 'LIÊN HỆ' : 'CONTACT'}
             </button>
-
-            <button
-              type="button"
-              className={`coida-nav-link ${currentPage === 'admin' ? 'active' : ''}`}
-              onClick={() => handleNavClick('admin')}
-            >
-              {isVietnamese ? 'QUẢN TRỊ' : 'ADMIN'}
-            </button>
           </nav>
 
           {/* Right Action Tools: Custom Language Dropdown, Search, Red Booking CTA, Account */}
@@ -411,7 +403,7 @@ export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
                           <span>{isVietnamese ? 'Ví & hội viên' : 'Wallet & Membership'}</span>
                         </button>
                       </li>
-                      {(currentUser.role === 'ADMIN' || currentUser.role === 'ROLE_ADMIN' || currentUser.username === 'admin') && (
+                      {(currentUser.role === 'ADMIN' || currentUser.role === 'ROLE_ADMIN' || currentUser.role === 'STAFF' || currentUser.role === 'ROLE_STAFF' || currentUser.username === 'admin') && (
                         <li>
                           <button
                             type="button"
@@ -422,7 +414,7 @@ export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
                             }}
                           >
                             <i className="fa-solid fa-gauge-high"></i>
-                            <span>{isVietnamese ? 'Quản trị hệ thống' : 'Admin Dashboard'}</span>
+                            <span>{isVietnamese ? 'Cổng quản trị (Admin Portal)' : 'Admin Portal'}</span>
                           </button>
                         </li>
                       )}

@@ -1353,10 +1353,6 @@ export default function BookingPage({ onNavigate }) {
                       <span className="legend-color-dot booked"></span>
                       <span>Đã Đặt</span>
                     </div>
-                    <div className="legend-item">
-                      <span className="legend-color-dot pass"></span>
-                      <span>Cần Pass</span>
-                    </div>
                   </div>
                 </div>
 
@@ -1677,8 +1673,6 @@ export default function BookingPage({ onNavigate }) {
                                   baseStatus === "CHECKED_IN" ||
                                   baseStatus === "COMPLETED" ||
                                   baseStatus === "PAID";
-                                const isPassWanted =
-                                  baseStatus === "PASS_WANTED";
                                 const isSelected = selectedSlots.some(
                                   (s) =>
                                     s.court.id === court.id &&
@@ -1697,10 +1691,6 @@ export default function BookingPage({ onNavigate }) {
                                   cellBg = "#ef4444"; // ĐỎ RỰC RỠ BÁO ĐÃ ĐẶT & ĐÃ THANH TOÁN
                                   cellColor = "#ffffff";
                                   cellContent = cellWidth < 40 ? "✕" : "Đã đặt";
-                                } else if (isPassWanted) {
-                                  cellBg = "#c084fc"; // Màu tím cần pass
-                                  cellColor = "#ffffff";
-                                  cellContent = cellWidth < 38 ? "P" : "Pass";
                                 } else if (isSelected) {
                                   cellBg = "#f59e0b"; // Màu vàng đã chọn
                                   cellColor = "#ffffff";
