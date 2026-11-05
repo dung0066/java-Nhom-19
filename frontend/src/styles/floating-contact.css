@@ -1,0 +1,167 @@
+/* Thanh liên hệ nhanh bên mép trái màn hình (Floating Contact Bar) */
+.d2-floating-contact-bar {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(180deg, #0284c7 0%, #0090e7 50%, #0284c7 100%);
+  padding: 16px 8px 16px 4px;
+  border-top-right-radius: 28px;
+  border-bottom-right-radius: 28px;
+  box-shadow: 2px 6px 20px rgba(2, 132, 199, 0.4);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.d2-floating-contact-bar:hover {
+  padding-right: 12px;
+  box-shadow: 4px 8px 24px rgba(2, 132, 199, 0.5);
+}
+
+.d2-floating-contact-bar .contact-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.d2-floating-contact-bar .contact-item:hover {
+  transform: scale(1.15) translateX(3px);
+}
+
+.d2-floating-contact-bar .icon-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 19px;
+  transition: all 0.2s ease;
+}
+
+/* Messenger icon */
+.d2-floating-contact-bar .messenger-item .icon-circle {
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Zalo icon */
+.d2-floating-contact-bar .zalo-badge {
+  border: 2px solid #ffffff;
+  background: #0068ff;
+  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+}
+
+.d2-floating-contact-bar .zalo-text {
+  font-size: 11px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Phone icon với hiệu ứng rung nhẹ thu hút sự chú ý */
+.d2-floating-contact-bar .phone-item .icon-circle {
+  background: #ffffff;
+  color: #0284c7;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+  animation: phonePulse 2s infinite ease-in-out;
+}
+
+@keyframes phonePulse {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  10%, 30% {
+    transform: rotate(-12deg) scale(1.06);
+  }
+  20%, 40% {
+    transform: rotate(12deg) scale(1.06);
+  }
+  50% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+/* SMS icon */
+.d2-floating-contact-bar .sms-badge {
+  background: #38bdf8;
+  border: 2px solid #ffffff;
+  border-radius: 12px;
+  border-bottom-left-radius: 2px;
+}
+
+.d2-floating-contact-bar .sms-text {
+  font-size: 10px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.2px;
+}
+
+/* Tooltip hiển thị khi hover sang phải */
+.d2-floating-contact-bar .contact-tooltip {
+  position: absolute;
+  left: 54px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: all 0.2s ease;
+  z-index: 9999;
+}
+
+.d2-floating-contact-bar .contact-tooltip::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent #0f172a transparent transparent;
+}
+
+.d2-floating-contact-bar .contact-item:hover .contact-tooltip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (max-width: 640px) {
+  .d2-floating-contact-bar {
+    padding: 10px 4px 10px 2px;
+    gap: 8px;
+  }
+  .d2-floating-contact-bar .contact-item {
+    width: 36px;
+    height: 36px;
+  }
+  .d2-floating-contact-bar .icon-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 15px;
+  }
+  .d2-floating-contact-bar .contact-tooltip {
+    display: none;
+  }
+}
+

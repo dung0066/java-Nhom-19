@@ -1,0 +1,801 @@
+/* ========================================================
+   SÂN CẦU LÔNG CỐI ĐÁ - PREMIUM HEADER DESIGN
+   Top Bar Cyan Blue + White Navbar with Custom Menu & Red CTA
+   ======================================================== */
+
+.coida-header-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* ---------------- 1. TOP BAR (CYAN / SKY BLUE) ---------------- */
+.coida-topbar {
+  background-color: #009fe3;
+  color: #ffffff;
+  font-size: 12.5px;
+  line-height: 1;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.coida-topbar-inner {
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.coida-topbar-contacts {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.coida-contact-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.coida-contact-item:hover {
+  opacity: 0.85;
+}
+
+.coida-contact-item i {
+  font-size: 13px;
+  opacity: 0.95;
+}
+
+.coida-divider {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  user-select: none;
+}
+
+.coida-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Status Pill */
+.coida-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  backdrop-filter: blur(4px);
+}
+
+.coida-status-dot {
+  width: 6.5px;
+  height: 6.5px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.coida-status-pill.live .coida-status-dot {
+  background-color: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}
+
+.coida-status-pill.demo .coida-status-dot {
+  background-color: #facc15;
+}
+
+/* Language selector in Navbar (Matching user's design) */
+.coida-lang-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.coida-lang-trigger-btn {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 5px 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.coida-lang-trigger-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.coida-flag-box {
+  width: 24px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.coida-flag-svg {
+  width: 24px;
+  height: 16px;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  display: block;
+}
+
+.coida-lang-text-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  line-height: 1.1;
+}
+
+.coida-lang-sublabel {
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.coida-lang-active-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.coida-lang-active-label i {
+  font-size: 8.5px;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+
+.coida-lang-menu-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 155px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e2e8f0;
+  padding: 6px 0;
+  z-index: 1020;
+  animation: coidaSlideDown 0.18s ease-out;
+}
+
+.coida-lang-menu-item {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-left: 3px solid transparent;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.coida-lang-menu-item:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.coida-lang-menu-item.active {
+  border-left-color: #e11d48;
+  background: #fff1f2;
+  color: #e11d48;
+  font-weight: 800;
+}
+
+/* Social icons */
+.coida-social-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coida-social-btn {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  text-decoration: none;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+}
+
+.coida-social-btn:hover {
+  transform: scale(1.15);
+}
+
+.coida-social-btn.fb {
+  color: #1877f2;
+  font-size: 12.5px;
+}
+
+.coida-social-btn.yt {
+  color: #ff0000;
+  font-size: 12px;
+}
+
+.coida-social-btn.ig {
+  color: #e1306c;
+  font-size: 12.5px;
+}
+
+
+/* ---------------- 2. MAIN NAVBAR (WHITE) ---------------- */
+.coida-main-nav {
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.coida-nav-inner {
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-sizing: border-box;
+}
+
+/* Brand / D2 SHOP Identity */
+.coida-brand.d2-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.d2-navbar-logo-img {
+  height: 62px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+  filter: drop-shadow(0 3px 10px rgba(0, 159, 227, 0.22));
+  display: block;
+}
+
+.coida-brand.d2-brand:hover .d2-navbar-logo-img {
+  transform: scale(1.08) rotate(-2deg);
+  filter: drop-shadow(0 6px 16px rgba(0, 159, 227, 0.38));
+}
+
+.d2-logo-emblem {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #009fe3 0%, #0060df 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 159, 227, 0.3);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+  flex-shrink: 0;
+}
+
+.coida-brand.d2-brand:hover .d2-logo-emblem {
+  transform: scale(1.08) rotate(-4deg);
+  box-shadow: 0 6px 18px rgba(0, 159, 227, 0.45);
+}
+
+.d2-logo-text {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.d2-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.d2-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.d2-brand-name {
+  font-size: 26px;
+  font-weight: 900;
+  color: #009fe3;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.d2-brand-shop {
+  font-size: 24px;
+  font-weight: 900;
+  color: #002d62;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.d2-brand-subtitle {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 1px;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+/* Nav Menu Links (Danh mục tùy chỉnh) */
+.coida-menu-links {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+.coida-nav-link {
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 8px 2px;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #009fe3;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  position: relative;
+  transition: color 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.coida-nav-link:hover {
+  color: #0077b6;
+  transform: translateY(-1px);
+}
+
+.coida-nav-link.active {
+  color: #0077b6;
+  font-weight: 900;
+}
+
+.coida-nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #009fe3;
+  border-radius: 2px;
+}
+
+/* Right Tools (Search, Red Đặt Lịch, Auth) */
+.coida-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Search Circle Button */
+.coida-search-wrapper {
+  position: relative;
+}
+
+.coida-search-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #009fe3;
+  color: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.coida-search-btn:hover {
+  background: #0084bf;
+  transform: scale(1.06);
+}
+
+.coida-search-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 280px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 1010;
+  animation: coidaSlideDown 0.2s ease-out;
+}
+
+@keyframes coidaSlideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.coida-search-dropdown input {
+  flex: 1;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+}
+
+.coida-search-dropdown input:focus {
+  border-color: #009fe3;
+}
+
+.coida-search-dropdown button {
+  background: #009fe3;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.coida-search-dropdown button:hover {
+  background: #0084bf;
+}
+
+/* Red Booking CTA Button: 📅 ĐẶT LỊCH */
+.coida-booking-cta-btn {
+  background: #cc0000;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 22px;
+  font-size: 14.5px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(204, 0, 0, 0.25);
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  font-family: inherit;
+}
+
+.coida-booking-cta-btn:hover {
+  background: #b30000;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(204, 0, 0, 0.35);
+}
+
+.coida-booking-cta-btn:active {
+  transform: translateY(0);
+}
+
+.coida-booking-cta-btn i {
+  font-size: 14px;
+}
+
+/* User Account & Dropdown */
+.coida-user-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.coida-user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.coida-user-badge:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.coida-user-badge i.fa-circle-user {
+  color: #009fe3;
+  font-size: 16px;
+}
+
+.coida-user-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.coida-user-chevron {
+  font-size: 10px;
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+}
+
+.coida-user-chevron.open {
+  transform: rotate(180deg);
+  color: #009fe3;
+}
+
+.coida-user-dropdown-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 250px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  padding: 6px 0;
+  z-index: 1050;
+  animation: coidaSlideDown 0.18s ease-out;
+}
+
+.coida-user-dropdown-header {
+  padding: 10px 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.coida-user-dropdown-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.coida-user-dropdown-meta {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.coida-user-role-badge {
+  background: #e0f2fe;
+  color: #009fe3;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+.coida-user-dropdown-menu {
+  list-style: none;
+  padding: 6px 0 2px 0;
+  margin: 0;
+}
+
+.coida-user-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border: none;
+  background: transparent;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  font-family: inherit;
+}
+
+.coida-user-dropdown-item:hover {
+  background: #f8fafc;
+  color: #009fe3;
+}
+
+.coida-user-dropdown-item i {
+  font-size: 13.5px;
+  width: 16px;
+  text-align: center;
+  color: #64748b;
+}
+
+.coida-user-dropdown-item:hover i {
+  color: #009fe3;
+}
+
+.coida-user-dropdown-item.logout {
+  color: #ef4444;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 4px;
+  padding-top: 10px;
+}
+
+.coida-user-dropdown-item.logout i {
+  color: #ef4444;
+}
+
+.coida-user-dropdown-item.logout:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.coida-logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+  font-size: 13px;
+  padding: 2px 4px;
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.coida-logout-btn:hover {
+  transform: scale(1.15);
+}
+
+.coida-login-btn {
+  background: #ffffff;
+  border: 1.5px solid #009fe3;
+  color: #009fe3;
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.coida-login-btn:hover {
+  background: #f0f9ff;
+  border-color: #0084bf;
+  color: #0084bf;
+}
+
+/* Mobile Toggle */
+.coida-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: #009fe3;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .coida-topbar-contacts .coida-contact-item:last-child,
+  .coida-topbar-contacts .coida-divider:last-of-type {
+    display: none;
+  }
+  .coida-menu-links {
+    gap: 18px;
+  }
+  .coida-nav-link {
+    font-size: 13.5px;
+  }
+}
+
+@media (max-width: 992px) {
+  .coida-topbar-inner {
+    padding: 0 16px;
+  }
+  .coida-topbar-right .coida-status-pill {
+    display: none;
+  }
+  .coida-menu-links {
+    display: none;
+  }
+  .coida-menu-links.mobile-open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    padding: 16px 24px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid #f1f5f9;
+    align-items: flex-start;
+    gap: 12px;
+    z-index: 999;
+  }
+  .coida-mobile-toggle {
+    display: block;
+  }
+}
+
+@media (max-width: 640px) {
+  .coida-topbar-contacts .coida-contact-item:first-child,
+  .coida-topbar-contacts .coida-divider {
+    display: none;
+  }
+  .d2-navbar-logo-img {
+    height: 48px;
+  }
+  .d2-brand-name {
+    font-size: 20px;
+  }
+  .d2-brand-shop {
+    font-size: 18px;
+  }
+  .d2-logo-emblem {
+    width: 36px;
+    height: 36px;
+  }
+  .d2-logo-text {
+    font-size: 16px;
+  }
+  .coida-booking-cta-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  .coida-login-btn span {
+    display: none;
+  }
+}

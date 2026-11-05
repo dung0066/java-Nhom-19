@@ -1,0 +1,437 @@
+/* ========================================================
+   D2 SHOP - ULTRA-PREMIUM FOOTER DESIGN
+   Newsletter Banner + 4-Column Deep Navy Blue Layout
+   ======================================================== */
+
+.d2-footer-wrapper {
+  width: 100%;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  color: #ffffff;
+  margin-top: auto;
+}
+
+/* ---------------- 1. NEWSLETTER BANNER (DARK NAVY) ---------------- */
+.d2-footer-newsletter {
+  background-color: #00264d;
+  padding: 36px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.d2-newsletter-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.d2-newsletter-text {
+  max-width: 620px;
+}
+
+.d2-newsletter-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.3px;
+}
+
+.d2-newsletter-sub {
+  font-size: 14.5px;
+  color: #cbd5e1;
+  margin: 0;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.d2-newsletter-form {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+  min-width: 380px;
+  max-width: 100%;
+}
+
+.d2-newsletter-input {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  padding: 13px 18px;
+  font-size: 14px;
+  color: #0f172a;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.d2-newsletter-input:focus {
+  border-color: #009fe3;
+}
+
+.d2-newsletter-btn {
+  background-color: #ff0055;
+  color: #ffffff;
+  border: 1px solid #ff0055;
+  border-radius: 0 6px 6px 0;
+  padding: 13px 26px;
+  font-size: 14.5px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  letter-spacing: 0.3px;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.d2-newsletter-btn:hover {
+  background-color: #e0004c;
+}
+
+.d2-newsletter-btn:active {
+  transform: scale(0.98);
+}
+
+.d2-newsletter-success {
+  font-size: 13px;
+  color: #4ade80;
+  font-weight: 700;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+
+/* ---------------- 2. MAIN FOOTER (DEEP ROYAL NAVY) ---------------- */
+.d2-footer-main {
+  background-color: #003876;
+  padding: 60px 24px 45px 24px;
+}
+
+.d2-footer-grid {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr 1fr;
+  gap: 48px;
+  box-sizing: border-box;
+}
+
+/* Col 1: Brand & Contact */
+.d2-footer-col-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.d2-footer-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.d2-footer-brand-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #003876;
+  font-size: 20px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.d2-footer-brand-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.d2-footer-brand-title span {
+  color: #38bdf8;
+}
+
+.d2-footer-contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.d2-footer-contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #e2e8f0;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.d2-footer-contact-item:hover {
+  color: #38bdf8;
+}
+
+.d2-footer-contact-item i {
+  color: #38bdf8;
+  font-size: 15px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.d2-footer-contact-item strong {
+  color: #ffffff;
+}
+
+/* Col 2 & 3: Headings & Navigation Links */
+.d2-footer-heading {
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 20px 0;
+  letter-spacing: 0.3px;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.d2-footer-heading::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 32px;
+  height: 2px;
+  background: #38bdf8;
+  border-radius: 2px;
+}
+
+.d2-footer-links-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.d2-footer-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13.5px;
+  color: #cbd5e1;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.d2-footer-link-btn:hover {
+  color: #ffffff;
+  transform: translateX(4px);
+}
+
+.d2-footer-link-btn i {
+  font-size: 11px;
+  color: #38bdf8;
+  opacity: 0.8;
+}
+
+/* Col 4: Certification & Trust Badges */
+.d2-footer-col-cert {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.d2-bct-badge-link {
+  display: inline-block;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  width: fit-content;
+}
+
+.d2-bct-badge-link:hover {
+  transform: scale(1.04);
+}
+
+.bo-cong-thuong-badge {
+  width: 195px;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
+}
+
+.d2-footer-payments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.d2-payments-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.d2-payments-icons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.d2-payment-pill {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.d2-payment-pill i {
+  color: #38bdf8;
+}
+
+
+/* ---------------- 3. COPYRIGHT BAR ---------------- */
+.d2-footer-copyright {
+  background-color: #002244;
+  padding: 18px 24px;
+  text-align: center;
+  font-size: 13px;
+  color: #94a3b8;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.d2-footer-copyright strong {
+  color: #ff0055;
+  font-weight: 700;
+}
+
+
+/* ---------------- 4. POLICY MODAL ---------------- */
+.d2-policy-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.d2-policy-modal-content {
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 16px;
+  max-width: 680px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 32px;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  animation: coidaSlideDown 0.25s ease-out;
+}
+
+.d2-policy-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #f1f5f9;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.d2-policy-modal-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.d2-policy-modal-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #003876;
+  margin: 0 0 16px 0;
+}
+
+.d2-policy-modal-body {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #334155;
+}
+
+.d2-policy-modal-body h4 {
+  margin: 16px 0 6px 0;
+  color: #003876;
+  font-weight: 700;
+}
+
+
+/* ---------------- 5. RESPONSIVE DESIGN ---------------- */
+@media (max-width: 1100px) {
+  .d2-footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+  }
+}
+
+@media (max-width: 768px) {
+  .d2-newsletter-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .d2-newsletter-form {
+    min-width: 100%;
+  }
+  .d2-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .d2-footer-main {
+    padding: 40px 16px 30px 16px;
+  }
+  .d2-newsletter-title {
+    font-size: 20px;
+  }
+}
+
