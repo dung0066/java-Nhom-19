@@ -24,6 +24,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Ví điện tử nội bộ và xác nhận thanh toán.
+ * Khách tạo yêu cầu nạp tiền (trạng thái PENDING), admin xác nhận thì mới cộng tiền vào ví.
+ */
 @Service
 public class WalletService {
 
@@ -78,14 +82,7 @@ public class WalletService {
             throw new IllegalArgumentException("Số tiền nạp tối thiểu là 1.000 VNĐ!");
         }
 
-        PaymentMethod method = PaymentMethod.VIETQR;
-        if (req.getPaymentMethod() != null) {
-            try {
-                method = PaymentMethod.valueOf(req.getPaymentMethod().toUpperCase());
-            } catch (IllegalArgumentException ignored) {
-                method = PaymentMethod.VIETQR;
-            }
-        }
+        PaymentMethod method = PaymentMethod.fromStringOrDefault(req.getPaymentMethod());
 
         String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String payCode = "PAY-TOPUP-" + dateStr + "-" + (1000 + new Random().nextInt(9000));
@@ -109,6 +106,10 @@ public class WalletService {
         return paymentRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
+    /**
+     * Admin xác nhận đã nhận tiền. Tùy mục đích của giao dịch:
+     * nạp ví thì cộng tiền, mua hội viên thì kích hoạt gói, đặt sân thì chuyển đơn sang CONFIRMED.
+     */
     @Transactional
     public Payment confirmPayment(Long paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
@@ -116,6 +117,9 @@ public class WalletService {
 
         if (payment.getStatus() == PaymentStatus.PAID) {
             throw new IllegalStateException("Giao dịch thanh toán này đã được xác nhận trước đó!");
+        }
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            throw new IllegalStateException("Giao dịch này đã bị hủy hoặc hoàn tiền nên không thể xác nhận!");
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -133,7 +137,12 @@ public class WalletService {
             }
         } else if (payment.getPurpose() == PaymentPurpose.BOOKING) {
             if (payment.getBooking() != null) {
+                if (payment.getBooking().getStatus() == BookingStatus.CANCELLED
+                        || payment.getBooking().getStatus() == BookingStatus.EXPIRED) {
+                    throw new IllegalStateException("Đơn đặt sân này đã bị hủy hoặc hết hạn giữ chỗ nên không thể xác nhận thanh toán!");
+                }
                 payment.getBooking().setStatus(BookingStatus.CONFIRMED);
+                payment.getBooking().setHoldExpiresAt(null);
                 bookingRepository.save(payment.getBooking());
                 log.info("Admin đã xác nhận thanh toán đơn đặt sân: chuyển đơn {} sang CONFIRMED", payment.getBooking().getBookingCode());
             }

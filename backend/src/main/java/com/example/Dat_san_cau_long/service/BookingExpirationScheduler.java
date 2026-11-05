@@ -6,8 +6,12 @@ import com.example.Dat_san_cau_long.model.BookingItem;
 import com.example.Dat_san_cau_long.model.enums.BookingDetailStatus;
 import com.example.Dat_san_cau_long.model.enums.BookingItemStatus;
 import com.example.Dat_san_cau_long.model.enums.BookingStatus;
+import com.example.Dat_san_cau_long.model.enums.PaymentStatus;
 import com.example.Dat_san_cau_long.repository.BookingRepository;
+import com.example.Dat_san_cau_long.repository.PaymentRepository;
 import com.example.Dat_san_cau_long.repository.ProductInventoryRepository;
+import com.example.Dat_san_cau_long.repository.SlotTransferRepository;
+import com.example.Dat_san_cau_long.repository.UserMembershipRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/** Các tác vụ chạy nền mỗi 60 giây: hủy đơn hết hạn giữ chỗ, đóng gói hội viên và tin pass sân quá hạn. */
 @Service
 public class BookingExpirationScheduler {
 
@@ -24,19 +29,23 @@ public class BookingExpirationScheduler {
 
     private final BookingRepository bookingRepository;
     private final ProductInventoryRepository productInventoryRepository;
-    private final com.example.Dat_san_cau_long.repository.UserMembershipRepository userMembershipRepository;
-    private final com.example.Dat_san_cau_long.repository.SlotTransferRepository slotTransferRepository;
+    private final UserMembershipRepository userMembershipRepository;
+    private final SlotTransferRepository slotTransferRepository;
+    private final PaymentRepository paymentRepository;
 
     public BookingExpirationScheduler(BookingRepository bookingRepository,
                                       ProductInventoryRepository productInventoryRepository,
-                                      com.example.Dat_san_cau_long.repository.UserMembershipRepository userMembershipRepository,
-                                      com.example.Dat_san_cau_long.repository.SlotTransferRepository slotTransferRepository) {
+                                      UserMembershipRepository userMembershipRepository,
+                                      SlotTransferRepository slotTransferRepository,
+                                      PaymentRepository paymentRepository) {
         this.bookingRepository = bookingRepository;
         this.productInventoryRepository = productInventoryRepository;
         this.userMembershipRepository = userMembershipRepository;
         this.slotTransferRepository = slotTransferRepository;
+        this.paymentRepository = paymentRepository;
     }
 
+    /** Đơn PENDING quá hạn giữ chỗ thì hủy, nhả sân và hoàn lại tồn kho. */
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void cancelExpiredPendingBookings() {
@@ -47,32 +56,43 @@ public class BookingExpirationScheduler {
             log.info("Phát hiện {} đơn đặt sân PENDING hết hạn giữ chỗ, tiến hành giải phóng...", expiredBookings.size());
 
             for (Booking booking : expiredBookings) {
-                booking.setStatus(BookingStatus.CANCELLED);
-                booking.setCancelledAt(now);
-                booking.setCancelReason("Hết thời gian giữ chỗ thanh toán");
-
-                for (BookingDetail detail : booking.getDetails()) {
-                    detail.setStatus(BookingDetailStatus.CANCELLED);
-                }
-
-                for (BookingItem item : booking.getItems()) {
-                    item.setStatus(BookingItemStatus.CANCELLED);
-                    // Hoàn trả tồn kho
-                    if (booking.getBranch() != null && item.getProduct() != null) {
-                        productInventoryRepository.addStockAtomic(
-                                booking.getBranch().getId(),
-                                item.getProduct().getId(),
-                                item.getQuantity()
-                        );
-                    }
-                }
-
-                bookingRepository.save(booking);
+                cancelExpiredBooking(booking, now);
                 log.info("Đã hủy đơn hết hạn: {}", booking.getBookingCode());
             }
         }
     }
 
+    private void cancelExpiredBooking(Booking booking, LocalDateTime now) {
+        booking.setStatus(BookingStatus.CANCELLED);
+        booking.setCancelledAt(now);
+        booking.setCancelReason("Hết thời gian giữ chỗ thanh toán");
+
+        for (BookingDetail detail : booking.getDetails()) {
+            detail.setStatus(BookingDetailStatus.CANCELLED);
+        }
+
+        for (BookingItem item : booking.getItems()) {
+            item.setStatus(BookingItemStatus.CANCELLED);
+            if (booking.getBranch() != null && item.getProduct() != null) {
+                productInventoryRepository.addStockAtomic(
+                        booking.getBranch().getId(),
+                        item.getProduct().getId(),
+                        item.getQuantity()
+                );
+            }
+        }
+
+        paymentRepository.findByBookingId(booking.getId()).stream()
+                .filter(p -> p.getStatus() == PaymentStatus.PENDING)
+                .forEach(p -> {
+                    p.setStatus(PaymentStatus.FAILED);
+                    paymentRepository.save(p);
+                });
+
+        bookingRepository.save(booking);
+    }
+
+    /** Gói hội viên quá ngày kết thúc thì chuyển sang EXPIRED. */
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void expireOldMemberships() {
@@ -83,6 +103,7 @@ public class BookingExpirationScheduler {
         }
     }
 
+    /** Tin pass sân của slot đã qua giờ thì chuyển sang EXPIRED. */
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void expireOldSlotTransfers() {

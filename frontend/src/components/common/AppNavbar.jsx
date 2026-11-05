@@ -2,37 +2,47 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { getStoredUser, logoutUser } from '../../services/api';
 import AuthModal from './AuthModal';
+import { showToast } from './ToastNotification';
 import AccountModal from './AccountModal';
+import useMembershipStatus from '../../hooks/useMembershipStatus';
 import '../../styles/navbar.css';
 
 export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
   const { language, setLanguage, isVietnamese } = useLanguage();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [accountModalTab, setAccountModalTab] = useState('profile');
+  const { membership, pending } = useMembershipStatus(currentUser);
   
-  const searchInputRef = useRef(null);
   const langDropdownRef = useRef(null);
   const userDropdownRef = useRef(null);
 
+  // Các màn hình khác (vd. đăng ký hội viên) yêu cầu mở hộp thoại đăng nhập qua sự kiện này
   useEffect(() => {
-    const user = getStoredUser();
-    if (user) {
-      setCurrentUser(user);
-    }
+    const openAuth = () => setIsAuthModalOpen(true);
+    window.addEventListener('d2_open_auth', openAuth);
+    return () => window.removeEventListener('d2_open_auth', openAuth);
   }, []);
 
   useEffect(() => {
-    if (isSearchOpen && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [isSearchOpen]);
+    const handleAuthChange = (e) => {
+      const user = e?.detail !== undefined ? e.detail : getStoredUser();
+      setCurrentUser(user);
+    };
+
+    setCurrentUser(getStoredUser());
+
+    window.addEventListener('d2_auth_changed', handleAuthChange);
+    window.addEventListener('storage', handleAuthChange);
+    return () => {
+      window.removeEventListener('d2_auth_changed', handleAuthChange);
+      window.removeEventListener('storage', handleAuthChange);
+    };
+  }, []);
 
   // Click outside to close dropdowns
   useEffect(() => {
@@ -49,16 +59,15 @@ export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
   }, []);
 
   const handleLogout = () => {
+    const oldName = currentUser?.fullName || currentUser?.username;
     logoutUser();
     setCurrentUser(null);
-  };
-
-  const handleSearchSubmit = (e) => {
-    if (e) e.preventDefault();
-    if (searchQuery.trim()) {
-      onNavigate('booking');
-      setIsSearchOpen(false);
-    }
+    showToast(
+      'info',
+      'Đã đăng xuất tài khoản',
+      oldName ? `Tài khoản ${oldName} đã đăng xuất thành công khỏi D2 SHOP!` : 'Bạn đã đăng xuất khỏi D2 SHOP!',
+      3500
+    );
   };
 
   const handleNavClick = (pageId, sectionId = null) => {
@@ -310,34 +319,6 @@ export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
               )}
             </div>
 
-            {/* Search Button with Dropdown Bar */}
-            <div className="coida-search-wrapper">
-              <button
-                type="button"
-                className="coida-search-btn"
-                title={isVietnamese ? 'Tìm kiếm sân / chi nhánh' : 'Search courts / branches'}
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                aria-label="Tìm kiếm"
-              >
-                <i className="fa-solid fa-magnifying-glass"></i>
-              </button>
-
-              {isSearchOpen && (
-                <form className="coida-search-dropdown" onSubmit={handleSearchSubmit}>
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder={isVietnamese ? 'Tìm sân, chi nhánh, dịch vụ...' : 'Search courts, branches...'}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <button type="submit" title={isVietnamese ? 'Tìm' : 'Search'}>
-                    <i className="fa-solid fa-arrow-right"></i>
-                  </button>
-                </form>
-              )}
-            </div>
-
             {/* Red Booking CTA Button: 📅 ĐẶT LỊCH */}
             <button
               type="button"
@@ -361,6 +342,9 @@ export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
                   <span className="coida-user-name">
                     {currentUser.fullName || currentUser.username}
                   </span>
+                  {(currentUser.role === 'ADMIN' || currentUser.role === 'ROLE_ADMIN' || currentUser.username === 'admin') && (
+                    <span className="coida-user-role-badge" style={{ marginLeft: 4, fontSize: '9.5px', padding: '1px 6px', lineHeight: '14px' }}>Admin</span>
+                  )}
                   <i className={`fa-solid fa-chevron-down coida-user-chevron ${isUserMenuOpen ? 'open' : ''}`}></i>
                 </div>
 
@@ -375,7 +359,11 @@ export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
                         <span className="coida-user-role-badge">
                           {currentUser.role === 'ADMIN' || currentUser.role === 'ROLE_ADMIN' || currentUser.username === 'admin'
                             ? 'Admin'
-                            : 'Thành viên'}
+                            : membership
+                              ? membership.package?.name
+                              : pending
+                                ? (isVietnamese ? 'Chờ xác nhận gói' : 'Plan pending')
+                                : (isVietnamese ? 'Chưa là hội viên' : 'Not a member')}
                         </span>
                       </div>
                     </div>
@@ -407,6 +395,20 @@ export default function AppNavbar({ currentPage, onNavigate, isBackendLive }) {
                         >
                           <i className="fa-solid fa-receipt"></i>
                           <span>{isVietnamese ? 'Đơn hàng đã đặt' : 'My Bookings'}</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          className="coida-user-dropdown-item"
+                          onClick={() => {
+                            setIsUserMenuOpen(false);
+                            setAccountModalTab('wallet');
+                            setIsAccountModalOpen(true);
+                          }}
+                        >
+                          <i className="fa-solid fa-wallet"></i>
+                          <span>{isVietnamese ? 'Ví & hội viên' : 'Wallet & Membership'}</span>
                         </button>
                       </li>
                       {(currentUser.role === 'ADMIN' || currentUser.role === 'ROLE_ADMIN' || currentUser.username === 'admin') && (

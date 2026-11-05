@@ -146,6 +146,8 @@ export default function ProductModal({
               <div className="form-group">
                 <label>Tên Sản Phẩm (*):</label>
                 <input
+                  required
+                  maxLength={150}
                   type="text"
                   className="form-control"
                   placeholder="VD: Yonex Astrox 100ZZ"
@@ -179,6 +181,7 @@ export default function ProductModal({
               <div className="form-group">
                 <label>Hãng / Thương Hiệu:</label>
                 <input
+                  maxLength={100}
                   type="text"
                   className="form-control"
                   placeholder="VD: YONEX JAPAN"
@@ -191,6 +194,7 @@ export default function ProductModal({
               <div className="form-group">
                 <label>Huy Hiệu (Badge):</label>
                 <input
+                  maxLength={50}
                   type="text"
                   className="form-control"
                   placeholder="VD: HOT NHẤT, VIP, BÁN CHẠY"
@@ -206,6 +210,9 @@ export default function ProductModal({
               <div className="form-group">
                 <label>Giá Thuê / Bán (VNĐ) (*):</label>
                 <input
+                  required
+                  max="100000000"
+                  step="1000"
                   type="number"
                   className="form-control"
                   placeholder="VD: 30000"
@@ -220,6 +227,7 @@ export default function ProductModal({
               <div className="form-group">
                 <label>Đơn Vị Tính:</label>
                 <input
+                  maxLength={50}
                   type="text"
                   className="form-control"
                   placeholder="VD: / buổi chơi, / ống, / cái"

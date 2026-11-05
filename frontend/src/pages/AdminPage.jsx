@@ -6,6 +6,8 @@ import AdminBranchesTab from '../components/admin/AdminBranchesTab';
 import AdminPricingTab from '../components/admin/AdminPricingTab';
 import AdminUsersTab from '../components/admin/AdminUsersTab';
 import AdminArticlesTab from '../components/admin/AdminArticlesTab';
+import AdminPaymentsTab from '../components/admin/AdminPaymentsTab';
+import AdminMembershipsTab from '../components/admin/AdminMembershipsTab';
 import ProductModal from '../components/admin/ProductModal';
 import CourtModal from '../components/admin/CourtModal';
 import ArticleModal from '../components/admin/ArticleModal';
@@ -36,7 +38,8 @@ import {
   deleteAdminCourt,
   fetchAdminUsers,
   toggleAdminUserStatus,
-  deleteAdminUser,
+  changeAdminUserRole,
+  createAdminUser,
   fetchAdminArticles,
   createAdminArticle,
   updateAdminArticle,
@@ -144,6 +147,19 @@ const D2_BRANCHES = [
   { id: 4, code: 'HB', name: 'D2 Shop HB - TP. Thủ Đức', address: '135 Hiệp Bình, P. Hiệp Bình Chánh, TP. Thủ Đức, TP.HCM', phone: '0914977030', totalCourts: 2 }
 ];
 
+/** Tải lần lượt các trang đơn đặt (100 đơn/trang, tối đa 20 trang) và gộp thành một mảng. */
+async function fetchAllAdminBookingPages() {
+  const first = await fetchAdminBookings(0, 100);
+  if (!first || !first.content) return first;
+  const all = [...first.content];
+  const totalPages = Math.min(first.totalPages || 1, 20);
+  for (let page = 1; page < totalPages; page++) {
+    const next = await fetchAdminBookings(page, 100);
+    all.push(...(next.content || []));
+  }
+  return all;
+}
+
 export default function AdminPage({ onNavigate }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -170,6 +186,26 @@ export default function AdminPage({ onNavigate }) {
   const [courts, setCourts] = useState(INITIAL_MULTI_COURTS);
   const [users, setUsers] = useState(INITIAL_USERS);
   const [articles, setArticles] = useState([]);
+  const [trashedProducts, setTrashedProducts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('d2_admin_products_trash');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (_) {}
+    return [];
+  });
+  const [trashedArticles, setTrashedArticles] = useState(() => {
+    try {
+      const saved = localStorage.getItem('d2_admin_articles_trash');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (_) {}
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   // Modals
@@ -226,7 +262,7 @@ export default function AdminPage({ onNavigate }) {
     try {
       // Gọi song song các API quản trị từ Spring Boot Backend
       const [bRes, pList, brList, cList, uList, aList] = await Promise.all([
-        fetchAdminBookings(0, 50).catch(() => fetchAllBookings().catch(() => null)),
+        fetchAllAdminBookingPages().catch(() => fetchAllBookings().catch(() => null)),
         fetchProducts().catch(() => null),
         fetchBranches().catch(() => null),
         fetchAdminCourts().catch(() => null),
@@ -386,7 +422,8 @@ export default function AdminPage({ onNavigate }) {
       gsap.fromTo(
         tabContainerRef.current,
         { opacity: 0.6, y: 8 },
-        { opacity: 1, y: 0, duration: 0.22, ease: 'power2.out' }
+        // clearProps: gỡ transform sau khi chạy xong, vì phần tử còn transform sẽ làm hộp thoại position:fixed bên trong bị lệch khỏi màn hình
+        { opacity: 1, y: 0, duration: 0.22, ease: 'power2.out', clearProps: 'transform,opacity' }
       );
     }
   };
@@ -460,58 +497,44 @@ export default function AdminPage({ onNavigate }) {
     }
   };
 
+  // Xóa tạm: sân chuyển vào thùng rác (khôi phục được). Lỗi từ máy chủ (ví dụ sân còn lịch chưa diễn ra) được báo nguyên văn.
   const handleDeleteCourt = async (courtId) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa sân #${courtId} khỏi hệ thống không?`)) return;
+    if (!window.confirm('Chuyển sân này vào thùng rác? Bạn có thể khôi phục lại sau.')) return;
     try {
-      try {
-        await deleteAdminCourt(courtId);
-      } catch (_) {}
-      setCourts(prev => {
-        const next = prev.filter(c => c.id !== courtId);
-        localStorage.setItem('d2_admin_courts', JSON.stringify(next));
-        return next;
-      });
-      alert('Đã xóa sân thành công!');
+      const res = await deleteAdminCourt(courtId);
+      alert(res?.message || 'Đã chuyển sân vào thùng rác!');
     } catch (err) {
-      alert(`Lỗi khi xóa sân: ${err.message}`);
+      alert(`Không thể xóa sân: ${err.message}`);
+    } finally {
+      loadData();
     }
   };
 
   // ==========================================
   // 5. BOOKING ACTIONS (QUẢN LÝ ĐƠN ĐẶT SÂN)
   // ==========================================
+  // Các thao tác trên đơn gọi máy chủ thật; lỗi (ví dụ đơn đã hết hạn giữ chỗ) được báo nguyên văn và danh sách luôn được tải lại từ máy chủ.
   const handleConfirmPayment = async (id) => {
-    if (!window.confirm(`Xác nhận duyệt và duyệt thanh toán cho đơn #${id}?`)) return;
+    if (!window.confirm(`Xác nhận đã nhận tiền và duyệt đơn #${id}?`)) return;
     try {
-      try {
-        await confirmBookingAdmin(id);
-      } catch (_) {}
-      // Cập nhật trạng thái đơn trong danh sách
-      setBookings(prev => {
-        const next = prev.map(b => b.id === id ? { ...b, status: 'CONFIRMED' } : b);
-        localStorage.setItem('d2_user_bookings', JSON.stringify(next));
-        return next;
-      });
+      await confirmBookingAdmin(id);
       alert(`Đã xác nhận đơn #${id} thành công!`);
     } catch (err) {
       alert(`Không thể xác nhận đơn #${id}: ${err.message}`);
+    } finally {
+      loadData();
     }
   };
 
   const handleCheckinBooking = async (id) => {
     if (!window.confirm(`Xác nhận khách đã đến sân và hoàn tất Check-in cho đơn #${id}?`)) return;
     try {
-      try {
-        await checkinBookingAdmin(id);
-      } catch (_) {}
-      setBookings(prev => {
-        const next = prev.map(b => b.id === id ? { ...b, status: 'COMPLETED' } : b);
-        localStorage.setItem('d2_user_bookings', JSON.stringify(next));
-        return next;
-      });
+      await checkinBookingAdmin(id);
       alert(`Đã hoàn tất check-in nhận sân cho đơn #${id}!`);
     } catch (err) {
       alert(`Lỗi check-in: ${err.message}`);
+    } finally {
+      loadData();
     }
   };
 
@@ -519,60 +542,45 @@ export default function AdminPage({ onNavigate }) {
     const reason = window.prompt(`Nhập lý do hủy đơn #${id}:`, 'Khách yêu cầu dời lịch / hủy');
     if (reason === null) return;
     try {
-      try {
-        await cancelBookingAdmin(id, reason);
-      } catch (_) {}
-      setBookings(prev => {
-        const next = prev.map(b => b.id === id ? { ...b, status: 'CANCELLED' } : b);
-        localStorage.setItem('d2_user_bookings', JSON.stringify(next));
-        return next;
-      });
+      await cancelBookingAdmin(id, reason);
       alert(`Đã hủy đơn #${id} thành công!`);
     } catch (err) {
       alert(`Không thể hủy đơn: ${err.message}`);
+    } finally {
+      loadData();
     }
   };
 
   // ==========================================
   // 6. USER MANAGEMENT ACTIONS (QUẢN LÝ KHÁCH HÀNG)
   // ==========================================
+  // Các thao tác gọi máy chủ thật; lỗi (ví dụ tự khóa chính mình) được báo nguyên văn rồi danh sách được tải lại từ máy chủ.
   const handleToggleUserStatus = async (userId) => {
     try {
-      try {
-        await toggleAdminUserStatus(userId);
-      } catch (_) {}
-      setUsers(prev => {
-        const next = prev.map(u => {
-          if (u.id === userId) {
-            const nextStatus = u.status === 'ACTIVE' ? 'LOCKED' : 'ACTIVE';
-            return { ...u, status: nextStatus };
-          }
-          return u;
-        });
-        localStorage.setItem('d2_admin_users', JSON.stringify(next));
-        return next;
-      });
+      await toggleAdminUserStatus(userId);
       alert('Đã cập nhật trạng thái tài khoản thành công!');
     } catch (err) {
       alert(`Lỗi khi đổi trạng thái: ${err.message}`);
+    } finally {
+      loadData();
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa tài khoản #${userId} không?`)) return;
+  const handleChangeUserRole = async (userId, role) => {
     try {
-      try {
-        await deleteAdminUser(userId);
-      } catch (_) {}
-      setUsers(prev => {
-        const next = prev.filter(u => u.id !== userId);
-        localStorage.setItem('d2_admin_users', JSON.stringify(next));
-        return next;
-      });
-      alert('Đã xóa tài khoản người dùng thành công!');
+      await changeAdminUserRole(userId, role);
+      alert('Đã đổi vai trò tài khoản thành công!');
     } catch (err) {
-      alert(`Lỗi xóa người dùng: ${err.message}`);
+      alert(`Không thể đổi vai trò: ${err.message}`);
+    } finally {
+      loadData();
     }
+  };
+
+  // Hộp thoại thêm tài khoản tự báo lỗi nên hàm này để lỗi nổi lên cho nó xử lý
+  const handleCreateUser = async (formData) => {
+    await createAdminUser(formData);
+    await loadData();
   };
 
   // ==========================================
@@ -605,17 +613,61 @@ export default function AdminPage({ onNavigate }) {
   };
 
   const handleDeleteProduct = async (id) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống?')) return;
+    const item = products.find(p => p.id === id);
+    if (!item) return;
+    if (!window.confirm(`Bạn có chắc muốn chuyển "${item.name}" vào thùng rác?`)) return;
     try {
       await deleteAdminProduct(id);
     } catch (err) {
       console.warn('Xóa backend chưa sẵn sàng, lưu localStorage:', err);
     }
+    const trashedItem = { ...item, deletedAt: new Date().toISOString() };
+    setTrashedProducts(prev => {
+      const next = [trashedItem, ...prev.filter(t => t.id !== id)];
+      localStorage.setItem('d2_admin_products_trash', JSON.stringify(next));
+      return next;
+    });
     setProducts(prev => {
       const next = prev.filter(p => p.id !== id);
       localStorage.setItem('d2_admin_products', JSON.stringify(next));
       return next;
     });
+  };
+
+  const handleRestoreProduct = (id) => {
+    const item = trashedProducts.find(p => p.id === id);
+    if (!item) return;
+    setTrashedProducts(prev => {
+      const next = prev.filter(p => p.id !== id);
+      localStorage.setItem('d2_admin_products_trash', JSON.stringify(next));
+      return next;
+    });
+    setProducts(prev => {
+      const { deletedAt, ...rest } = item;
+      const next = [rest, ...prev.filter(p => p.id !== id)];
+      localStorage.setItem('d2_admin_products', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handlePermanentDeleteProduct = async (id) => {
+    const item = trashedProducts.find(p => p.id === id);
+    const itemName = item?.name || `#${id}`;
+    if (!window.confirm(`Bạn có chắc muốn xóa vĩnh viễn "${itemName}"? Không thể khôi phục lại!`)) return;
+    try {
+      await deleteAdminProduct(id);
+    } catch (_) {}
+    setTrashedProducts(prev => {
+      const next = prev.filter(p => p.id !== id);
+      localStorage.setItem('d2_admin_products_trash', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleClearProductTrash = () => {
+    if (!window.confirm('Bạn có chắc muốn dọn sạch toàn bộ thùng rác dụng cụ? Các mục sẽ bị xóa vĩnh viễn.')) return;
+    setTrashedProducts([]);
+    localStorage.removeItem('d2_admin_products_trash');
   };
 
   const handleSaveProduct = async (formData) => {
@@ -707,20 +759,63 @@ export default function AdminPage({ onNavigate }) {
   };
 
   const handleDeleteArticle = async (id) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này khỏi hệ thống SQL?')) return;
+    const item = articles.find(a => a.id === id);
+    if (!item) return;
+    if (!window.confirm(`Bạn có chắc muốn chuyển bài viết "${item.title}" vào thùng rác?`)) return;
     try {
       try {
         await deleteAdminArticle(id);
       } catch (_) {}
+      const trashedItem = { ...item, deletedAt: new Date().toISOString() };
+      setTrashedArticles(prev => {
+        const next = [trashedItem, ...prev.filter(t => t.id !== id)];
+        localStorage.setItem('d2_admin_articles_trash', JSON.stringify(next));
+        return next;
+      });
       setArticles(prev => {
         const next = prev.filter(a => a.id !== id);
         localStorage.setItem('d2_admin_articles', JSON.stringify(next));
         return next;
       });
-      alert('Đã xóa bài viết thành công!');
     } catch (err) {
       alert(`Lỗi xóa bài viết: ${err.message}`);
     }
+  };
+
+  const handleRestoreArticle = (id) => {
+    const item = trashedArticles.find(a => a.id === id);
+    if (!item) return;
+    setTrashedArticles(prev => {
+      const next = prev.filter(a => a.id !== id);
+      localStorage.setItem('d2_admin_articles_trash', JSON.stringify(next));
+      return next;
+    });
+    setArticles(prev => {
+      const { deletedAt, ...rest } = item;
+      const next = [rest, ...prev.filter(a => a.id !== id)];
+      localStorage.setItem('d2_admin_articles', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handlePermanentDeleteArticle = async (id) => {
+    const item = trashedArticles.find(a => a.id === id);
+    const itemTitle = item?.title || `#${id}`;
+    if (!window.confirm(`Bạn có chắc muốn xóa vĩnh viễn bài viết "${itemTitle}"? Không thể khôi phục lại!`)) return;
+    try {
+      await deleteAdminArticle(id);
+    } catch (_) {}
+    setTrashedArticles(prev => {
+      const next = prev.filter(a => a.id !== id);
+      localStorage.setItem('d2_admin_articles_trash', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleClearArticleTrash = () => {
+    if (!window.confirm('Bạn có chắc muốn dọn sạch toàn bộ thùng rác bài viết? Các bài viết sẽ bị xóa vĩnh viễn.')) return;
+    setTrashedArticles([]);
+    localStorage.removeItem('d2_admin_articles_trash');
   };
 
   // ==========================================
@@ -767,24 +862,18 @@ export default function AdminPage({ onNavigate }) {
     }
   };
 
+  // Xóa tạm: chi nhánh và các sân của nó chuyển vào thùng rác (khôi phục được).
   const handleDeleteBranch = async (branchIdOrCode) => {
     const brObj = branches.find(b => b.id === branchIdOrCode || b.code === branchIdOrCode);
     const branchName = brObj ? brObj.name : `Chi nhánh #${branchIdOrCode}`;
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa "${branchName}" khỏi hệ thống không?`)) return;
+    if (!window.confirm(`Chuyển "${branchName}" cùng các sân của nó vào thùng rác? Bạn có thể khôi phục lại sau.`)) return;
     try {
-      if (typeof branchIdOrCode === 'number') {
-        try {
-          await deleteAdminBranch(branchIdOrCode);
-        } catch (_) {}
-      }
-      setBranches(prev => {
-        const next = prev.filter(b => b.id !== branchIdOrCode && b.code !== branchIdOrCode);
-        localStorage.setItem('d2_admin_branches', JSON.stringify(next));
-        return next;
-      });
-      alert('Đã xóa chi nhánh thành công!');
+      const res = await deleteAdminBranch(brObj?.id ?? branchIdOrCode);
+      alert(res?.message || 'Đã chuyển chi nhánh vào thùng rác!');
     } catch (err) {
-      alert(`Lỗi khi xóa chi nhánh: ${err.message}`);
+      alert(`Không thể xóa chi nhánh: ${err.message}`);
+    } finally {
+      loadData();
     }
   };
 
@@ -951,7 +1040,7 @@ export default function AdminPage({ onNavigate }) {
           </div>
         </div>
 
-        {/* TAB MENU (5 TABS ĐẦY ĐỦ QUẢN LÝ) */}
+        {/* TAB MENU */}
         <nav className="tab-menu-bar">
           <button
             type="button"
@@ -995,6 +1084,20 @@ export default function AdminPage({ onNavigate }) {
           >
             <i className="fa-solid fa-newspaper"></i> Quản Lý Tin Tức & Bài Viết
           </button>
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === 'payments' ? 'active' : ''}`}
+            onClick={() => handleSwitchTab('payments')}
+          >
+            <i className="fa-solid fa-money-check-dollar"></i> Thanh Toán & Xác Nhận
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === 'memberships' ? 'active' : ''}`}
+            onClick={() => handleSwitchTab('memberships')}
+          >
+            <i className="fa-solid fa-crown"></i> Gói Hội Viên
+          </button>
         </nav>
 
         {/* TAB CONTENT PANES */}
@@ -1021,6 +1124,7 @@ export default function AdminPage({ onNavigate }) {
               onToggleCourtActive={handleToggleCourtActive}
               onDeleteBranch={handleDeleteBranch}
               onDeleteCourt={handleDeleteCourt}
+              onRefresh={loadData}
             />
           )}
 
@@ -1028,7 +1132,8 @@ export default function AdminPage({ onNavigate }) {
             <AdminUsersTab
               users={users}
               onToggleUserStatus={handleToggleUserStatus}
-              onDeleteUser={handleDeleteUser}
+              onChangeUserRole={handleChangeUserRole}
+              onCreateUser={handleCreateUser}
               onRefresh={loadData}
               isLoading={isLoading}
             />
@@ -1037,22 +1142,36 @@ export default function AdminPage({ onNavigate }) {
           {activeTab === 'products' && (
             <AdminProductsTab
               products={products}
+              trashedProducts={trashedProducts}
               onOpenAddModal={handleOpenAddProduct}
               onEditProduct={handleEditProduct}
               onToggleActive={handleToggleProductActive}
               onDeleteProduct={handleDeleteProduct}
+              onRestoreProduct={handleRestoreProduct}
+              onPermanentDeleteProduct={handlePermanentDeleteProduct}
+              onClearProductTrash={handleClearProductTrash}
+              onRefresh={loadData}
+              isLoading={isLoading}
             />
           )}
 
           {activeTab === 'pricing' && <AdminPricingTab />}
 
+          {activeTab === 'payments' && <AdminPaymentsTab />}
+
+          {activeTab === 'memberships' && <AdminMembershipsTab />}
+
           {activeTab === 'articles' && (
             <AdminArticlesTab
               articles={articles}
+              trashedArticles={trashedArticles}
               onOpenAddModal={handleOpenAddArticle}
               onEditArticle={handleEditArticle}
               onTogglePublished={handleToggleArticlePublished}
               onDeleteArticle={handleDeleteArticle}
+              onRestoreArticle={handleRestoreArticle}
+              onPermanentDeleteArticle={handlePermanentDeleteArticle}
+              onClearArticleTrash={handleClearArticleTrash}
               onRefresh={loadData}
               isLoading={isLoading}
             />

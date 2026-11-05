@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { PaginationBar } from './Pagination';
+import { usePagination } from './usePagination';
+import AdminTrashModal from './AdminTrashModal';
 
 export default function AdminBranchesTab({
   branches = [],
@@ -9,8 +12,11 @@ export default function AdminBranchesTab({
   onEditCourt,
   onToggleCourtActive,
   onDeleteBranch,
-  onDeleteCourt
+  onDeleteCourt,
+  onRefresh
 }) {
+  // Thùng rác đang mở: 'branches' | 'courts' | null
+  const [trashType, setTrashType] = useState(null);
   const [selectedBranchCode, setSelectedBranchCode] = useState(
     branches[0]?.code || 'NVL'
   );
@@ -20,6 +26,10 @@ export default function AdminBranchesTab({
     const code = c.branch?.code || c.branchCode || 'NVL';
     return code === selectedBranchCode;
   });
+
+  const pg = usePagination(filteredCourts, 10, filteredCourts.length);
+  // Bảng chi nhánh có phân trang riêng, tách biệt với bảng sân đấu bên dưới
+  const branchPg = usePagination(branches, 5, branches.length);
 
   return (
     <section id="branchesTab" className="tab-pane">
@@ -34,6 +44,17 @@ export default function AdminBranchesTab({
               Thêm mới cơ sở, cập nhật địa chỉ hotline hoặc quản lý chi nhánh
             </p>
           </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn-tbl btn-tbl-delete"
+            title="Thùng rác chi nhánh: xem, khôi phục hoặc xóa vĩnh viễn"
+            aria-label="Thùng rác chi nhánh"
+            style={{ padding: '10px 14px' }}
+            onClick={() => setTrashType('branches')}
+          >
+            <i className="fa-solid fa-trash-can"></i>
+          </button>
           <button
             type="button"
             className="btn-action-add"
@@ -41,6 +62,7 @@ export default function AdminBranchesTab({
           >
             <i className="fa-solid fa-plus"></i> Thêm Chi Nhánh Mới
           </button>
+          </div>
         </div>
 
         <div className="table-responsive">
@@ -63,7 +85,7 @@ export default function AdminBranchesTab({
                   </td>
                 </tr>
               ) : (
-                branches.map((b) => (
+                branchPg.pageItems.map((b) => (
                   <tr key={b.id || b.code}>
                     <td>
                       <strong style={{ color: '#0284c7' }}>{b.code}</strong>
@@ -89,7 +111,7 @@ export default function AdminBranchesTab({
                         <button
                           type="button"
                           className="btn-tbl btn-tbl-delete"
-                          title="Xóa chi nhánh này"
+                          title="Chuyển chi nhánh này vào thùng rác (khôi phục được)"
                           onClick={() => onDeleteBranch && onDeleteBranch(b.id || b.code)}
                         >
                           <i className="fa-solid fa-trash"></i> Xóa
@@ -101,6 +123,7 @@ export default function AdminBranchesTab({
               )}
             </tbody>
           </table>
+          <PaginationBar pagination={branchPg} unit="chi nhánh" />
         </div>
       </div>
 
@@ -127,6 +150,16 @@ export default function AdminBranchesTab({
                 </option>
               ))}
             </select>
+            <button
+              type="button"
+              className="btn-tbl btn-tbl-delete"
+              title="Thùng rác sân đấu: xem, khôi phục hoặc xóa vĩnh viễn"
+              aria-label="Thùng rác sân đấu"
+              style={{ padding: '10px 14px' }}
+              onClick={() => setTrashType('courts')}
+            >
+              <i className="fa-solid fa-trash-can"></i>
+            </button>
             <button
               type="button"
               className="btn-action-add btn-action-orange"
@@ -158,7 +191,7 @@ export default function AdminBranchesTab({
                   </td>
                 </tr>
               ) : (
-                filteredCourts.map((c) => {
+                pg.pageItems.map((c) => {
                   const isActive = c.active !== false;
                   return (
                     <tr key={c.id}>
@@ -220,7 +253,7 @@ export default function AdminBranchesTab({
                           <button
                             type="button"
                             className="btn-tbl btn-tbl-delete"
-                            title="Xóa sân này"
+                            title="Chuyển sân này vào thùng rác (khôi phục được)"
                             onClick={() => onDeleteCourt && onDeleteCourt(c.id)}
                           >
                             <i className="fa-solid fa-trash"></i> Xóa
@@ -233,8 +266,12 @@ export default function AdminBranchesTab({
               )}
             </tbody>
           </table>
+          <PaginationBar pagination={pg} unit="sân" />
         </div>
       </div>
+      {trashType && (
+        <AdminTrashModal type={trashType} onClose={() => setTrashType(null)} onChanged={onRefresh} />
+      )}
     </section>
   );
 }

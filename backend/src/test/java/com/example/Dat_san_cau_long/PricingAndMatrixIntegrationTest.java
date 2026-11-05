@@ -8,6 +8,7 @@ import com.example.Dat_san_cau_long.repository.BookingDetailRepository;
 import com.example.Dat_san_cau_long.repository.BookingRepository;
 import com.example.Dat_san_cau_long.repository.TimeSlotRepository;
 import com.example.Dat_san_cau_long.repository.UserRepository;
+import com.example.Dat_san_cau_long.security.JwtTokenProvider;
 import com.example.Dat_san_cau_long.service.PricingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
@@ -40,6 +41,9 @@ public class PricingAndMatrixIntegrationTest extends AbstractIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
     private PricingService pricingService;
 
     @Autowired
@@ -54,10 +58,14 @@ public class PricingAndMatrixIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private BookingDetailRepository bookingDetailRepository;
 
+    @Autowired
+    private com.example.Dat_san_cau_long.repository.PaymentRepository paymentRepository;
+
     @AfterEach
     @org.springframework.transaction.annotation.Transactional
     void cleanTestBookings() {
         bookingRepository.findByCustomerPhone("0999888777").forEach(b -> {
+            paymentRepository.deleteAll(paymentRepository.findByBookingId(b.getId()));
             bookingRepository.delete(b);
         });
     }
@@ -122,7 +130,9 @@ public class PricingAndMatrixIntegrationTest extends AbstractIntegrationTest {
         slotItem.setTimeSlotId(17L); // Giờ cao điểm: 120.000đ
         req.setSelectedSlots(List.of(slotItem));
 
+        // Người đặt được xác định bằng token đăng nhập, không còn tin userId trong body
         mockMvc.perform(post("/api/booking/create")
+                        .header("Authorization", "Bearer " + jwtTokenProvider.generateToken(goldUser))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())

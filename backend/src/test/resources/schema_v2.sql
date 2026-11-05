@@ -9,7 +9,9 @@
 --   * spring.jpa.hibernate.ddl-auto=validate (de Hibernate khong tu sua schema)
 --   * Mat khau seed = '123456' (BCrypt) -> DOI NGAY khi len production
 --
--- BAN 27 BANG: da bo holidays, wallet_transactions, product_specs, audit_logs.
+-- BAN 19 BANG: da bo holidays, wallet_transactions, product_specs, audit_logs
+-- va 9 bang chua dung: court_groups, court_blocks, membership_usage,
+-- recurring_bookings, refunds, reviews, vouchers, notifications, staff_branches.
 --
 -- CANH BAO: script nay DROP toan bo bang cu. Chi chay tren DB dev/test
 -- hoac sau khi da backup.
@@ -31,44 +33,22 @@ CREATE TABLE `branches` (
     `name`      VARCHAR(100) NOT NULL,
     `address`   VARCHAR(255) NOT NULL,
     `phone`     VARCHAR(20),
-    `active`    BOOLEAN NOT NULL DEFAULT TRUE
+    `active`    BOOLEAN NOT NULL DEFAULT TRUE,
+    `deleted_at` DATETIME NULL                 -- co gia tri = dang trong thung rac (xoa tam)
     -- total_courts da bo: dung view v_branch_court_count
 ) ENGINE=InnoDB;
 
--- Nhom san ghep (vd "San 1+2" dung chung 1 khu). Tach rieng de dat nguyen tu (1NF)
-CREATE TABLE `court_groups` (
-    `id`        BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `branch_id` BIGINT NOT NULL,
-    `name`      VARCHAR(50) NOT NULL,
-    UNIQUE KEY `uk_court_groups_branch_name` (`branch_id`, `name`),
-    CONSTRAINT `fk_court_groups_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB;
 
 CREATE TABLE `courts` (
     `id`             BIGINT AUTO_INCREMENT PRIMARY KEY,
     `branch_id`      BIGINT NOT NULL,
     `court_number`   INT NOT NULL,                    -- ten hien thi = 'San ' + court_number (suy ra o tang app)
-    `court_group_id` BIGINT NULL,
     `active`         BOOLEAN NOT NULL DEFAULT TRUE,
+    `deleted_at`     DATETIME NULL,                   -- co gia tri = dang trong thung rac (xoa tam)
     UNIQUE KEY `uk_courts_branch_number` (`branch_id`, `court_number`),
     UNIQUE KEY `uk_courts_id_branch` (`id`, `branch_id`),   -- phuc vu FK kep o booking_details
     CONSTRAINT `chk_courts_number` CHECK (`court_number` > 0),
-    CONSTRAINT `fk_courts_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_courts_group`  FOREIGN KEY (`court_group_id`) REFERENCES `court_groups` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB;
-
--- Khoa san theo khoang thoi gian (bao tri, su kien, giai dau...)
-CREATE TABLE `court_blocks` (
-    `id`          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `court_id`    BIGINT NOT NULL,
-    `start_at`    DATETIME NOT NULL,
-    `end_at`      DATETIME NOT NULL,
-    `reason`      VARCHAR(255),
-    `created_by`  BIGINT NULL,
-    `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    KEY `idx_court_blocks_range` (`court_id`, `start_at`, `end_at`),
-    CONSTRAINT `chk_court_blocks_range` CHECK (`end_at` > `start_at`),
-    CONSTRAINT `fk_court_blocks_court` FOREIGN KEY (`court_id`) REFERENCES `courts` (`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_courts_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- Khung gio: KHONG con gia (gia nam o price_rules). Slot cuoi 23:00-00:00 qua nua dem.
@@ -163,13 +143,6 @@ CREATE TABLE `users` (
     -- membership_package_id / membership_expires_at / wallet_balance da bo khoi day
 ) ENGINE=InnoDB;
 
-CREATE TABLE `staff_branches` (
-    `user_id`   BIGINT NOT NULL,
-    `branch_id` BIGINT NOT NULL,
-    PRIMARY KEY (`user_id`, `branch_id`),
-    CONSTRAINT `fk_staff_user`   FOREIGN KEY (`user_id`)   REFERENCES `users` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_staff_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB;
 
 CREATE TABLE `password_reset_tokens` (
     `id`          BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -198,21 +171,6 @@ CREATE TABLE `wallets` (
 -- E. DAT SAN
 -- ==========================================================================
 
-CREATE TABLE `vouchers` (
-    `id`              BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `code`            VARCHAR(30) NOT NULL UNIQUE,
-    `description`     VARCHAR(255),
-    `discount_type`   ENUM('PERCENT','FIXED') NOT NULL,
-    `discount_value`  DECIMAL(12,2) NOT NULL,
-    `max_discount`    DECIMAL(12,0) NULL,
-    `min_order`       DECIMAL(12,0) NOT NULL DEFAULT 0,
-    `valid_from`      DATETIME NOT NULL,
-    `valid_to`        DATETIME NOT NULL,
-    `usage_limit`     INT NULL,
-    `active`          BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT `chk_voucher_value` CHECK (`discount_value` > 0),
-    CONSTRAINT `chk_voucher_range` CHECK (`valid_to` > `valid_from`)
-) ENGINE=InnoDB;
 
 CREATE TABLE `user_memberships` (
     `id`                BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -232,37 +190,6 @@ CREATE TABLE `user_memberships` (
     CONSTRAINT `fk_um_package` FOREIGN KEY (`package_id`) REFERENCES `membership_packages` (`id`)
 ) ENGINE=InnoDB;
 
--- Theo doi han muc dac quyen da dung (vd muon vot 2 lan/thang)
-CREATE TABLE `membership_usage` (
-    `id`                  BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `user_membership_id`  BIGINT NOT NULL,
-    `benefit_id`          BIGINT NOT NULL,
-    `booking_id`          BIGINT NULL,
-    `quantity`            INT NOT NULL DEFAULT 1,
-    `used_at`             DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    KEY `idx_usage_lookup` (`user_membership_id`, `benefit_id`, `used_at`),
-    CONSTRAINT `fk_usage_membership` FOREIGN KEY (`user_membership_id`) REFERENCES `user_memberships` (`id`),
-    CONSTRAINT `fk_usage_benefit`    FOREIGN KEY (`benefit_id`) REFERENCES `package_benefits` (`id`)
-) ENGINE=InnoDB;
-
--- Lich dat co dinh hang tuan
-CREATE TABLE `recurring_bookings` (
-    `id`            BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `user_id`       BIGINT NOT NULL,
-    `court_id`      BIGINT NOT NULL,
-    `time_slot_id`  BIGINT NOT NULL,
-    `day_of_week`   TINYINT NOT NULL,                    -- 1=Thu 2 ... 7=Chu nhat
-    `start_date`    DATE NOT NULL,
-    `end_date`      DATE NOT NULL,
-    `status`        ENUM('ACTIVE','PAUSED','ENDED') NOT NULL DEFAULT 'ACTIVE',
-    `created_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `chk_rec_dow`   CHECK (`day_of_week` BETWEEN 1 AND 7),
-    CONSTRAINT `chk_rec_dates` CHECK (`end_date` >= `start_date`),
-    CONSTRAINT `fk_rec_user`  FOREIGN KEY (`user_id`)      REFERENCES `users` (`id`),
-    CONSTRAINT `fk_rec_court` FOREIGN KEY (`court_id`)     REFERENCES `courts` (`id`),
-    CONSTRAINT `fk_rec_slot`  FOREIGN KEY (`time_slot_id`) REFERENCES `time_slots` (`id`)
-) ENGINE=InnoDB;
-
 -- booking_date, total_hours, total_price, original_price da bo -> xem view v_booking_totals
 CREATE TABLE `bookings` (
     `id`                       BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -273,8 +200,6 @@ CREATE TABLE `bookings` (
     `customer_name`            VARCHAR(100) NOT NULL,
     `customer_phone`           VARCHAR(20)  NOT NULL,
     `customer_email`           VARCHAR(100),
-    `recurring_booking_id`     BIGINT NULL,
-    `voucher_id`               BIGINT NULL,
     `applied_membership_id`    BIGINT NULL,              -- goi hoi vien da dung de giam gia
     `discount_amount`          DECIMAL(12,0) NOT NULL DEFAULT 0,
     `status`                   ENUM('PENDING','CONFIRMED','COMPLETED','CANCELLED','NO_SHOW','EXPIRED') NOT NULL DEFAULT 'PENDING',
@@ -291,13 +216,9 @@ CREATE TABLE `bookings` (
     CONSTRAINT `chk_bookings_discount` CHECK (`discount_amount` >= 0),
     CONSTRAINT `fk_bookings_user`      FOREIGN KEY (`user_id`)   REFERENCES `users` (`id`),
     CONSTRAINT `fk_bookings_branch`    FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`),
-    CONSTRAINT `fk_bookings_recurring` FOREIGN KEY (`recurring_booking_id`) REFERENCES `recurring_bookings` (`id`),
-    CONSTRAINT `fk_bookings_voucher`   FOREIGN KEY (`voucher_id`) REFERENCES `vouchers` (`id`),
     CONSTRAINT `fk_bookings_membership` FOREIGN KEY (`applied_membership_id`) REFERENCES `user_memberships` (`id`)
 ) ENGINE=InnoDB;
 
-ALTER TABLE `membership_usage`
-    ADD CONSTRAINT `fk_usage_booking` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE SET NULL;
 
 CREATE TABLE `booking_details` (
     `id`                BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -365,6 +286,21 @@ CREATE TABLE `products` (
     CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `product_categories` (`id`)
 ) ENGINE=InnoDB;
 
+-- Bang quan ly tin tuc & bai viet D2 Shop
+CREATE TABLE IF NOT EXISTS `articles` (
+    `id`             BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `title`          VARCHAR(250) NOT NULL,
+    `summary`        VARCHAR(500),
+    `content`        TEXT,
+    `image`          LONGTEXT,
+    `category`       VARCHAR(50) NOT NULL DEFAULT 'TIN_TUC',
+    `category_label` VARCHAR(100) NOT NULL DEFAULT 'Tin Tức',
+    `author`         VARCHAR(100) NOT NULL DEFAULT 'D2 Media',
+    `read_time`      VARCHAR(50) NOT NULL DEFAULT '5 phút đọc',
+    `published`      BOOLEAN NOT NULL DEFAULT TRUE,
+    `created_at`     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
 CREATE TABLE `product_inventory` (
     `branch_id`       BIGINT NOT NULL,
     `product_id`      BIGINT NOT NULL,
@@ -423,43 +359,8 @@ CREATE TABLE `payments` (
     CONSTRAINT `fk_payments_membership` FOREIGN KEY (`user_membership_id`) REFERENCES `user_memberships` (`id`)
 ) ENGINE=InnoDB;
 
-CREATE TABLE `refunds` (
-    `id`          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `payment_id`  BIGINT NOT NULL,
-    `amount`      DECIMAL(12,0) NOT NULL,
-    `reason`      VARCHAR(255),
-    `status`      ENUM('PENDING','DONE','FAILED') NOT NULL DEFAULT 'PENDING',
-    `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `chk_refunds_amount` CHECK (`amount` > 0),
-    CONSTRAINT `fk_refunds_payment` FOREIGN KEY (`payment_id`) REFERENCES `payments` (`id`)
-) ENGINE=InnoDB;
 
--- ==========================================================================
--- H. TIEN ICH: DANH GIA, THONG BAO, NHAT KY
--- ==========================================================================
 
-CREATE TABLE `reviews` (
-    `id`          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `booking_id`  BIGINT NOT NULL UNIQUE,                -- 1 don = 1 danh gia
-    `user_id`     BIGINT NOT NULL,
-    `rating`      TINYINT NOT NULL,
-    `comment`     VARCHAR(1000),
-    `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `chk_reviews_rating` CHECK (`rating` BETWEEN 1 AND 5),
-    CONSTRAINT `fk_reviews_booking` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`),
-    CONSTRAINT `fk_reviews_user`    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB;
-
-CREATE TABLE `notifications` (
-    `id`          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `user_id`     BIGINT NOT NULL,
-    `title`       VARCHAR(150) NOT NULL,
-    `content`     VARCHAR(1000),
-    `is_read`     BOOLEAN NOT NULL DEFAULT FALSE,
-    `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    KEY `idx_notif_user_read` (`user_id`, `is_read`, `created_at`),
-    CONSTRAINT `fk_notif_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB;
 
 -- ==========================================================================
 -- I. VIEW (thay cho cac cot suy ra duoc)
@@ -521,12 +422,10 @@ INSERT INTO `branches` (`id`, `code`, `name`, `address`, `phone`) VALUES
 (3, 'NQA',  'Ways Station NQA',  '86 Nguyễn Quý Anh, P. Tân Sơn Nhì, Tân Phú, TP.HCM', '0889555559'),
 (4, 'HB',   'Ways Station HB',   '135 Hiệp Bình, TP. Thủ Đức, TP.HCM', '0889555559');
 
--- 2. Nhom san + san (NVL 7, DQII 6, NQA 6, HB 8 - khop so luong khai bao truoc day)
-INSERT INTO `court_groups` (`id`, `branch_id`, `name`) VALUES
-(1, 1, 'Sân 1+2'), (2, 1, 'Sân 3+4'), (3, 1, 'Sân 5+6'), (4, 1, 'Sân 7');
+-- 2. San (NVL 7, DQII 6, NQA 6, HB 8 - khop so luong khai bao truoc day)
 
-INSERT INTO `courts` (`branch_id`, `court_number`, `court_group_id`) VALUES
-(1, 1, 1), (1, 2, 1), (1, 3, 2), (1, 4, 2), (1, 5, 3), (1, 6, 3), (1, 7, 4);
+INSERT INTO `courts` (`branch_id`, `court_number`) VALUES
+(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7);
 
 INSERT INTO `courts` (`branch_id`, `court_number`)
 WITH RECURSIVE n AS (SELECT 1 AS i UNION ALL SELECT i + 1 FROM n WHERE i < 8)
@@ -534,16 +433,21 @@ SELECT 2, i FROM n WHERE i <= 6
 UNION ALL SELECT 3, i FROM n WHERE i <= 6
 UNION ALL SELECT 4, i FROM n WHERE i <= 8;
 
--- 3. Khung gio
+-- 3. Khung gio (38 ca chuan tu 05:00 den 24:00, moi ca 30 phut)
 INSERT INTO `time_slots` (`id`, `start_time`, `end_time`, `sort_order`) VALUES
-(1,  '00:15', '01:15', 1),  (2,  '01:20', '02:20', 2),  (3,  '02:25', '03:25', 3),
-(4,  '03:30', '04:30', 4),  (5,  '04:35', '05:35', 5),  (6,  '05:40', '06:40', 6),
-(7,  '06:45', '07:45', 7),  (8,  '07:50', '08:50', 8),  (9,  '08:55', '09:55', 9),
-(10, '10:00', '11:00', 10), (11, '11:05', '12:05', 11), (12, '12:10', '13:10', 12),
-(13, '13:15', '14:15', 13), (14, '14:20', '15:20', 14), (15, '15:25', '16:25', 15),
-(16, '16:30', '17:30', 16), (17, '17:35', '18:35', 17), (18, '18:40', '19:40', 18),
-(19, '19:45', '20:45', 19), (20, '20:50', '21:50', 20), (21, '21:55', '22:55', 21),
-(22, '23:00', '00:00', 22);
+(1,  '05:00:00', '05:30:00', 1),  (2,  '05:30:00', '06:00:00', 2),  (3,  '06:00:00', '06:30:00', 3),
+(4,  '06:30:00', '07:00:00', 4),  (5,  '07:00:00', '07:30:00', 5),  (6,  '07:30:00', '08:00:00', 6),
+(7,  '08:00:00', '08:30:00', 7),  (8,  '08:30:00', '09:00:00', 8),  (9,  '09:00:00', '09:30:00', 9),
+(10, '09:30:00', '10:00:00', 10), (11, '10:00:00', '10:30:00', 11), (12, '10:30:00', '11:00:00', 12),
+(13, '11:00:00', '11:30:00', 13), (14, '11:30:00', '12:00:00', 14), (15, '12:00:00', '12:30:00', 15),
+(16, '12:30:00', '13:00:00', 16), (17, '13:00:00', '13:30:00', 17), (18, '13:30:00', '14:00:00', 18),
+(19, '14:00:00', '14:30:00', 19), (20, '14:30:00', '15:00:00', 20), (21, '15:00:00', '15:30:00', 21),
+(22, '15:30:00', '16:00:00', 22), (23, '16:00:00', '16:30:00', 23), (24, '16:30:00', '17:00:00', 24),
+(25, '17:00:00', '17:30:00', 25), (26, '17:30:00', '18:00:00', 26), (27, '18:00:00', '18:30:00', 27),
+(28, '18:30:00', '19:00:00', 28), (29, '19:00:00', '19:30:00', 29), (30, '19:30:00', '20:00:00', 30),
+(31, '20:00:00', '20:30:00', 31), (32, '20:30:00', '21:00:00', 32), (33, '21:00:00', '21:30:00', 33),
+(34, '21:30:00', '22:00:00', 34), (35, '22:00:00', '22:30:00', 35), (36, '22:30:00', '23:00:00', 36),
+(37, '23:00:00', '23:30:00', 37), (38, '23:30:00', '24:00:00', 38);
 
 -- 4. Gia: mac dinh 70k; gio cao diem (slot 17-21) 120k
 INSERT INTO `price_rules` (`branch_id`, `time_slot_id`, `day_type`, `price`, `priority`) VALUES
@@ -575,7 +479,6 @@ INSERT INTO `users` (`id`, `username`, `password`, `full_name`, `email`, `phone`
 (2, 'hoivien_gold', '$2a$10$7Jc5UoKPUfmL/MnAMk3f.OtRfR1BWxjjNm2dtPTMzc1lcV/Yv.tFq', 'Nguyễn Văn Tuấn',        'tuan.badminton@gmail.com', '0909123456', 'ROLE_USER',  'ACTIVE'),
 (3, 'khachhang1',   '$2a$10$7Jc5UoKPUfmL/MnAMk3f.OtRfR1BWxjjNm2dtPTMzc1lcV/Yv.tFq', 'Trần Minh Đức',          'duc.tm@gmail.com',         '0912345678', 'ROLE_USER',  'ACTIVE');
 
-INSERT INTO `staff_branches` (`user_id`, `branch_id`) VALUES (1, 1), (1, 2), (1, 3), (1, 4);
 
 -- 7. Vi
 INSERT INTO `wallets` (`user_id`, `balance`) VALUES (1, 5000000), (2, 850000), (3, 0);
@@ -591,11 +494,7 @@ INSERT INTO `payments`
 ('PAY-SUB-0001', 'MEMBERSHIP', 2, 1, 499000,  'VIETQR', 'PAID', 'TXN-QR-889922',  '2026-10-01 08:00:00'),
 ('PAY-SUB-0002', 'MEMBERSHIP', 1, 2, 1290000, 'SYSTEM', 'PAID', 'TXN-ADMIN-SYS',  '2026-01-01 00:00:00');
 
--- 9. Voucher mau
-INSERT INTO `vouchers` (`code`, `description`, `discount_type`, `discount_value`, `max_discount`, `min_order`, `valid_from`, `valid_to`, `usage_limit`) VALUES
-('WELCOME10', 'Giảm 10% cho khách mới, tối đa 50.000đ', 'PERCENT', 10, 50000, 100000, '2026-10-01 00:00:00', '2026-12-31 23:59:59', 500);
-
--- 10. San pham mau
+-- 9. San pham mau
 INSERT INTO `product_categories` (`id`, `code`, `name`) VALUES
 (1, 'RACKET', 'Vợt cầu lông'), (2, 'SHOES', 'Giày'), (3, 'ACCESSORY', 'Phụ kiện');
 

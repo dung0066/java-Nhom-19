@@ -27,4 +27,6 @@ public interface BookingItemRepository extends JpaRepository<BookingItem, Long> 
                                     @Param("productId") Long productId,
                                     @Param("date") LocalDate date,
                                     @Param("statuses") Collection<BookingItemStatus> statuses);
+
+    long countByProductId(Long productId);
 }

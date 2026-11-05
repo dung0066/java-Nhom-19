@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchArticles } from '../services/api';
 import '../styles/subpages.css';
@@ -55,6 +56,21 @@ export default function NewsPage({ onNavigate }) {
     };
     loadData();
   }, [selectedCategory]);
+
+  useEffect(() => {
+    if (readingArticle) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') setReadingArticle(null);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [readingArticle]);
 
   const featuredArticle = articles.length > 0 ? articles[0] : null;
   const regularArticles = articles.length > 1 ? articles.slice(1) : (articles.length === 1 ? articles : []);
@@ -171,54 +187,159 @@ export default function NewsPage({ onNavigate }) {
         )}
       </section>
 
-      {/* 5. POPUP ĐỌC TOÀN VĂN BÀI VIẾT */}
-      {readingArticle && (
-        <div className="modal-backdrop-custom" onClick={() => setReadingArticle(null)} style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(5px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px'
-        }}>
+      {/* 5. POPUP ĐỌC TOÀN VĂN BÀI VIẾT (RENDER BẰNG PORTAL TRÁNH BỊ TRƯỢT/KẸT VÀO PARENT) */}
+      {readingArticle && createPortal(
+        <div
+          className="modal-backdrop-custom"
+          onClick={() => setReadingArticle(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(15, 23, 42, 0.72)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999999,
+            padding: '20px',
+            boxSizing: 'border-box'
+          }}
+        >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: '#fff', borderRadius: '16px', maxWidth: '720px', width: '100%',
-              maxHeight: '90vh', overflowY: 'auto',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0'
+              background: '#ffffff',
+              borderRadius: '20px',
+              maxWidth: '760px',
+              width: '100%',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.35)',
+              border: '1px solid #e2e8f0',
+              overflow: 'hidden',
+              animation: 'newsModalFadeIn 0.22s ease-out'
             }}
           >
-            <div style={{ position: 'relative', height: '260px', overflow: 'hidden' }}>
+            {/* Header Image với Gradient & Nút Đóng */}
+            <div style={{ position: 'relative', height: '260px', width: '100%', flexShrink: 0, backgroundColor: '#0f172a', overflow: 'hidden' }}>
               <img
                 src={readingArticle.image || '/news/news1.png'}
                 alt={readingArticle.title}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
                 onError={(e) => { e.currentTarget.src = '/banners/banner1.jpg'; }}
               />
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'linear-gradient(to top, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.2) 60%, transparent 100%)'
+              }}></div>
+              
+              <span style={{
+                position: 'absolute', bottom: '18px', left: '24px',
+                background: '#0284c7', color: '#ffffff', padding: '6px 14px', borderRadius: '20px',
+                fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
+              }}>
+                {readingArticle.categoryLabel || readingArticle.category || 'Tin Tức'}
+              </span>
+
               <button
                 type="button"
                 onClick={() => setReadingArticle(null)}
+                aria-label="Đóng bài viết"
                 style={{
                   position: 'absolute', top: '16px', right: '16px',
-                  background: 'rgba(0,0,0,0.6)', border: 'none', color: '#fff',
-                  width: '36px', height: '36px', borderRadius: '50%',
-                  fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  background: 'rgba(0, 0, 0, 0.6)', border: '1px solid rgba(255, 255, 255, 0.25)', color: '#ffffff',
+                  width: '38px', height: '38px', borderRadius: '50%',
+                  fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'background 0.2s', zIndex: 10
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.85)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)'; }}
               >
                 ✕
               </button>
             </div>
-            <div style={{ padding: '28px' }}>
-              <div style={{ display: 'flex', gap: '14px', fontSize: '13px', color: '#64748b', marginBottom: '12px' }}>
-                <span><i className="fa-regular fa-calendar"></i> {readingArticle.createdAt ? new Date(readingArticle.createdAt).toLocaleDateString('vi-VN') : '22 Tháng 07'}</span>
-                <span><i className="fa-solid fa-user-pen"></i> {readingArticle.author || 'D2 Media'}</span>
-                <span style={{ color: '#0284c7', fontWeight: 700 }}>{readingArticle.categoryLabel || readingArticle.category}</span>
+
+            {/* Content Area cuộn mượt mà */}
+            <div style={{ padding: '28px 32px 32px', overflowY: 'auto', flex: 1 }}>
+              {/* Metadata row */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '13px', color: '#64748b', marginBottom: '14px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <i className="fa-regular fa-calendar" style={{ color: '#0284c7' }}></i>
+                  {readingArticle.createdAt ? new Date(readingArticle.createdAt).toLocaleDateString('vi-VN') : 'Mới cập nhật'}
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <i className="fa-solid fa-user-pen" style={{ color: '#0284c7' }}></i>
+                  {readingArticle.author || 'D2 Media Team'}
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <i className="fa-regular fa-clock" style={{ color: '#0284c7' }}></i>
+                  {readingArticle.readTime || '3 phút đọc'}
+                </span>
               </div>
-              <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0', lineHeight: 1.4 }}>
+
+              {/* Tiêu đề bài viết */}
+              <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', margin: '0 0 18px 0', lineHeight: 1.4 }}>
                 {readingArticle.title}
               </h2>
-              <div style={{ fontSize: '15px', color: '#334155', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
+
+              {/* Tóm tắt / Highlight Box */}
+              {readingArticle.summary && readingArticle.summary !== readingArticle.content && (
+                <div style={{
+                  background: '#f0f9ff',
+                  borderLeft: '4px solid #0284c7',
+                  padding: '14px 18px',
+                  borderRadius: '0 8px 8px 0',
+                  marginBottom: '20px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  color: '#0369a1',
+                  lineHeight: 1.6
+                }}>
+                  {readingArticle.summary}
+                </div>
+              )}
+
+              {/* Nội dung chi tiết */}
+              <div style={{ fontSize: '15.5px', color: '#334155', lineHeight: 1.85, whiteSpace: 'pre-line' }}>
                 {readingArticle.content || readingArticle.summary}
               </div>
-              <div style={{ marginTop: '28px', borderTop: '1px solid #f1f5f9', paddingTop: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+
+              {/* Hộp mẹo thi đấu thể thao */}
+              <div style={{
+                marginTop: '24px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
+                padding: '16px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <i className="fa-solid fa-circle-info" style={{ color: '#0284c7', fontSize: '20px' }}></i>
+                <div style={{ fontSize: '13.5px', color: '#475569', lineHeight: 1.5 }}>
+                  <strong>Lưu ý từ Ban Huấn Luyện:</strong> Khởi động kỹ và sử dụng đúng loại giày chuyên dụng cho thảm thi đấu Taraflex để đạt phong độ cao nhất và phòng ngừa chấn thương.
+                </div>
+              </div>
+
+              {/* Bottom Buttons */}
+              <div style={{
+                marginTop: '28px',
+                borderTop: '1px solid #f1f5f9',
+                paddingTop: '20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '12px'
+              }}>
                 <button
                   type="button"
                   onClick={() => {
@@ -227,8 +348,17 @@ export default function NewsPage({ onNavigate }) {
                   }}
                   style={{
                     background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-                    color: '#fff', border: 'none', padding: '10px 22px', borderRadius: '8px',
-                    fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px'
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '11px 24px',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: '0 4px 14px rgba(2, 132, 199, 0.3)'
                   }}
                 >
                   <i className="fa-solid fa-calendar-check"></i> Đặt Sân Ngay Bây Giờ
@@ -236,14 +366,24 @@ export default function NewsPage({ onNavigate }) {
                 <button
                   type="button"
                   onClick={() => setReadingArticle(null)}
-                  style={{ background: '#f8fafc', border: '1px solid #cbd5e1', color: '#64748b', padding: '10px 18px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #cbd5e1',
+                    color: '#475569',
+                    padding: '11px 20px',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
                 >
-                  Đóng
+                  Đóng Bài Viết
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

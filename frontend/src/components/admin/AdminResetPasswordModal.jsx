@@ -4,6 +4,7 @@ import {
   verifyForgotPasswordOtp,
   resetPasswordWithToken
 } from '../../services/api';
+import ModalPortal from './ModalPortal';
 
 export default function AdminResetPasswordModal({
   isOpen,
@@ -126,15 +127,16 @@ export default function AdminResetPasswordModal({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
+    <ModalPortal>
+    <div className="admin-modal-backdrop show" onClick={onClose} style={{ zIndex: 9999 }}>
       <div
-        className="modal-content"
+        className="admin-modal-box"
         style={{ maxWidth: '480px', borderRadius: '16px', overflow: 'hidden' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER MODAL */}
         <div
-          className="modal-header"
+          className="admin-modal-header"
           style={{
             background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
             color: '#ffffff',
@@ -181,7 +183,7 @@ export default function AdminResetPasswordModal({
           </div>
         </div>
 
-        <div className="modal-body" style={{ padding: '24px' }}>
+        <div className="admin-modal-body" style={{ padding: '24px' }}>
           {/* ERROR ALERT */}
           {errorMsg && (
             <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -431,6 +433,7 @@ export default function AdminResetPasswordModal({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }
 

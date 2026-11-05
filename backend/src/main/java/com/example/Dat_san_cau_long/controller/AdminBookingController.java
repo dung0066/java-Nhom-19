@@ -55,14 +55,7 @@ public class AdminBookingController {
 
     @PostMapping("/{id}/confirm")
     public ResponseEntity<Map<String, Object>> confirmBooking(@PathVariable Long id) {
-        Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn đặt sân ID: " + id));
-
-        booking.setStatus(BookingStatus.CONFIRMED);
-        if (booking.getDetails() != null) {
-            booking.getDetails().forEach(d -> d.setStatus(BookingDetailStatus.BOOKED));
-        }
-        bookingRepository.save(booking);
+        Booking booking = bookingService.confirmBooking(id);
 
         Map<String, Object> res = new HashMap<>();
         res.put("success", true);

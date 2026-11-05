@@ -88,6 +88,7 @@ export default function CourtModal({ isOpen, onClose, initialData, branches = []
               Tên Sân Đấu <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <input
+              maxLength={50}
               type="text"
               required
               placeholder="VD: Sân 1, Sân 8 (VIP), Sân Thi Đấu..."

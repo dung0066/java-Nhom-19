@@ -70,11 +70,17 @@ public class BookingFlowIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private BookingExpirationScheduler expirationScheduler;
 
+    @Autowired
+    private com.example.Dat_san_cau_long.repository.PaymentRepository paymentRepository;
+
     @AfterEach
     @Transactional
     void cleanup() {
         slotTransferRepository.deleteAll();
-        bookingRepository.findByCustomerPhone("0987654321").forEach(b -> bookingRepository.delete(b));
+        bookingRepository.findByCustomerPhone("0987654321").forEach(b -> {
+            paymentRepository.deleteAll(paymentRepository.findByBookingId(b.getId()));
+            bookingRepository.delete(b);
+        });
     }
 
     @Test

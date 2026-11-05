@@ -11,6 +11,7 @@ import {
   DEFAULT_SLOT_STATUS_MAP,
   SERVICES_CATEGORIES
 } from '../data/courtData';
+import { toLocalDateString } from '../utils/date';
 
 const API_BASE = '/api';
 
@@ -53,8 +54,14 @@ export function setStoredUser(user) {
   try {
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('d2_auth_changed', { detail: user }));
+      }
     } else {
       localStorage.removeItem('user');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('d2_auth_changed', { detail: null }));
+      }
     }
   } catch (e) {
     console.error('Không thể lưu user vào localStorage:', e);
@@ -68,7 +75,10 @@ export function logoutUser() {
   } catch (e) {
     console.error('Lỗi khi đăng xuất:', e);
   }
-  window.dispatchEvent(new Event('auth:logout'));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('d2_auth_changed', { detail: null }));
+    window.dispatchEvent(new Event('auth:logout'));
+  }
 }
 
 /**
@@ -120,218 +130,62 @@ export async function authFetch(url, options = {}) {
   return null;
 }
 
-// Helpers lưu tài khoản demo khi backend chưa bật
-export function getRegisteredDemoUsers() {
-  try {
-    const raw = localStorage.getItem('demo_registered_accounts');
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function saveRegisteredDemoUser(account) {
-  try {
-    const accounts = getRegisteredDemoUsers();
-    const idx = accounts.findIndex(
-      (a) => a.username === account.username || (a.phone && a.phone === account.phone)
-    );
-    if (idx >= 0) {
-      accounts[idx] = { ...accounts[idx], ...account };
-    } else {
-      accounts.push(account);
-    }
-    localStorage.setItem('demo_registered_accounts', JSON.stringify(accounts));
-  } catch (e) {
-    console.error('Không thể lưu demo account:', e);
-  }
-}
-
 // ==========================================
 // 1. AUTHENTICATION APIS
 // ==========================================
-export async function loginUser(username, password) {
+/** Chuẩn hóa dữ liệu user từ phản hồi đăng nhập/đăng ký, lưu token và user vào localStorage. */
+function saveAuthResponse(data) {
+  if (!data.token) return data;
+  const userObj = data.user || {
+    id: data.id,
+    username: data.username,
+    fullName: data.fullName || data.username,
+    email: data.email,
+    phone: data.phone,
+    role: data.role || 'ROLE_USER',
+    walletBalance: data.walletBalance || 0,
+    avatar: data.avatar || null,
+    isMember: data.isMember,
+    membershipPackage: data.membershipPackage,
+    discountPercent: data.discountPercent
+  };
+  data.user = userObj;
+  setStoredToken(data.token);
+  setStoredUser(userObj);
+  isBackendLive = true;
+  return data;
+}
+
+/** Gửi yêu cầu xác thực; mất kết nối thì báo lỗi rõ ràng, tuyệt đối không tự đăng nhập giả. */
+async function postAuth(path, body, defaultError) {
+  let res;
   try {
-    const res = await fetch(`${API_BASE}/auth/login`, {
+    res = await fetch(`${API_BASE}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ identifier: username, username, password })
+      body: JSON.stringify(body)
     });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.token) {
-        setStoredToken(data.token);
-        setStoredUser(data.user);
-        isBackendLive = true;
-      }
-      return data;
-    }
-
-    if (res.status === 401 || res.status === 400) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || 'Tài khoản hoặc mật khẩu không chính xác');
-    }
-    throw new Error('Không thể kết nối đến máy chủ backend');
-  } catch (err) {
-    const target = (username || '').trim().toLowerCase();
-
-    // 1. Tài khoản admin
-    if (target === 'admin' && (password === '123456' || password === 'admin')) {
-      const mockAdmin = {
-        token: 'mock-jwt-admin-token',
-        user: {
-          id: 1,
-          username: 'admin',
-          fullName: 'Quản Trị Viên Hệ Thống',
-          email: 'admin@waysstation.vn',
-          phone: '0889555559',
-          role: 'ROLE_ADMIN'
-        }
-      };
-      setStoredToken(mockAdmin.token);
-      setStoredUser(mockAdmin.user);
-      return mockAdmin;
-    }
-
-    // 2. Tài khoản mẫu hoivien_gold
-    if (target === 'hoivien_gold' && password === '123456') {
-      const mockUser = {
-        token: 'mock-jwt-gold-token',
-        user: {
-          id: 2,
-          username: 'hoivien_gold',
-          fullName: 'Nguyễn Văn Tuấn',
-          email: 'tuan.badminton@gmail.com',
-          phone: '0909123456',
-          role: 'ROLE_USER'
-        }
-      };
-      setStoredToken(mockUser.token);
-      setStoredUser(mockUser.user);
-      return mockUser;
-    }
-
-    // 3. Tài khoản mẫu khachhang1
-    if (target === 'khachhang1' && password === '123456') {
-      const mockUser = {
-        token: 'mock-jwt-kh-token',
-        user: {
-          id: 3,
-          username: 'khachhang1',
-          fullName: 'Trần Minh Đức',
-          email: 'duc.tm@gmail.com',
-          phone: '0912345678',
-          role: 'ROLE_USER'
-        }
-      };
-      setStoredToken(mockUser.token);
-      setStoredUser(mockUser.user);
-      return mockUser;
-    }
-
-    // 4. Kiểm tra danh sách tài khoản vừa đăng ký trong Demo Mode
-    const demoAccounts = getRegisteredDemoUsers();
-    const matched = demoAccounts.find(
-      (a) =>
-        (a.username?.toLowerCase() === target ||
-          a.phone?.toLowerCase() === target ||
-          a.email?.toLowerCase() === target) &&
-        (!a.password || a.password === password)
-    );
-
-    if (matched) {
-      const mockUser = {
-        token: 'mock-jwt-acc-' + matched.id,
-        user: {
-          id: matched.id,
-          username: matched.username,
-          fullName: matched.fullName || matched.username,
-          email: matched.email,
-          phone: matched.phone,
-          role: matched.role || 'ROLE_USER'
-        }
-      };
-      setStoredToken(mockUser.token);
-      setStoredUser(mockUser.user);
-      return mockUser;
-    }
-
-    // 5. Nếu đăng nhập bằng Số điện thoại (dù đăng ký trước đó hay số mới) trong Demo Mode
-    if (/^[0-9]{9,11}$/.test(target)) {
-      const autoUser = {
-        id: Math.floor(Math.random() * 1000) + 50,
-        username: target,
-        fullName: 'Hội Viên (' + target.slice(-4) + ')',
-        email: `${target}@gmail.com`,
-        phone: target,
-        role: 'ROLE_USER'
-      };
-      const mockUser = {
-        token: 'mock-jwt-phone-' + Date.now(),
-        user: autoUser
-      };
-      setStoredToken(mockUser.token);
-      setStoredUser(mockUser.user);
-      return mockUser;
-    }
-
-    throw new Error('Tài khoản hoặc mật khẩu không chính xác');
+  } catch {
+    throw new Error('Không thể kết nối đến máy chủ. Vui lòng thử lại sau!');
   }
+
+  if (res.ok) {
+    return saveAuthResponse(await res.json());
+  }
+  const err = await res.json().catch(() => ({}));
+  throw new Error(err.message || defaultError);
+}
+
+export async function loginUser(username, password) {
+  return postAuth(
+    '/auth/login',
+    { identifier: username, username, password },
+    'Tài khoản hoặc mật khẩu không chính xác'
+  );
 }
 
 export async function registerUser(userData) {
-  try {
-    const res = await fetch(`${API_BASE}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(userData)
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.token) {
-        setStoredToken(data.token);
-        setStoredUser(data.user);
-        isBackendLive = true;
-      }
-      return data;
-    }
-
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Đăng ký tài khoản thất bại');
-  } catch (err) {
-    // Nếu backend offline (Demo Mode), lưu tài khoản demo và trả về kết quả
-    if (userData.username || userData.phone) {
-      const uname = userData.username || userData.phone;
-      const demoAccount = {
-        id: Math.floor(Math.random() * 1000) + 10,
-        username: uname,
-        fullName: userData.fullName || uname,
-        email: userData.email || `${uname}@gmail.com`,
-        phone: userData.phone || uname,
-        password: userData.password,
-        role: 'ROLE_USER'
-      };
-      saveRegisteredDemoUser(demoAccount);
-
-      const mockUser = {
-        token: 'mock-jwt-reg-' + Date.now(),
-        user: {
-          id: demoAccount.id,
-          username: demoAccount.username,
-          fullName: demoAccount.fullName,
-          email: demoAccount.email,
-          phone: demoAccount.phone,
-          role: demoAccount.role
-        }
-      };
-      setStoredToken(mockUser.token);
-      setStoredUser(mockUser.user);
-      return mockUser;
-    }
-    throw new Error(err.message || 'Đăng ký tài khoản thất bại');
-  }
+  return postAuth('/auth/register', userData, 'Đăng ký tài khoản thất bại');
 }
 
 export async function fetchCurrentUser() {
@@ -386,7 +240,7 @@ export async function fetchBranches() {
 }
 
 export async function fetchMatrixData(branchCode = 'NVL', dateStr) {
-  const targetDate = dateStr || new Date().toISOString().split('T')[0];
+  const targetDate = dateStr || toLocalDateString();
   try {
     const res = await fetch(
       `${API_BASE}/booking/matrix?branch=${encodeURIComponent(branchCode)}&date=${encodeURIComponent(targetDate)}`,
@@ -432,16 +286,18 @@ export async function fetchProducts(branchId) {
   return null;
 }
 
+/** Danh sách gói hội viên đang mở bán; lỗi mạng hoặc lỗi máy chủ được ném ra để giao diện hiện trạng thái lỗi. */
 export async function fetchMembershipPackages() {
+  let res;
   try {
-    const res = await fetch(`${API_BASE}/memberships/packages`, { signal: AbortSignal.timeout(3500) });
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch (err) {
-    // Fallback
+    res = await fetch(`${API_BASE}/memberships/packages`, { signal: AbortSignal.timeout(6000) });
+  } catch {
+    throw new Error('Không thể kết nối đến máy chủ để tải các gói hội viên.');
   }
-  return [];
+  if (!res.ok) {
+    throw new Error('Không thể tải danh sách gói hội viên. Vui lòng thử lại sau!');
+  }
+  return await res.json();
 }
 
 // ==========================================
@@ -482,6 +338,33 @@ export async function createBooking(bookingData) {
 }
 
 /**
+ * Báo giá trước khi đặt: backend tính giá từng slot, giảm giá hội viên (nếu đã đăng nhập) và tổng tiền.
+ * Không lưu đơn nên có thể gọi mỗi lần khách đổi lựa chọn.
+ */
+export async function quoteBooking(quoteData, signal) {
+  const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+  const token = getStoredToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}/booking/quote`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(quoteData),
+    signal
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || 'Không thể tính giá đơn đặt sân');
+  }
+  return await res.json();
+}
+
+/** Danh sách đơn đặt sân của chính người dùng đang đăng nhập (từ cơ sở dữ liệu). */
+export async function fetchMyBookings(userId) {
+  return await authFetch(`/api/booking/user/${userId}`);
+}
+
+/**
  * Tra cứu đơn đặt sân theo mã bookingCode
  */
 export async function lookupBookingByCode(bookingCode) {
@@ -493,7 +376,19 @@ export async function lookupBookingByCode(bookingCode) {
 }
 
 /**
- * Lấy tất cả đơn đặt sân (cho lookup/admin)
+ * Tra cứu đơn của khách theo mã đơn (WAY-...) hoặc số điện thoại đầy đủ (khớp chính xác, không cần đăng nhập)
+ */
+export async function lookupBookings(query) {
+  const res = await fetch(`${API_BASE}/booking/lookup?query=${encodeURIComponent(query)}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Không thể tra cứu đơn đặt sân');
+  }
+  return await res.json();
+}
+
+/**
+ * Lấy tất cả đơn đặt sân (chỉ admin/nhân viên)
  */
 export async function fetchAllBookings() {
   try {
@@ -596,19 +491,31 @@ export async function topupWallet(amount, paymentMethod = 'VIETQR') {
   });
 }
 
-export async function fetchMyWalletTransactions(page = 0, size = 10) {
-  return await authFetch(`/api/wallet/transactions?page=${page}&size=${size}`);
+/** Lịch sử giao dịch thanh toán của ví (nạp ví, mua gói, thanh toán đơn). */
+export async function fetchMyWalletTransactions() {
+  return await authFetch('/api/wallet/transactions');
 }
 
-export async function buyMembership(packageId, paymentMethod = 'VIETQR') {
+export async function buyMembership(packageId, paymentMethod = 'WALLET') {
   return await authFetch('/api/memberships/buy', {
     method: 'POST',
     body: JSON.stringify({ packageId, paymentMethod })
   });
 }
 
-export async function fetchMyMemberships() {
-  return await authFetch('/api/memberships/my');
+/** Hủy yêu cầu đăng ký gói đang chờ thanh toán của chính mình. */
+export async function cancelPendingMembership(membershipId) {
+  return await authFetch(`/api/memberships/${membershipId}/cancel`, { method: 'POST' });
+}
+
+/** Gói hội viên đang có hiệu lực của người dùng (isMember=false nếu chưa có). */
+export async function fetchMyActiveMembership(userId) {
+  return await authFetch(`/api/memberships/user/${userId}/active`);
+}
+
+/** Lịch sử mua gói hội viên của người dùng. */
+export async function fetchMyMembershipHistory(userId) {
+  return await authFetch(`/api/memberships/user/${userId}/history`);
 }
 
 // ==========================================
@@ -697,6 +604,31 @@ export async function deleteAdminBranch(id) {
   });
 }
 
+// ----- Thùng rác chi nhánh và sân (xóa tạm) -----
+export async function fetchBranchTrash() {
+  return await authFetch('/api/admin/branches/trash');
+}
+
+export async function restoreAdminBranch(id) {
+  return await authFetch(`/api/admin/branches/${id}/restore`, { method: 'POST' });
+}
+
+export async function permanentDeleteAdminBranch(id) {
+  return await authFetch(`/api/admin/branches/${id}/permanent`, { method: 'DELETE' });
+}
+
+export async function fetchCourtTrash() {
+  return await authFetch('/api/admin/courts/trash');
+}
+
+export async function restoreAdminCourt(id) {
+  return await authFetch(`/api/admin/courts/${id}/restore`, { method: 'POST' });
+}
+
+export async function permanentDeleteAdminCourt(id) {
+  return await authFetch(`/api/admin/courts/${id}/permanent`, { method: 'DELETE' });
+}
+
 export async function fetchAdminCourts(branchId) {
   const query = branchId ? `?branchId=${branchId}` : '';
   return await authFetch(`/api/admin/courts${query}`);
@@ -730,6 +662,11 @@ export async function deleteAdminCourt(courtId) {
 
 export async function fetchAdminUsers() {
   return await authFetch('/api/admin/users');
+}
+
+/** Thông tin đầy đủ của một tài khoản: hồ sơ, ví, hội viên và thống kê đơn đặt sân (chỉ admin). */
+export async function fetchAdminUserDetail(userId) {
+  return await authFetch(`/api/admin/users/${userId}/detail`);
 }
 
 export async function toggleAdminUserStatus(userId) {

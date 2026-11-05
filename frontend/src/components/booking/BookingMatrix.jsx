@@ -41,7 +41,12 @@ export default function BookingMatrix({
 
   const handleCellClick = (e, court, slot, status, isSelected) => {
     // If slot is booked, cannot select
-    if (status === 'BOOKED') {
+    const isBooked =
+      status === 'BOOKED' ||
+      status === 'CHECKED_IN' ||
+      status === 'COMPLETED' ||
+      status === 'PAID';
+    if (isBooked) {
       gsap.to(e.currentTarget, {
         x: [-4, 4, -4, 4, 0],
         duration: 0.25,
@@ -120,9 +125,15 @@ export default function BookingMatrix({
                         let cellClass = 'status-available';
                         let cellContent = `${Math.round(slot.price / 1000)}k`;
 
-                        if (baseStatus === 'BOOKED') {
+                        const isSlotBooked =
+                          baseStatus === 'BOOKED' ||
+                          baseStatus === 'CHECKED_IN' ||
+                          baseStatus === 'COMPLETED' ||
+                          baseStatus === 'PAID';
+
+                        if (isSlotBooked) {
                           cellClass = 'status-booked';
-                          cellContent = 'H';
+                          cellContent = 'Đã đặt';
                         } else if (baseStatus === 'PASS_WANTED') {
                           cellClass = 'status-pass-wanted';
                           cellContent = 'Pass';

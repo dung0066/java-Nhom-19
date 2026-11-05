@@ -89,6 +89,9 @@ export default function BranchModal({ isOpen, onClose, initialData, onSave }) {
                 Mã Chi Nhánh <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input
+                maxLength={20}
+                pattern="[A-Za-z0-9_]{2,20}"
+                title="Chỉ gồm chữ, số, gạch dưới (2-20 ký tự)"
                 type="text"
                 required
                 placeholder="VD: NVL, Q1..."
@@ -103,6 +106,7 @@ export default function BranchModal({ isOpen, onClose, initialData, onSave }) {
                 Tên Chi Nhánh <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input
+                maxLength={100}
                 type="text"
                 required
                 placeholder="VD: D2 Shop NVL - Gò Vấp..."
@@ -118,6 +122,7 @@ export default function BranchModal({ isOpen, onClose, initialData, onSave }) {
               Địa Chỉ Cơ Sở <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <input
+              maxLength={255}
               type="text"
               required
               placeholder="VD: 70 Nguyễn Văn Lượng, P. 10, Q. Gò Vấp, TP.HCM"
@@ -133,7 +138,10 @@ export default function BranchModal({ isOpen, onClose, initialData, onSave }) {
                 Hotline Chi Nhánh
               </label>
               <input
-                type="text"
+                maxLength={12}
+                pattern="(0|\+84)[0-9]{9,10}"
+                title="Số điện thoại Việt Nam, VD: 0914977030"
+                type="tel"
                 placeholder="VD: 0914977030"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}

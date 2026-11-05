@@ -2,16 +2,20 @@ package com.example.Dat_san_cau_long.controller;
 
 import com.example.Dat_san_cau_long.dto.membership.BuyMembershipRequest;
 import com.example.Dat_san_cau_long.model.MembershipPackage;
+import com.example.Dat_san_cau_long.model.User;
 import com.example.Dat_san_cau_long.model.UserMembership;
+import com.example.Dat_san_cau_long.security.AccessChecks;
+import com.example.Dat_san_cau_long.security.CustomUserDetails;
 import com.example.Dat_san_cau_long.service.MembershipService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+
 @RestController
 @RequestMapping("/api/memberships")
-@CrossOrigin(origins = "*")
 public class MembershipApiController {
 
     private final MembershipService membershipService;
@@ -45,9 +49,9 @@ public class MembershipApiController {
      */
     @PostMapping("/buy")
     public ResponseEntity<?> buyMembership(@RequestBody BuyMembershipRequest req,
-                                           @org.springframework.security.core.annotation.AuthenticationPrincipal com.example.Dat_san_cau_long.security.CustomUserDetails userDetails) {
+                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
-            com.example.Dat_san_cau_long.model.User currentUser = userDetails != null ? userDetails.getUser() : null;
+            User currentUser = userDetails != null ? userDetails.getUser() : null;
             Map<String, Object> result = membershipService.buyMembership(req, currentUser);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -56,10 +60,21 @@ public class MembershipApiController {
     }
 
     /**
+     * Hủy yêu cầu đăng ký gói đang chờ thanh toán (chủ gói hoặc admin)
+     */
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelPendingMembership(@PathVariable Long id,
+                                                     @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(membershipService.cancelPendingMembership(id, userDetails != null ? userDetails.getUser() : null));
+    }
+
+    /**
      * Lấy trạng thái gói hội viên hiện tại đang kích hoạt của User
      */
     @GetMapping("/user/{userId}/active")
-    public ResponseEntity<?> getUserActiveMembership(@PathVariable Long userId) {
+    public ResponseEntity<?> getUserActiveMembership(@PathVariable Long userId,
+                                                     @AuthenticationPrincipal CustomUserDetails principal) {
+        AccessChecks.requireSelfOrStaff(principal, userId);
         try {
             return ResponseEntity.ok(membershipService.getUserActiveMembership(userId));
         } catch (Exception e) {
@@ -71,64 +86,9 @@ public class MembershipApiController {
      * Lịch sử mua gói hội viên của User
      */
     @GetMapping("/user/{userId}/history")
-    public ResponseEntity<List<UserMembership>> getUserMembershipHistory(@PathVariable Long userId) {
+    public ResponseEntity<List<UserMembership>> getUserMembershipHistory(@PathVariable Long userId,
+                                                                       @AuthenticationPrincipal CustomUserDetails principal) {
+        AccessChecks.requireSelfOrStaff(principal, userId);
         return ResponseEntity.ok(membershipService.getUserMembershipHistory(userId));
-    }
-
-    // ==========================================
-    // API QUẢN TRỊ DÀNH CHO ADMIN
-    // ==========================================
-
-    /**
-     * Admin: Lấy tất cả lịch sử mua gói hội viên trong hệ thống
-     */
-    @GetMapping("/admin/all")
-    public ResponseEntity<List<UserMembership>> getAllMembershipsAdmin() {
-        return ResponseEntity.ok(membershipService.getAllMembershipsAdmin());
-    }
-
-    /**
-     * Admin: Lấy tất cả gói hội viên (kể cả đã ẩn)
-     */
-    @GetMapping("/admin/packages")
-    public ResponseEntity<List<MembershipPackage>> getAllPackagesAdmin() {
-        return ResponseEntity.ok(membershipService.getAllPackagesAdmin());
-    }
-
-    /**
-     * Admin: Tạo gói hội viên mới
-     */
-    @PostMapping("/admin/packages")
-    public ResponseEntity<?> createPackage(@RequestBody MembershipPackage pkg) {
-        try {
-            return ResponseEntity.ok(membershipService.createPackage(pkg));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
-        }
-    }
-
-    /**
-     * Admin: Cập nhật thông tin gói hội viên
-     */
-    @PutMapping("/admin/packages/{id}")
-    public ResponseEntity<?> updatePackage(@PathVariable Long id, @RequestBody MembershipPackage pkg) {
-        try {
-            return ResponseEntity.ok(membershipService.updatePackage(id, pkg));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
-        }
-    }
-
-    /**
-     * Admin: Xóa / Ẩn gói hội viên
-     */
-    @DeleteMapping("/admin/packages/{id}")
-    public ResponseEntity<?> deletePackage(@PathVariable Long id) {
-        try {
-            membershipService.deletePackage(id);
-            return ResponseEntity.ok(Map.of("success", true, "message", "Đã xóa / ẩn gói hội viên thành công!"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
-        }
     }
 }

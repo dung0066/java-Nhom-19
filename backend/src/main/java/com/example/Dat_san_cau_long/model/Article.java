@@ -1,6 +1,8 @@
 package com.example.Dat_san_cau_long.model;
 
 import jakarta.persistence.*;
+import com.example.Dat_san_cau_long.validation.OnCreate;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -23,9 +25,12 @@ public class Article {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(groups = OnCreate.class, message = "Tiêu đề bài viết không được để trống")
+    @Size(max = 250, message = "Tiêu đề tối đa 250 ký tự")
     @Column(nullable = false, length = 250)
     private String title;
 
+    @Size(max = 500, message = "Tóm tắt tối đa 500 ký tự")
     @Column(length = 500)
     private String summary;
 
@@ -43,6 +48,7 @@ public class Article {
     @Builder.Default
     private String categoryLabel = "Tin Tức";
 
+    @Size(max = 100, message = "Tên tác giả tối đa 100 ký tự")
     @Column(length = 100)
     @Builder.Default
     private String author = "D2 Media";

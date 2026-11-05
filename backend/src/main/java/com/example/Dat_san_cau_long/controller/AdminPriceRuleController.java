@@ -8,11 +8,19 @@ import com.example.Dat_san_cau_long.model.enums.PriceDayType;
 import com.example.Dat_san_cau_long.repository.BranchRepository;
 import com.example.Dat_san_cau_long.repository.PriceRuleRepository;
 import com.example.Dat_san_cau_long.repository.TimeSlotRepository;
+import com.example.Dat_san_cau_long.validation.OnCreate;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -48,9 +56,10 @@ public class AdminPriceRuleController {
     }
 
     @PostMapping
-    public ResponseEntity<PriceRule> createPriceRule(@RequestBody PriceRuleDto dto) {
-        Branch branch = dto.getBranchId() != null ? branchRepository.findById(dto.getBranchId()).orElse(null) : null;
-        TimeSlot slot = dto.getTimeSlotId() != null ? timeSlotRepository.findById(dto.getTimeSlotId()).orElse(null) : null;
+    public ResponseEntity<PriceRule> createPriceRule(@Validated(OnCreate.class) @RequestBody PriceRuleDto dto) {
+        checkDateRange(dto.getValidFrom(), dto.getValidTo());
+        Branch branch = dto.getBranchId() != null ? findBranch(dto.getBranchId()) : null;
+        TimeSlot slot = dto.getTimeSlotId() != null ? findTimeSlot(dto.getTimeSlotId()) : null;
 
         PriceRule rule = PriceRule.builder()
                 .branch(branch)
@@ -67,15 +76,15 @@ public class AdminPriceRuleController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PriceRule> updatePriceRule(@PathVariable Long id, @RequestBody PriceRuleDto dto) {
+    public ResponseEntity<PriceRule> updatePriceRule(@PathVariable Long id, @Valid @RequestBody PriceRuleDto dto) {
         PriceRule rule = priceRuleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy quy tắc giá ID: " + id));
 
         if (dto.getBranchId() != null) {
-            rule.setBranch(branchRepository.findById(dto.getBranchId()).orElse(null));
+            rule.setBranch(findBranch(dto.getBranchId()));
         }
         if (dto.getTimeSlotId() != null) {
-            rule.setTimeSlot(timeSlotRepository.findById(dto.getTimeSlotId()).orElse(null));
+            rule.setTimeSlot(findTimeSlot(dto.getTimeSlotId()));
         }
         if (dto.getDayType() != null) rule.setDayType(dto.getDayType());
         if (dto.getPrice() != null) rule.setPrice(dto.getPrice());
@@ -83,6 +92,7 @@ public class AdminPriceRuleController {
         if (dto.getValidFrom() != null) rule.setValidFrom(dto.getValidFrom());
         if (dto.getValidTo() != null) rule.setValidTo(dto.getValidTo());
         if (dto.getActive() != null) rule.setActive(dto.getActive());
+        checkDateRange(rule.getValidFrom(), rule.getValidTo());
 
         return ResponseEntity.ok(priceRuleRepository.save(rule));
     }
@@ -93,13 +103,35 @@ public class AdminPriceRuleController {
         return ResponseEntity.ok(Map.of("success", true, "message", "Đã xóa quy tắc giá thành công!"));
     }
 
+    private Branch findBranch(Long id) {
+        return branchRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chi nhánh ID: " + id));
+    }
+
+    private TimeSlot findTimeSlot(Long id) {
+        return timeSlotRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khung giờ ID: " + id));
+    }
+
+    /** Ngày kết thúc không được trước ngày bắt đầu. */
+    private void checkDateRange(LocalDate from, LocalDate to) {
+        if (from != null && to != null && to.isBefore(from)) {
+            throw new IllegalArgumentException("Ngày kết thúc áp dụng không được trước ngày bắt đầu!");
+        }
+    }
+
     @Getter
     @Setter
     public static class PriceRuleDto {
         private Long branchId;
         private Long timeSlotId;
         private PriceDayType dayType;
+        @NotNull(groups = OnCreate.class, message = "Giá không được để trống")
+        @DecimalMin(value = "1000", message = "Giá tối thiểu 1.000đ")
+        @DecimalMax(value = "100000000", message = "Giá tối đa 100.000.000đ")
         private BigDecimal price;
+        @Min(value = 0, message = "Độ ưu tiên từ 0 trở lên")
+        @Max(value = 100, message = "Độ ưu tiên tối đa 100")
         private Integer priority;
         private LocalDate validFrom;
         private LocalDate validTo;

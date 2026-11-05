@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { PaginationBar } from './Pagination';
+import { usePagination } from './usePagination';
+import AdminTrashModal from './AdminTrashModal';
 
 /**
  * Tab Quản Lý Tin Tức & Bài Viết Cầu Lông (Admin)
@@ -6,15 +9,20 @@ import React, { useState } from 'react';
  */
 export default function AdminArticlesTab({
   articles = [],
+  trashedArticles = [],
   onOpenAddModal,
   onEditArticle,
   onTogglePublished,
   onDeleteArticle,
+  onRestoreArticle,
+  onPermanentDeleteArticle,
+  onClearArticleTrash,
   onRefresh,
   isLoading
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [isTrashOpen, setIsTrashOpen] = useState(false);
 
   const filteredArticles = articles.filter((a) => {
     const q = searchTerm.toLowerCase();
@@ -27,6 +35,8 @@ export default function AdminArticlesTab({
     const matchCat = !categoryFilter || a.category === categoryFilter;
     return matchSearch && matchCat;
   });
+
+  const pg = usePagination(filteredArticles, 10, filteredArticles.length);
 
   return (
     <section id="articlesTab" className="tab-pane">
@@ -78,6 +88,24 @@ export default function AdminArticlesTab({
             >
               <i className="fa-solid fa-rotate"></i> Làm mới
             </button>
+            <button
+              type="button"
+              className="btn-tbl btn-tbl-delete"
+              style={{
+                padding: '9px 14px',
+                borderRadius: '8px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '7px',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+              title="Thùng rác: Xem, khôi phục hoặc xóa vĩnh viễn bài viết"
+              onClick={() => setIsTrashOpen(true)}
+            >
+              <i className="fa-solid fa-trash-can"></i> Thùng rác ({trashedArticles.length})
+            </button>
           </div>
         </div>
 
@@ -108,7 +136,7 @@ export default function AdminArticlesTab({
                   </td>
                 </tr>
               ) : (
-                filteredArticles.map((item) => {
+                pg.pageItems.map((item) => {
                   const isPub = item.published !== false;
                   return (
                     <tr key={item.id}>
@@ -183,7 +211,7 @@ export default function AdminArticlesTab({
                           <button
                             type="button"
                             className="btn-tbl btn-tbl-delete"
-                            title="Xóa bài viết này khỏi SQL"
+                            title="Chuyển vào thùng rác"
                             onClick={() => onDeleteArticle && onDeleteArticle(item.id)}
                           >
                             <i className="fa-solid fa-trash"></i> Xóa
@@ -196,9 +224,21 @@ export default function AdminArticlesTab({
               )}
             </tbody>
           </table>
+          <PaginationBar pagination={pg} unit="bài viết" />
         </div>
       </div>
+
+      {isTrashOpen && (
+        <AdminTrashModal
+          title="Thùng rác Tin Tức & Bài Viết"
+          hint="Bài viết đã xóa tạm được lưu trữ tại đây. Bạn có thể khôi phục ra bảng tin hoặc xóa vĩnh viễn."
+          items={trashedArticles}
+          onRestore={(item) => onRestoreArticle && onRestoreArticle(item.id)}
+          onDestroy={(item) => onPermanentDeleteArticle && onPermanentDeleteArticle(item.id)}
+          onClearAll={trashedArticles.length > 0 ? onClearArticleTrash : null}
+          onClose={() => setIsTrashOpen(false)}
+        />
+      )}
     </section>
   );
 }
-

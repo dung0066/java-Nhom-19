@@ -1,15 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { PaginationBar } from './Pagination';
+import { usePagination } from './usePagination';
+import AdminTrashModal from './AdminTrashModal';
 
+/**
+ * Tab Quản Lý Kho Dụng Cụ, Vợt & Giày Cho Thuê (Admin)
+ * Giao diện hiển thị bảng dữ liệu (Table) chuẩn giống AdminArticlesTab
+ */
 export default function AdminProductsTab({
   products = [],
+  trashedProducts = [],
   onOpenAddModal,
   onEditProduct,
   onToggleActive,
-  onDeleteProduct
+  onDeleteProduct,
+  onRestoreProduct,
+  onPermanentDeleteProduct,
+  onClearProductTrash,
+  onRefresh,
+  isLoading
 }) {
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedCat, setSelectedCat] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(8);
+  const [isTrashOpen, setIsTrashOpen] = useState(false);
 
   const getCatCode = (p) => {
     if (!p) return '';
@@ -17,37 +30,67 @@ export default function AdminProductsTab({
     return p.category || p.categoryCode || '';
   };
 
-  const filteredProducts = selectedCat
-    ? products.filter((p) => {
-        const catCode = getCatCode(p).toUpperCase();
-        if (selectedCat === 'RACKET') return catCode === 'RACKET' || catCode === 'RACQUET';
-        if (selectedCat === 'REFRESHMENTS') return catCode === 'REFRESHMENTS' || catCode === 'DRINKS';
-        return catCode === selectedCat;
-      })
-    : products;
+  const getCatLabel = (p) => {
+    const catCode = getCatCode(p).toUpperCase();
+    if (catCode === 'RACKET' || catCode === 'RACQUET') return 'Vợt Cầu Lông';
+    if (catCode === 'SHOES') return 'Giày Thi Đấu';
+    if (catCode === 'REFRESHMENTS' || catCode === 'DRINKS') return 'Nước & Khăn Lạnh';
+    if (catCode === 'SERVICES') return 'Dịch Vụ Căng Cước';
+    if (catCode === 'ACCESSORY') return 'Phụ Kiện Thể Thao';
+    return p.categoryName || p.categoryLabel || 'Dụng Cụ';
+  };
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedCat, pageSize]);
+  const filteredProducts = products.filter((p) => {
+    const q = searchTerm.toLowerCase().trim();
+    const matchSearch =
+      !q ||
+      (p.name && p.name.toLowerCase().includes(q)) ||
+      (p.brand && p.brand.toLowerCase().includes(q)) ||
+      (p.spec1 && p.spec1.toLowerCase().includes(q)) ||
+      (p.spec2 && p.spec2.toLowerCase().includes(q)) ||
+      (p.description && p.description.toLowerCase().includes(q));
 
-  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, filteredProducts.length);
-  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+    let matchCat = true;
+    if (selectedCat) {
+      const catCode = getCatCode(p).toUpperCase();
+      if (selectedCat === 'RACKET') matchCat = catCode === 'RACKET' || catCode === 'RACQUET';
+      else if (selectedCat === 'REFRESHMENTS') matchCat = catCode === 'REFRESHMENTS' || catCode === 'DRINKS';
+      else matchCat = catCode === selectedCat;
+    }
+
+    return matchSearch && matchCat;
+  });
+
+  const pg = usePagination(
+    filteredProducts,
+    10,
+    `${filteredProducts.length}-${selectedCat}-${searchTerm}`
+  );
 
   return (
     <section id="productsTab" className="tab-pane">
       <div className="admin-content-card">
         <div className="card-header-flex">
           <div>
-            <h3>
+            <h3 style={{ margin: 0 }}>
               <i className="fa-solid fa-wand-magic-sparkles"></i> Quản Lý Kho Dụng Cụ, Vợt & Giày Cho Thuê
             </h3>
-            <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
+            <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px', margin: '4px 0 0 0' }}>
               Thay đổi hình ảnh, giá thuê, thông số kỹ thuật và trạng thái hiển thị trực tiếp lên Trang Chủ và Bước Đặt Sân
             </p>
           </div>
+
           <div className="filter-tools-row">
+            <div className="input-search-box">
+              <i className="fa-solid fa-magnifying-glass"></i>
+              <input
+                type="text"
+                placeholder="Tìm tên dụng cụ, thương hiệu, thông số..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
             <select
               className="select-filter"
               value={selectedCat}
@@ -60,154 +103,259 @@ export default function AdminProductsTab({
               <option value="SERVICES">Dịch Vụ Căng Cước & Tiện Ích</option>
               <option value="ACCESSORY">Phụ Kiện Thể Thao</option>
             </select>
+
             <button
               type="button"
-              className="btn-action-add"
+              className="btn-action-add btn-action-orange"
               onClick={onOpenAddModal}
             >
               <i className="fa-solid fa-plus"></i> Thêm Sản Phẩm Mới
             </button>
+            <button
+              type="button"
+              className="btn-action-add"
+              onClick={onRefresh}
+            >
+              <i className="fa-solid fa-rotate"></i> Làm mới
+            </button>
+            <button
+              type="button"
+              className="btn-tbl btn-tbl-delete"
+              style={{
+                padding: '9px 14px',
+                borderRadius: '8px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '7px',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+              title="Thùng rác: Xem, khôi phục hoặc xóa vĩnh viễn sản phẩm"
+              onClick={() => setIsTrashOpen(true)}
+            >
+              <i className="fa-solid fa-trash-can"></i> Thùng rác ({trashedProducts.length})
+            </button>
           </div>
         </div>
 
-        {/* Products Grid Display */}
-        <div className="products-admin-grid">
-          {filteredProducts.length === 0 ? (
-            <p style={{ gridColumn: '1/-1', textAlign: 'center', padding: '30px', color: '#64748b' }}>
-              Chưa có sản phẩm nào trong kho.
-            </p>
-          ) : (
-            paginatedProducts.map((p) => {
-              const catCode = getCatCode(p).toUpperCase();
-              let catLabel = 'Vợt Cầu Lông';
-              if (catCode === 'SHOES') catLabel = 'Giày Thi Đấu';
-              else if (catCode === 'REFRESHMENTS' || catCode === 'DRINKS') catLabel = 'Nước & Khăn Lạnh';
-              else if (catCode === 'SERVICES') catLabel = 'Dịch Vụ Căng Cước';
-              else if (catCode === 'ACCESSORY') catLabel = 'Phụ Kiện Thể Thao';
-
-              return (
-                <div
-                  key={p.id}
-                  className="p-admin-card"
-                  style={{ opacity: p.active !== false ? 1 : 0.6 }}
-                >
-                  <div className="p-admin-thumb-wrap">
-                    <img
-                      src={
-                        p.imageUrl ||
-                        'https://images.unsplash.com/photo-1613918108466-292b78a8ef95?q=80&w=600&auto=format&fit=crop'
-                      }
-                      alt={p.name}
-                      className="p-admin-thumb"
-                    />
-                    {p.badge && <span className="p-admin-badge">{p.badge}</span>}
-                    <span className="p-admin-cat">{catLabel}</span>
-                  </div>
-                  <div className="p-admin-body">
-                    <span className="p-admin-brand">{p.brand || 'CHÍNH HÃNG'}</span>
-                    <h4 className="p-admin-name">{p.name}</h4>
-                    <div className="p-admin-specs">
-                      {p.spec1 && (
-                        <span>
-                          <i className="fa-solid fa-check"></i> {p.spec1}
+        <div className="table-responsive">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Mã</th>
+                <th>Hình Ảnh</th>
+                <th>Tên Dụng Cụ / Sản Phẩm</th>
+                <th>Danh Mục</th>
+                <th>Giá Thuê / Bán</th>
+                <th>Trạng Thái</th>
+                <th>Thao Tác Quản Trị</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
+                    <i className="fa-solid fa-spinner fa-spin"></i> Đang tải danh sách dụng cụ...
+                  </td>
+                </tr>
+              ) : filteredProducts.length === 0 ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
+                    Chưa có sản phẩm nào trong kho. Bấm <strong>"+ Thêm Sản Phẩm Mới"</strong> để thêm!
+                  </td>
+                </tr>
+              ) : (
+                pg.pageItems.map((item) => {
+                  const isActive = item.active !== false;
+                  const catLabel = getCatLabel(item);
+                  return (
+                    <tr key={item.id}>
+                      <td>
+                        <strong>#{item.id}</strong>
+                      </td>
+                      <td>
+                        <img
+                          src={
+                            item.imageUrl ||
+                            'https://images.unsplash.com/photo-1613918108466-292b78a8ef95?q=80&w=600&auto=format&fit=crop'
+                          }
+                          alt={item.name}
+                          style={{
+                            width: '68px',
+                            height: '46px',
+                            objectFit: 'cover',
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1'
+                          }}
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              'https://images.unsplash.com/photo-1613918108466-292b78a8ef95?q=80&w=600&auto=format&fit=crop';
+                          }}
+                        />
+                      </td>
+                      <td style={{ maxWidth: '340px' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            marginBottom: '4px',
+                            flexWrap: 'wrap'
+                          }}
+                        >
+                          <strong style={{ color: '#0f172a', fontSize: '13.5px' }}>
+                            {item.name}
+                          </strong>
+                          {item.badge && (
+                            <span
+                              style={{
+                                background: '#ffedd5',
+                                color: '#c2410c',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontSize: '10.5px',
+                                fontWeight: 700
+                              }}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: '12px',
+                            color: '#64748b',
+                            display: 'flex',
+                            gap: '8px',
+                            flexWrap: 'wrap',
+                            alignItems: 'center'
+                          }}
+                        >
+                          {item.brand && (
+                            <span
+                              style={{
+                                fontWeight: 700,
+                                color: '#0284c7',
+                                textTransform: 'uppercase'
+                              }}
+                            >
+                              {item.brand}
+                            </span>
+                          )}
+                          {item.spec1 && (
+                            <span>
+                              <i className="fa-solid fa-check" style={{ fontSize: '10px' }}></i> {item.spec1}
+                            </span>
+                          )}
+                          {item.spec2 && (
+                            <span>
+                              <i className="fa-solid fa-shield-halved" style={{ fontSize: '10px' }}></i> {item.spec2}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            background: '#e0f2fe',
+                            color: '#0369a1',
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {catLabel}
                         </span>
-                      )}
-                      {p.spec2 && (
-                        <span>
-                          <i className="fa-solid fa-shield-halved"></i> {p.spec2}
-                        </span>
-                      )}
-                    </div>
-                    <div className="p-admin-price-row">
-                      <span className="p-admin-price">
-                        {(p.price || 0).toLocaleString('vi-VN')} đ
-                      </span>
-                      <span className="p-admin-unit">{p.priceUnit || '/ buổi'}</span>
-                    </div>
-                    <div className="p-admin-actions">
-                      <button
-                        type="button"
-                        className="btn-tbl btn-tbl-edit"
-                        onClick={() => onEditProduct(p)}
-                      >
-                        <i className="fa-solid fa-pen-to-square"></i> Sửa
-                      </button>
-                      <button
-                        type="button"
-                        className={`btn-tbl ${p.active !== false ? 'btn-tbl-view' : 'btn-tbl-success'}`}
-                        onClick={() => onToggleActive(p.id)}
-                      >
-                        <i className="fa-solid fa-eye"></i> {p.active !== false ? 'Ẩn' : 'Hiện'}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-tbl btn-tbl-delete"
-                        onClick={() => onDeleteProduct(p.id)}
-                      >
-                        <i className="fa-solid fa-trash"></i> Xóa
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
+                      </td>
+                      <td>
+                        <div style={{ whiteSpace: 'nowrap' }}>
+                          <strong style={{ color: '#0f172a', fontSize: '13.5px' }}>
+                            {(item.price || 0).toLocaleString('vi-VN')} đ
+                          </strong>
+                          <span style={{ fontSize: '11.5px', color: '#64748b', marginLeft: '4px' }}>
+                            {item.priceUnit || '/ ca chơi'}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        {isActive ? (
+                          <span className="badge-status badge-active">
+                            <i className="fa-solid fa-eye"></i> Công Khai
+                          </span>
+                        ) : (
+                          <span
+                            className="badge-status badge-danger"
+                            style={{ background: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1' }}
+                          >
+                            <i className="fa-solid fa-eye-slash"></i> Đang Ẩn
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="action-btn-group">
+                          <button
+                            type="button"
+                            className="btn-tbl btn-tbl-edit"
+                            title="Chỉnh sửa sản phẩm"
+                            onClick={() => onEditProduct && onEditProduct(item)}
+                          >
+                            <i className="fa-solid fa-pen-to-square"></i> Sửa
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-tbl"
+                            style={{
+                              background: isActive ? '#fef3c7' : '#dcfce7',
+                              color: isActive ? '#b45309' : '#15803d',
+                              border: isActive ? '1px solid #fde68a' : '1px solid #bbf7d0'
+                            }}
+                            title={
+                              isActive
+                                ? 'Ẩn khỏi trang chủ & đặt sân'
+                                : 'Hiển thị công khai lên hệ thống'
+                            }
+                            onClick={() => onToggleActive && onToggleActive(item.id)}
+                          >
+                            <i className={isActive ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'}></i>
+                            {isActive ? 'Ẩn' : 'Hiện'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-tbl btn-tbl-delete"
+                            title="Chuyển vào thùng rác"
+                            onClick={() => onDeleteProduct && onDeleteProduct(item.id)}
+                          >
+                            <i className="fa-solid fa-trash"></i> Xóa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+          <PaginationBar pagination={pg} unit="dụng cụ & sản phẩm" />
         </div>
-
-        {/* Pagination Bar for Products */}
-        {filteredProducts.length > 0 && (
-          <div className="admin-pagination-bar" style={{ marginTop: '20px', borderRadius: '8px' }}>
-            <div className="pagination-info">
-              Hiển thị <strong>{startIndex + 1} - {endIndex}</strong> trên <strong>{filteredProducts.length}</strong> sản phẩm
-              &nbsp;&bull;&nbsp;
-              <label style={{ marginLeft: '8px' }}>
-                Số SP/trang:
-                <select
-                  className="pagination-size-select"
-                  value={pageSize}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
-                  style={{ marginLeft: '6px' }}
-                >
-                  <option value={4}>4</option>
-                  <option value={6}>6</option>
-                  <option value={12}>12</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="pagination-controls">
-              <button
-                type="button"
-                className="btn-page-nav"
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              >
-                <i className="fa-solid fa-chevron-left"></i> Trước
-              </button>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
-                <button
-                  key={pageNumber}
-                  type="button"
-                  className={`page-number-btn ${currentPage === pageNumber ? 'active' : ''}`}
-                  onClick={() => setCurrentPage(pageNumber)}
-                >
-                  {pageNumber}
-                </button>
-              ))}
-
-              <button
-                type="button"
-                className="btn-page-nav"
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              >
-                Tiếp <i className="fa-solid fa-chevron-right"></i>
-              </button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {isTrashOpen && (
+        <AdminTrashModal
+          title="Thùng rác Dụng Cụ, Vợt & Giày"
+          hint="Dụng cụ đã xóa tạm được lưu trữ tại đây. Bạn có thể khôi phục lại kho hoặc xóa vĩnh viễn."
+          items={trashedProducts}
+          onRestore={(item) => onRestoreProduct && onRestoreProduct(item.id)}
+          onDestroy={(item) => onPermanentDeleteProduct && onPermanentDeleteProduct(item.id)}
+          onClearAll={trashedProducts.length > 0 ? onClearProductTrash : null}
+          onClose={() => setIsTrashOpen(false)}
+        />
+      )}
     </section>
   );
 }

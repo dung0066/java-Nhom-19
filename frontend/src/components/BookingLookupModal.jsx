@@ -1,40 +1,43 @@
 import React, { useState } from 'react';
 import { Search, X, Calendar, MapPin, Phone, User, Clock, CheckCircle2, AlertCircle, Trash2, ArrowRight } from 'lucide-react';
-import { fetchAllBookings, cancelBooking } from '../services/api';
+import { lookupBookings, cancelBooking } from '../services/api';
 
 export default function BookingLookupModal({ isOpen, onClose }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [cancelMsg, setCancelMsg] = useState('');
+  const [searchError, setSearchError] = useState('');
 
   if (!isOpen) return null;
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    const query = searchQuery.trim().toLowerCase();
+    const query = searchQuery.trim();
     if (!query) return;
 
     setIsLoading(true);
     setCancelMsg('');
-    const all = await fetchAllBookings();
-
-    const matches = all.filter((b) => {
-      const codeMatch = b.bookingCode && b.bookingCode.toLowerCase().includes(query);
-      const phoneMatch = b.customerPhone && b.customerPhone.replace(/\s+/g, '').includes(query.replace(/\s+/g, ''));
-      const nameMatch = b.customerName && b.customerName.toLowerCase().includes(query);
-      return codeMatch || phoneMatch || nameMatch;
-    });
-
-    setSearchResults(matches);
-    setIsLoading(false);
+    setSearchError('');
+    try {
+      setSearchResults(await lookupBookings(query));
+    } catch (err) {
+      setSearchResults(null);
+      setSearchError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancelBooking = async (bookingId) => {
-    if (window.confirm('Bạn có chắc chắn muốn hủy đơn đặt sân này không?')) {
+    if (!window.confirm('Bạn có chắc chắn muốn hủy đơn đặt sân này không?')) return;
+    try {
       await cancelBooking(bookingId);
       setCancelMsg('Đã hủy đơn đặt sân thành công!');
       setSearchResults((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: 'CANCELLED' } : b)));
+    } catch (err) {
+      setCancelMsg('');
+      setSearchError(err.message || 'Bạn cần đăng nhập bằng tài khoản đã đặt đơn này để hủy.');
     }
   };
 
@@ -51,7 +54,7 @@ export default function BookingLookupModal({ isOpen, onClose }) {
 
         <div className="modal-header-section">
           <h3 className="modal-heading">Tra Cứu Đơn Đặt Sân</h3>
-          <p className="modal-sub">Nhập số điện thoại người đặt hoặc mã đơn đặt sân (WAY-...) để kiểm tra lịch chơi</p>
+          <p className="modal-sub">Nhập đầy đủ số điện thoại người đặt hoặc mã đơn đặt sân (WAY-...) để kiểm tra lịch chơi</p>
         </div>
 
         <form onSubmit={handleSearch} className="lookup-search-form">
@@ -69,6 +72,13 @@ export default function BookingLookupModal({ isOpen, onClose }) {
             </button>
           </div>
         </form>
+
+        {searchError && (
+          <div className="lookup-alert-success" style={{ background: '#fef2f2', color: '#b91c1c' }}>
+            <AlertCircle size={15} />
+            <span>{searchError}</span>
+          </div>
+        )}
 
         {cancelMsg && (
           <div className="lookup-alert-success">

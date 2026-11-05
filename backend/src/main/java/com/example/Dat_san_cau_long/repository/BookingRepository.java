@@ -38,4 +38,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Page<Booking> findByBranchIdOrderByCreatedAtDesc(Long branchId, Pageable pageable);
 
     List<Booking> findByStatusOrderByCreatedAtDesc(BookingStatus status);
+
+    long countByBranchId(Long branchId);
+
+    long countByUserId(Long userId);
 }

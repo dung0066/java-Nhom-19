@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import AppNavbar from './components/common/AppNavbar';
 import AppFooter from './components/common/AppFooter';
 import FloatingContactBar from './components/common/FloatingContactBar';
+import ToastNotification from './components/common/ToastNotification';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import BookingPage from './pages/BookingPage';
@@ -114,6 +115,9 @@ export default function App() {
 
       {/* 4. FLOATING CONTACT BAR (MÉP TRÁI MÀN HÌNH) */}
       {currentPage !== 'admin' && <FloatingContactBar />}
+
+      {/* 5. SLIDE-IN TOAST NOTIFICATION (MÉP PHẢI MÀN HÌNH) */}
+      <ToastNotification />
     </div>
   );
 }

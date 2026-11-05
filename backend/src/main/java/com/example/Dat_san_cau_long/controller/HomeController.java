@@ -16,13 +16,13 @@ public class HomeController {
 
     @GetMapping({"/", "/home"})
     public String home(Model model) {
-        model.addAttribute("branches", branchRepository.findAll());
+        model.addAttribute("branches", branchRepository.findByDeletedAtIsNull());
         return "home";
     }
 
     @GetMapping({"/dat-san", "/booking", "/san"})
     public String booking(Model model) {
-        model.addAttribute("branches", branchRepository.findAll());
+        model.addAttribute("branches", branchRepository.findByDeletedAtIsNull());
         return "booking";
     }
 

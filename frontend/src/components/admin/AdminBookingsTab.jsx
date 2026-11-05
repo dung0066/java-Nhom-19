@@ -30,8 +30,11 @@ export default function AdminBookingsTab({
     if (b.status === 'PENDING' || b.status === 'WAITING_PAYMENT') {
       pendingCount++;
     }
+    // Doanh thu chỉ tính đơn đã xác nhận thanh toán; đơn chờ thanh toán hoặc đã hủy chưa tính
+    if (b.status === 'CONFIRMED' || b.status === 'COMPLETED') {
+      totalRevenue += b.totalPrice ?? b.totalAmount ?? 0;
+    }
     if (b.status !== 'CANCELLED') {
-      totalRevenue += b.totalAmount || 0;
       totalHours += b.details ? b.details.length : 1;
     }
   });
@@ -251,7 +254,7 @@ export default function AdminBookingsTab({
                       <td style={{ fontSize: '12px', lineHeight: 1.4, maxWidth: '200px' }}>{slotsStr}</td>
                       <td>
                         <strong style={{ color: '#ea580c', fontSize: '14px' }}>
-                          {(b.totalAmount || 0).toLocaleString('vi-VN')} đ
+                          {(b.totalPrice ?? b.totalAmount ?? 0).toLocaleString('vi-VN')} đ
                         </strong>
                       </td>
                       <td>

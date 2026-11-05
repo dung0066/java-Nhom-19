@@ -1,0 +1,53 @@
+/* Hộp thoại đăng ký hội viên và ví: lưới gói, trạng thái tải/lỗi, kết quả thanh toán */
+.mem-overlay { z-index: 1200; }
+.mem-box { max-width: 880px; width: 100%; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; max-height: 92vh; }
+.mem-head { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; }
+.mem-body { padding: 22px; overflow-y: auto; }
+.mem-intro { color: #475569; font-size: 14px; margin: 0 0 16px; }
+.mem-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.mem-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; display: flex; flex-direction: column; gap: 6px; transition: border-color .15s, box-shadow .15s; }
+.mem-card:hover { box-shadow: 0 6px 18px rgba(15, 23, 42, .1); }
+.mem-card.selected { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, .2); }
+.mem-card-icon { font-size: 26px; }
+.mem-card h4 { margin: 4px 0 0; font-size: 15px; color: #0f172a; overflow-wrap: anywhere; }
+.mem-percent { font-weight: 800; font-size: 20px; color: #d97706; }
+.mem-price { font-weight: 800; font-size: 16px; color: #0f172a; }
+.mem-meta { font-size: 12px; color: #64748b; }
+.mem-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #ede9fe; color: #6d28d9; align-self: center; }
+.mem-benefits { list-style: none; margin: 6px 0 0; padding: 0; text-align: left; font-size: 12px; color: #475569; display: flex; flex-direction: column; gap: 4px; }
+.mem-benefits li::before { content: '✓ '; color: #16a34a; font-weight: 800; }
+.mem-banner { border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; font-size: 13.5px; }
+.mem-banner.active { background: #ecfdf5; border: 1.5px solid #10b981; color: #065f46; }
+.mem-banner.warn { background: #fffbeb; border: 1.5px solid #f59e0b; color: #92400e; }
+.mem-banner.error { background: #fef2f2; border: 1.5px solid #f87171; color: #991b1b; }
+.mem-state { text-align: center; padding: 36px 12px; color: #64748b; }
+.mem-state i { font-size: 34px; color: #cbd5e1; margin-bottom: 10px; display: block; }
+.mem-panel { border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 16px; background: #f8fafc; }
+.mem-panel h4 { margin: 0 0 10px; font-size: 15px; color: #0f172a; }
+.mem-pay-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.mem-pay { display: flex; gap: 10px; align-items: flex-start; border: 2px solid #e2e8f0; background: #fff; border-radius: 10px; padding: 10px 12px; cursor: pointer; font-size: 13px; }
+.mem-pay.selected { border-color: #f59e0b; }
+.mem-pay.disabled { opacity: .55; cursor: not-allowed; }
+.mem-pay small { display: block; color: #64748b; margin-top: 2px; }
+.mem-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.mem-btn { border: none; border-radius: 10px; padding: 10px 18px; font-weight: 800; font-size: 13.5px; cursor: pointer; }
+.mem-btn:disabled { opacity: .6; cursor: not-allowed; }
+.mem-btn.primary { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; }
+.mem-btn.ghost { background: #e2e8f0; color: #334155; }
+.mem-qr { text-align: center; }
+.mem-qr img { width: 220px; max-width: 100%; height: auto; border-radius: 8px; background: #fff; }
+.mem-kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; text-align: left; margin: 12px auto; max-width: 360px; }
+.mem-kv dt { color: #64748b; }
+.mem-kv dd { margin: 0; font-weight: 700; color: #0f172a; overflow-wrap: anywhere; }
+.acc-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.acc-list { display: flex; flex-direction: column; gap: 10px; }
+.acc-row { border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+.acc-status { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #e2e8f0; color: #334155; }
+.acc-status.ok { background: #ecfdf5; color: #047857; }
+.acc-status.wait { background: #fffbeb; color: #b45309; }
+.acc-status.bad { background: #fef2f2; color: #b91c1c; }
+@media (max-width: 560px) {
+  .mem-body { padding: 16px; }
+  .mem-actions { justify-content: stretch; }
+  .mem-actions .mem-btn { flex: 1; }
+}

@@ -146,6 +146,7 @@ export default function ArticleModal({ isOpen, onClose, initialData, onSave }) {
               Tiêu Đề Bài Viết <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <input
+              maxLength={250}
               type="text"
               required
               placeholder="VD: Khởi Động Cầu Lông Chuẩn Cho Người Mới Tránh Chấn Thương..."
@@ -185,6 +186,7 @@ export default function ArticleModal({ isOpen, onClose, initialData, onSave }) {
                 Tác Giả / Người Đăng
               </label>
               <input
+                maxLength={100}
                 type="text"
                 value={formData.author}
                 onChange={(e) => setFormData({ ...formData, author: e.target.value })}
@@ -287,6 +289,7 @@ export default function ArticleModal({ isOpen, onClose, initialData, onSave }) {
               Tóm Tắt Ngắn (Hiển thị ngoài trang chủ)
             </label>
             <textarea
+              maxLength={500}
               rows="2"
               value={formData.summary}
               onChange={(e) => setFormData({ ...formData, summary: e.target.value })}

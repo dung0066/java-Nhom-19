@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { useLanguage } from '../context/LanguageContext';
 import { BRANCHES } from '../data/courtData';
 import MembershipModal from '../components/home/MembershipModal';
+import { fetchMembershipPackages } from '../services/api';
 import HomeNewsSection from '../components/home/HomeNewsSection';
 import HomeProductsSection from '../components/home/HomeProductsSection';
 import '../styles/home.css';
@@ -12,6 +13,26 @@ export default function HomePage({ onNavigate }) {
   const { language, t, isVietnamese } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isMembershipModalOpen, setIsMembershipModalOpen] = useState(false);
+  const [maxMemberDiscount, setMaxMemberDiscount] = useState(null);
+
+  // Mở hộp thoại hội viên từ nơi khác (vd. tab Ví trong hộp thoại tài khoản)
+  useEffect(() => {
+    const openMembership = () => setIsMembershipModalOpen(true);
+    window.addEventListener('d2_open_membership', openMembership);
+    return () => window.removeEventListener('d2_open_membership', openMembership);
+  }, []);
+
+  // Phần trăm giảm cao nhất lấy từ các gói hội viên thật trong cơ sở dữ liệu
+  useEffect(() => {
+    let cancelled = false;
+    fetchMembershipPackages()
+      .then((list) => {
+        const max = Math.max(0, ...list.map((p) => Number(p.discountPercent) || 0));
+        if (!cancelled && max > 0) setMaxMemberDiscount(max);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
   const [activeBranchKey, setActiveBranchKey] = useState('NVL');
   const [quickDate, setQuickDate] = useState('today');
   const [quickTime, setQuickTime] = useState('evening');
@@ -549,23 +570,25 @@ export default function HomePage({ onNavigate }) {
             </div>
 
             <div className="d2-pricing-card">
-              <h3 className="d2-pricing-name">{isVietnamese ? 'Gói Cố Định Tháng / CLB' : 'Monthly Recurring Pass'}</h3>
-              <div className="d2-pricing-hours">{isVietnamese ? 'Cố định hàng tuần theo tháng' : 'Fixed weekly recurring slot'}</div>
+              <h3 className="d2-pricing-name">{isVietnamese ? 'Gói Hội Viên' : 'Membership Plans'}</h3>
+              <div className="d2-pricing-hours">{isVietnamese ? 'Giảm giá giờ chơi theo từng gói' : 'Court-hour discount by plan'}</div>
               <div className="d2-pricing-price">
-                <span className="d2-price-large" style={{ color: '#ea580c' }}>-15%</span>
-                <span className="d2-price-unit">{isVietnamese ? 'tổng hóa đơn' : 'total monthly bill'}</span>
+                <span className="d2-price-large" style={{ color: '#ea580c' }}>
+                  {maxMemberDiscount ? `${isVietnamese ? 'Đến' : 'Up to'} -${maxMemberDiscount}%` : (isVietnamese ? 'Ưu đãi' : 'Perks')}
+                </span>
+                <span className="d2-price-unit">{isVietnamese ? 'giờ chơi, tự áp khi đặt sân' : 'court hours, applied at booking'}</span>
               </div>
               <ul className="d2-pricing-list">
-                <li><i className="fa-solid fa-check"></i> {isVietnamese ? 'Cố định sân & giờ vàng không lo hết chỗ' : 'Guaranteed reserved weekly time'}</li>
-                <li><i className="fa-solid fa-check"></i> {isVietnamese ? 'Miễn phí tủ gửi vợt & mượn bóng tập' : 'Free racket locker & practice shuttles'}</li>
-                <li><i className="fa-solid fa-check"></i> {isVietnamese ? 'Hỗ trợ linh hoạt đổi buổi khi bận' : 'Flexible reschedule when requested'}</li>
+                <li><i className="fa-solid fa-check"></i> {isVietnamese ? 'Tự động giảm giá khi đặt sân lúc đã đăng nhập' : 'Discount applied automatically when booking while signed in'}</li>
+                <li><i className="fa-solid fa-check"></i> {isVietnamese ? 'Mua bằng ví (kích hoạt ngay) hoặc VietQR' : 'Pay by wallet (instant) or VietQR'}</li>
+                <li><i className="fa-solid fa-check"></i> {isVietnamese ? 'Gói mua sau nối tiếp khi gói hiện tại hết hạn' : 'New plans start when the current one ends'}</li>
               </ul>
               <button
                 type="button"
                 className="d2-btn-price-select"
                 onClick={() => setIsMembershipModalOpen(true)}
               >
-                {isVietnamese ? 'Đăng Ký Gói Cố Định' : 'Apply For Pass'}
+                {isVietnamese ? 'Xem Gói Hội Viên' : 'View Membership Plans'}
               </button>
             </div>
           </div>

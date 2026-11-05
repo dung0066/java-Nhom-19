@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { PaginationBar } from './Pagination';
+import { usePagination } from './usePagination';
+import AdminUserDetailModal from './AdminUserDetailModal';
+import ModalPortal from './ModalPortal';
 
 /**
  * Tab Quản Lý Tài Khoản Khách Hàng & Người Dùng
@@ -9,12 +13,14 @@ export default function AdminUsersTab({
   onToggleUserStatus,
   onChangeUserRole,
   onCreateUser,
-  onDeleteUser,
   onRefresh,
   isLoading
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+
+  // Hộp thoại xem chi tiết / đơn hàng của một tài khoản
+  const [detailTarget, setDetailTarget] = useState(null);
 
   // Modal Thêm User mới
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -40,6 +46,8 @@ export default function AdminUsersTab({
     const matchRole = !roleFilter || u.role === roleFilter;
     return matchSearch && matchRole;
   });
+
+  const pg = usePagination(filteredUsers, 10, filteredUsers.length);
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
@@ -151,7 +159,7 @@ export default function AdminUsersTab({
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((u) => {
+                pg.pageItems.map((u) => {
                   const isLocked = u.status === 'LOCKED' || u.status === 'DELETED';
                   const isAdmin = u.role === 'ROLE_ADMIN' || u.role === 'ADMIN';
 
@@ -202,6 +210,22 @@ export default function AdminUsersTab({
                       </td>
                       <td>
                         <div className="action-btn-group">
+                          <button
+                            type="button"
+                            className="btn-tbl btn-tbl-view"
+                            title="Xem thông tin đầy đủ của tài khoản này"
+                            onClick={() => setDetailTarget({ user: u, tab: 'info' })}
+                          >
+                            <i className="fa-solid fa-id-card"></i> Chi tiết
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-tbl btn-tbl-view"
+                            title="Xem tất cả đơn đặt sân của tài khoản này"
+                            onClick={() => setDetailTarget({ user: u, tab: 'orders' })}
+                          >
+                            <i className="fa-solid fa-receipt"></i> Đơn hàng
+                          </button>
                           {u.id !== 1 && (
                             <button
                               type="button"
@@ -218,21 +242,6 @@ export default function AdminUsersTab({
                               {isLocked ? 'Mở Khóa' : 'Khóa'}
                             </button>
                           )}
-                          {u.id !== 1 && (
-                            <button
-                              type="button"
-                              className="btn-tbl btn-tbl-delete"
-                              title="Xóa tài khoản này"
-                              onClick={() => onDeleteUser && onDeleteUser(u.id)}
-                            >
-                              <i className="fa-solid fa-trash"></i> Xóa
-                            </button>
-                          )}
-                          {u.id === 1 && (
-                            <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>
-                              Super Admin
-                            </span>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -241,18 +250,28 @@ export default function AdminUsersTab({
               )}
             </tbody>
           </table>
+          <PaginationBar pagination={pg} unit="tài khoản" />
         </div>
       </div>
 
+      {detailTarget && (
+        <AdminUserDetailModal
+          key={`${detailTarget.user.id}-${detailTarget.tab}`}
+          user={detailTarget.user}
+          initialTab={detailTarget.tab}
+          onClose={() => setDetailTarget(null)}
+        />
+      )}
+
       {/* MODAL THÊM USER MỚI */}
       {isAddModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
+        <ModalPortal><div className="admin-modal-backdrop show" onClick={() => setIsAddModalOpen(false)}>
           <div
-            className="modal-content"
+            className="admin-modal-box"
             style={{ maxWidth: '480px' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="modal-header">
+            <div className="admin-modal-header">
               <h3>
                 <i className="fa-solid fa-user-plus"></i> Thêm Tài Khoản Người Dùng Mới
               </h3>
@@ -266,12 +285,16 @@ export default function AdminUsersTab({
             </div>
 
             <form onSubmit={handleCreateSubmit}>
-              <div className="modal-body" style={{ padding: '20px' }}>
+              <div className="admin-modal-body" style={{ padding: '20px' }}>
                 <div className="form-group" style={{ marginBottom: '14px' }}>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
                     Tên Đăng Nhập (Username) *
                   </label>
                   <input
+                    minLength={4}
+                    maxLength={50}
+                    pattern="[A-Za-z0-9_.]{4,50}"
+                    title="4-50 ký tự: chữ, số, dấu chấm, gạch dưới"
                     type="text"
                     className="form-control"
                     placeholder="VD: staff_tanphu"
@@ -286,6 +309,8 @@ export default function AdminUsersTab({
                     Mật Khẩu *
                   </label>
                   <input
+                    minLength={6}
+                    maxLength={100}
                     type="password"
                     className="form-control"
                     placeholder="Nhập mật khẩu..."
@@ -300,6 +325,7 @@ export default function AdminUsersTab({
                     Họ Và Tên
                   </label>
                   <input
+                    maxLength={100}
                     type="text"
                     className="form-control"
                     placeholder="VD: Nguyễn Văn A"
@@ -314,7 +340,11 @@ export default function AdminUsersTab({
                       Số Điện Thoại
                     </label>
                     <input
-                      type="text"
+                      required
+                      maxLength={12}
+                      pattern="(0|\+84)[0-9]{9,10}"
+                      title="Số điện thoại Việt Nam, VD: 0912345678 (không có khoảng trắng)"
+                      type="tel"
                       className="form-control"
                       placeholder="0912 345 678"
                       value={newUserForm.phone}
@@ -342,6 +372,7 @@ export default function AdminUsersTab({
                     Email
                   </label>
                   <input
+                    maxLength={100}
                     type="email"
                     className="form-control"
                     placeholder="user@example.com"
@@ -351,7 +382,7 @@ export default function AdminUsersTab({
                 </div>
               </div>
 
-              <div className="modal-footer" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <div className="admin-modal-footer" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 <button
                   type="button"
                   className="btn-tbl btn-tbl-edit"
@@ -369,7 +400,7 @@ export default function AdminUsersTab({
               </div>
             </form>
           </div>
-        </div>
+        </div></ModalPortal>
       )}
     </section>
   );

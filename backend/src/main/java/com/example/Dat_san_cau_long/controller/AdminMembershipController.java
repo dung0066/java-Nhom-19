@@ -1,10 +1,13 @@
 package com.example.Dat_san_cau_long.controller;
 
 import com.example.Dat_san_cau_long.model.MembershipPackage;
+import com.example.Dat_san_cau_long.validation.OnCreate;
 import com.example.Dat_san_cau_long.model.UserMembership;
 import com.example.Dat_san_cau_long.service.MembershipService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,12 +30,12 @@ public class AdminMembershipController {
     }
 
     @PostMapping("/packages")
-    public ResponseEntity<MembershipPackage> createPackage(@RequestBody MembershipPackage pkg) {
+    public ResponseEntity<MembershipPackage> createPackage(@Validated(OnCreate.class) @RequestBody MembershipPackage pkg) {
         return ResponseEntity.ok(membershipService.createPackage(pkg));
     }
 
     @PutMapping("/packages/{id}")
-    public ResponseEntity<MembershipPackage> updatePackage(@PathVariable Long id, @RequestBody MembershipPackage pkg) {
+    public ResponseEntity<MembershipPackage> updatePackage(@PathVariable Long id, @Valid @RequestBody MembershipPackage pkg) {
         return ResponseEntity.ok(membershipService.updatePackage(id, pkg));
     }
 

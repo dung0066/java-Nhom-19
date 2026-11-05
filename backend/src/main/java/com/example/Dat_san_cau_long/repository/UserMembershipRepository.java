@@ -22,6 +22,9 @@ public interface UserMembershipRepository extends JpaRepository<UserMembership, 
 
     Optional<UserMembership> findBySubscriptionCode(String subscriptionCode);
 
+    /** Gói mới nhất của người dùng đang ở trạng thái cho trước (dùng để tìm gói đang chờ thanh toán). */
+    Optional<UserMembership> findFirstByUserIdAndStatusOrderByCreatedAtDesc(Long userId, MembershipStatus status);
+
     List<UserMembership> findAllByOrderByCreatedAtDesc();
 
     Page<UserMembership> findAllByOrderByCreatedAtDesc(Pageable pageable);

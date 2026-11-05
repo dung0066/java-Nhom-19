@@ -28,6 +28,8 @@ public class PricingService {
 
     private static final BigDecimal DEFAULT_STANDARD_PRICE = BigDecimal.valueOf(70000);
     private static final BigDecimal DEFAULT_PEAK_PRICE = BigDecimal.valueOf(120000);
+    /** Rule có giá từ mức này trở lên được xem là giờ cao điểm. */
+    private static final BigDecimal PEAK_PRICE_THRESHOLD = BigDecimal.valueOf(100000);
 
     private final PriceRuleRepository priceRuleRepository;
     private final UserMembershipRepository userMembershipRepository;
@@ -42,6 +44,11 @@ public class PricingService {
         return resolvePriceInfo(branchId, timeSlotId, date).getPrice();
     }
 
+    /**
+     * Tìm giá cho một slot. Repository trả các rule phù hợp (chi nhánh, khung giờ, loại ngày)
+     * đã sắp theo độ ưu tiên giảm dần, nên rule đầu tiên là rule thắng.
+     * Không có rule nào thì dùng giá mặc định 70.000đ.
+     */
     public ResolvedPriceInfo resolvePriceInfo(Long branchId, Long timeSlotId, LocalDate date) {
         LocalDate effectiveDate = (date != null) ? date : LocalDate.now();
         PriceDayType dayType = determineDayType(effectiveDate);
@@ -50,21 +57,17 @@ public class PricingService {
 
         if (!candidates.isEmpty()) {
             PriceRule winningRule = candidates.get(0);
-            BigDecimal resolvedPrice = winningRule.getPrice();
-
-            boolean isPeak = resolvedPrice.compareTo(BigDecimal.valueOf(100000)) >= 0
-                    || (winningRule.getPriority() != null && winningRule.getPriority() > 0 && winningRule.getTimeSlot() != null);
 
             return ResolvedPriceInfo.builder()
-                    .price(resolvedPrice)
-                    .peak(isPeak)
+                    .price(winningRule.getPrice())
+                    .peak(isPeakRule(winningRule))
                     .standardPrice(DEFAULT_STANDARD_PRICE)
                     .peakPrice(DEFAULT_PEAK_PRICE)
                     .ruleDescription("Rule ID: " + winningRule.getId() + ", Priority: " + winningRule.getPriority())
                     .build();
         }
 
-        // Fallback default
+        // Không có rule nào khớp: dùng giá mặc định
         return ResolvedPriceInfo.builder()
                 .price(DEFAULT_STANDARD_PRICE)
                 .peak(false)
@@ -74,6 +77,18 @@ public class PricingService {
                 .build();
     }
 
+    /** Giờ cao điểm: giá từ 100.000đ trở lên, hoặc rule riêng cho một khung giờ có độ ưu tiên lớn hơn 0. */
+    private boolean isPeakRule(PriceRule rule) {
+        boolean highPrice = rule.getPrice().compareTo(PEAK_PRICE_THRESHOLD) >= 0;
+        boolean prioritizedSlotRule = rule.getPriority() != null && rule.getPriority() > 0 && rule.getTimeSlot() != null;
+        return highPrice || prioritizedSlotRule;
+    }
+
+    /**
+     * Số tiền giảm của hội viên cho một slot = giá gốc x % giảm của gói (làm tròn đến đồng).
+     * Trả 0 nếu không phải hội viên, gói không có giảm giá, hoặc slot nằm ngoài khung giờ áp dụng
+     * (ví dụ gói Sinh Viên chỉ giảm trước 16:30).
+     */
     public BigDecimal calculateDiscount(BigDecimal originalPrice, User user, TimeSlot timeSlot, LocalDate bookingDate) {
         if (originalPrice == null || originalPrice.compareTo(BigDecimal.ZERO) <= 0 || user == null) {
             return BigDecimal.ZERO;

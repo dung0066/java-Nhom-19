@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Calendar, ChevronRight } from 'lucide-react';
+import { toLocalDateString } from '../utils/date';
 
 gsap.registerPlugin(useGSAP);
 
@@ -17,7 +18,7 @@ export default function DateSelector({ selectedDate, setSelectedDate }) {
 
     return {
       dateObj: d,
-      id: d.toISOString().split('T')[0],
+      id: toLocalDateString(d),
       dayTitle: index === 0 ? 'Hôm nay' : index === 1 ? 'Ngày mai' : dayNames[dayOfWeek],
       dayShort: shortNames[dayOfWeek],
       dayNumber: d.getDate(),

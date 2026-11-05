@@ -2,6 +2,8 @@ package com.example.Dat_san_cau_long.model;
 
 import com.example.Dat_san_cau_long.model.enums.ProductType;
 import jakarta.persistence.*;
+import com.example.Dat_san_cau_long.validation.OnCreate;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -45,9 +47,12 @@ public class Product {
         }
     }
 
+    @NotBlank(groups = OnCreate.class, message = "Tên sản phẩm không được để trống")
+    @Size(max = 150, message = "Tên sản phẩm tối đa 150 ký tự")
     @Column(nullable = false, length = 150)
     private String name;
 
+    @Size(max = 100, message = "Thương hiệu tối đa 100 ký tự")
     @Column(length = 100)
     private String brand;
 
@@ -56,9 +61,13 @@ public class Product {
     @Builder.Default
     private ProductType productType = ProductType.RENTAL;
 
+    @NotNull(groups = OnCreate.class, message = "Giá sản phẩm không được để trống")
+    @DecimalMin(value = "0", message = "Giá sản phẩm không được âm")
+    @DecimalMax(value = "100000000", message = "Giá sản phẩm tối đa 100.000.000đ")
     @Column(nullable = false, precision = 12, scale = 0)
     private BigDecimal price;
 
+    @Size(max = 50, message = "Đơn vị tính tối đa 50 ký tự")
     @Column(name = "price_unit", nullable = false, length = 50)
     @Builder.Default
     private String priceUnit = "/ buoi choi";
@@ -66,6 +75,7 @@ public class Product {
     @Column(name = "image_url", columnDefinition = "LONGTEXT")
     private String imageUrl;
 
+    @Size(max = 50, message = "Nhãn tối đa 50 ký tự")
     @Column(length = 50)
     private String badge;
 

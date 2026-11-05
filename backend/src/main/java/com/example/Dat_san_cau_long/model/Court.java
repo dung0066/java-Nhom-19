@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "courts", uniqueConstraints = {
     @UniqueConstraint(name = "uk_courts_branch_number", columnNames = {"branch_id", "court_number"}),
@@ -29,14 +31,13 @@ public class Court {
     @Column(name = "court_number", nullable = false)
     private Integer courtNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "court_group_id")
-    @JsonIgnore
-    private CourtGroup courtGroup;
-
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
+
+    /** Có giá trị nghĩa là sân đang nằm trong thùng rác (xóa tạm), khôi phục được. */
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @Transient
     public String getName() {

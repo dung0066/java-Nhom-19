@@ -2,13 +2,17 @@ import React, { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
 import { useLanguage } from "../context/LanguageContext";
 import { BRANCHES, TIME_SLOTS, DEFAULT_D2_PRODUCTS } from "../data/courtData";
-import { fetchMatrixData, createBooking, getStoredUser, fetchProducts } from "../services/api";
+import { fetchMatrixData, createBooking, quoteBooking, getStoredUser, fetchProducts } from "../services/api";
+import { buildVietQrUrl, formatVnd } from "../services/payment";
+import useMembershipStatus, { notifyMembershipChanged } from "../hooks/useMembershipStatus";
+import { showToast } from "../components/common/ToastNotification";
 import ComboModal from "../components/booking/ComboModal";
 import OrderHistoryModal from "../components/booking/OrderHistoryModal";
 import GuideModal from "../components/booking/GuideModal";
 import AuthModal from "../components/common/AuthModal";
 import "../styles/stepper-booking.css";
 import "../styles/booking.css";
+import { toLocalDateString } from "../utils/date";
 
 // Dịch vụ tiêu chuẩn phục vụ thi đấu & tập luyện
 const SERVICE_ITEMS = [
@@ -147,7 +151,7 @@ export default function BookingPage({ onNavigate }) {
   };
 
   // Selection states
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = toLocalDateString();
   const [branch, setBranch] = useState("NVL");
   const [date, setDate] = useState(todayStr);
 
@@ -200,6 +204,30 @@ export default function BookingPage({ onNavigate }) {
   // Success result
   const [bookingResult, setBookingResult] = useState(null);
 
+  // Tự động kiểm tra trạng thái thanh toán đơn hàng (SePay webhook auto-update)
+  useEffect(() => {
+    if (!bookingResult || bookingResult.status === "CONFIRMED" || bookingResult.paymentType !== "VIETQR") {
+      return;
+    }
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/booking/code/${bookingResult.bookingCode}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.status === "CONFIRMED") {
+            setBookingResult((prev) => ({
+              ...prev,
+              status: "CONFIRMED"
+            }));
+          }
+        }
+      } catch (err) {
+        // ignore polling error
+      }
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [bookingResult]);
+
   // Modals
   const [isComboModalOpen, setIsComboModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -207,16 +235,31 @@ export default function BookingPage({ onNavigate }) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authNotice, setAuthNotice] = useState("Vui lòng đăng nhập hoặc đăng ký tài khoản để tiếp tục đặt sân!");
   const [currentUser, setCurrentUser] = useState(() => getStoredUser());
+  const { balance: walletBalance } = useMembershipStatus(currentUser);
 
-  // Tự động điền thông tin nếu đã đăng nhập
+  // Tự động điền thông tin nếu đã đăng nhập & đồng bộ auth toàn hệ thống
   useEffect(() => {
-    const user = getStoredUser();
-    if (user) {
-      setCurrentUser(user);
-      if (!customerName) setCustomerName(user.fullName || user.username || "");
-      if (!customerPhone) setCustomerPhone(user.phone || "");
-      if (!customerEmail) setCustomerEmail(user.email || "");
-    }
+    const syncUser = (user) => {
+      if (user) {
+        setCurrentUser(user);
+        setCustomerName(user.fullName || user.username || "");
+        setCustomerPhone(user.phone || "");
+        setCustomerEmail(user.email || "");
+      } else {
+        setCurrentUser(null);
+      }
+    };
+
+    const initialUser = getStoredUser();
+    if (initialUser) syncUser(initialUser);
+
+    const handleAuthChange = (e) => {
+      const u = e?.detail !== undefined ? e.detail : getStoredUser();
+      syncUser(u);
+    };
+
+    window.addEventListener('d2_auth_changed', handleAuthChange);
+    return () => window.removeEventListener('d2_auth_changed', handleAuthChange);
   }, []);
 
   // Tải danh mục sản phẩm và dụng cụ thật từ SQL Database (/api/products)
@@ -321,47 +364,41 @@ export default function BookingPage({ onNavigate }) {
     try {
       const data = await fetchMatrixData(targetBranch, targetDate).catch(() => null);
       
-      // Lấy danh sách sân do Admin quản lý từ SQL / localStorage
-      let adminCourts = [];
-      try {
-        const saved = localStorage.getItem('d2_admin_courts');
-        if (saved) adminCourts = JSON.parse(saved);
-      } catch (_) {}
+      let branchCourts = [];
+      if (data?.courts && data.courts.length > 0) {
+        // Dùng danh sách sân thật từ Database của đúng chi nhánh đang chọn
+        branchCourts = data.courts.map(c => ({
+          ...c,
+          name: c.name || `Sân ${c.courtNumber}`
+        }));
+      } else {
+        // Fallback khi offline hoặc mất kết nối
+        let adminCourts = [];
+        try {
+          const saved = localStorage.getItem('d2_admin_courts');
+          if (saved) adminCourts = JSON.parse(saved);
+        } catch (_) {}
 
-      // Lọc sân theo đúng chi nhánh đang chọn
-      let branchCourts = adminCourts.filter(c => {
-        const code = c.branch?.code || c.branchCode || 'NVL';
-        return code === targetBranch;
-      });
+        branchCourts = adminCourts.filter(c => {
+          const code = c.branch?.code || c.branchCode || 'NVL';
+          return code === targetBranch;
+        });
 
-      // Nếu chưa có trong admin thì dùng danh sách sân theo từng chi nhánh
-      if (branchCourts.length === 0) {
-        if (targetBranch === 'DQII') {
-          branchCourts = [
-            { id: 21, courtNumber: 1, name: 'Sân 1', courtGroup: 'Thảm Taraflex BWF', branchCode: 'DQII', active: true },
-            { id: 22, courtNumber: 2, name: 'Sân 2', courtGroup: 'Thảm Taraflex BWF', branchCode: 'DQII', active: true },
-            { id: 23, courtNumber: 3, name: 'Sân 3', courtGroup: 'Thảm PVC Tiêu Chuẩn', branchCode: 'DQII', active: true },
-            { id: 24, courtNumber: 4, name: 'Sân 4', courtGroup: 'Thảm PVC Tiêu Chuẩn', branchCode: 'DQII', active: true }
-          ];
-        } else if (targetBranch === 'NQA') {
-          branchCourts = [
-            { id: 31, courtNumber: 1, name: 'Sân 1', courtGroup: 'Thảm Taraflex BWF', branchCode: 'NQA', active: true },
-            { id: 32, courtNumber: 2, name: 'Sân 2', courtGroup: 'Thảm Taraflex BWF', branchCode: 'NQA', active: true },
-            { id: 33, courtNumber: 3, name: 'Sân 3', courtGroup: 'Thảm Taraflex BWF', branchCode: 'NQA', active: true }
-          ];
-        } else if (targetBranch === 'HB') {
-          branchCourts = [
-            { id: 41, courtNumber: 1, name: 'Sân 1 VIP Máy Lạnh', courtGroup: 'Phòng VIP Riêng', branchCode: 'HB', active: true },
-            { id: 42, courtNumber: 2, name: 'Sân 2 VIP Máy Lạnh', courtGroup: 'Phòng VIP Riêng', branchCode: 'HB', active: true }
-          ];
-        } else {
-          branchCourts = data?.courts?.length ? data.courts : COURTS_NVL;
+        if (branchCourts.length === 0) {
+          branchCourts = COURTS_NVL;
         }
       }
 
       setCourts(branchCourts);
       setTimeSlots(data?.timeSlots || TIME_SLOTS);
-      setSlotStatusMap(data?.slotStatusMap || {});
+      
+      let mergedMap = { ...(data?.slotStatusMap || {}) };
+      try {
+        const localKey = `d2_booked_slots_${targetBranch}_${targetDate}`;
+        const existingLocal = JSON.parse(localStorage.getItem(localKey) || '{}');
+        mergedMap = { ...mergedMap, ...existingLocal };
+      } catch (_) {}
+      setSlotStatusMap(mergedMap);
     } catch (err) {
       console.error("Lỗi tải dữ liệu sân:", err);
     }
@@ -387,7 +424,7 @@ export default function BookingPage({ onNavigate }) {
   const upcomingDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
-    const dateStr = d.toISOString().split("T")[0];
+    const dateStr = toLocalDateString(d);
     const dayNames = isVietnamese ? ["CN", "T2", "T3", "T4", "T5", "T6", "T7"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const dayName =
       i === 0 ? (isVietnamese ? "Hôm nay" : "Today") : i === 1 ? (isVietnamese ? "Ngày mai" : "Tomorrow") : dayNames[d.getDay()];
@@ -421,9 +458,32 @@ export default function BookingPage({ onNavigate }) {
     return true;
   };
 
+  // Khung giờ đã qua (ngày trước hôm nay, hoặc hôm nay nhưng đã bắt đầu) thì không đặt được
+  const isPastSlot = (slot) => {
+    if (date < todayStr) return true;
+    if (date > todayStr || !slot.startTime) return false;
+    const now = new Date();
+    const nowHm = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    return String(slot.startTime).slice(0, 5) <= nowHm;
+  };
+
   // Slot toggle handler với quy tắc BẮT BUỘC KHUNG GIỜ PHẢI LIỀN KỀ NHAU
   const handleToggleSlot = (court, slot, baseStatus) => {
-    if (baseStatus === "BOOKED") return;
+    const isSlotBooked =
+      baseStatus === "BOOKED" ||
+      baseStatus === "CHECKED_IN" ||
+      baseStatus === "COMPLETED" ||
+      baseStatus === "PAID";
+    if (isSlotBooked) {
+      showWarning(`⚠️ Ca ${slot.displayLabel} của ${court.name} đã có người đặt và thanh toán thành công! Quý khách vui lòng chọn ca khác.`);
+      return;
+    }
+
+    const alreadySelected = selectedSlots.some((s) => s.court.id === court.id && s.slot.id === slot.id);
+    if (!alreadySelected && isPastSlot(slot)) {
+      showWarning("⚠️ Khung giờ này đã qua, vui lòng chọn khung giờ còn lại trong ngày hoặc đổi sang ngày khác.");
+      return;
+    }
 
     const isSelected = selectedSlots.some(
       (s) => s.court.id === court.id && s.slot.id === slot.id,
@@ -553,7 +613,7 @@ export default function BookingPage({ onNavigate }) {
     });
   };
 
-  // Price calculations (30 phút / slot)
+  // Giá tạm tính ở trình duyệt, chỉ dùng khi chưa có báo giá từ máy chủ
   const rawCourtPrice = selectedSlots.reduce(
     (sum, s) =>
       sum +
@@ -563,14 +623,9 @@ export default function BookingPage({ onNavigate }) {
     0,
   );
 
-  let comboDiscount = 0;
-  if (appliedCombo === "SINGLE_OFFPEAK" && selectedSlots.length >= 2) {
-    comboDiscount = Math.max(0, rawCourtPrice - 99000);
-  } else if (appliedCombo === "DOUBLE_OFFPEAK" && selectedSlots.length >= 4) {
-    comboDiscount = Math.max(0, rawCourtPrice - 189000);
-  }
-
-  const finalCourtPrice = Math.max(0, rawCourtPrice - comboDiscount);
+  // Combo giờ vắng chưa được máy chủ tính vào hóa đơn nên không trừ vào tổng tiền
+  // (nếu trừ ở đây thì số tiền khách thấy và mã QR sẽ lệch với đơn thật).
+  const finalCourtPrice = rawCourtPrice;
 
   // Services price (Tính theo danh mục sản phẩm từ SQL Database)
   const allFlattenedServices = (serviceCategories || SERVICE_ITEMS).flatMap((c) => c.items);
@@ -583,7 +638,53 @@ export default function BookingPage({ onNavigate }) {
     0,
   );
 
-  const totalAmount = finalCourtPrice + servicesTotal;
+  // Sản phẩm mua kèm gửi lên máy chủ: id giao diện có dạng "prod_<id sản phẩm>"
+  const buildAddonItems = () =>
+    Object.entries(serviceQuantities)
+      .filter(([, qty]) => qty > 0)
+      .map(([id, qty]) => ({ productId: Number(String(id).replace("prod_", "")), quantity: qty }))
+      .filter((item) => Number.isInteger(item.productId) && item.productId > 0);
+
+  // Báo giá từ máy chủ (giá slot, giảm giá hội viên, tổng tiền) mỗi khi khách đổi lựa chọn
+  const [quote, setQuote] = useState(null);
+  const [quoteError, setQuoteError] = useState("");
+  useEffect(() => {
+    if (selectedSlots.length === 0) {
+      setQuote(null);
+      setQuoteError("");
+      return undefined;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const result = await quoteBooking(
+          {
+            branchCode: branch,
+            bookingDate: date,
+            selectedSlots: selectedSlots.map((s) => ({ courtId: s.court.id, timeSlotId: s.slot.id })),
+            addonItems: buildAddonItems(),
+          },
+          controller.signal,
+        );
+        setQuote(result);
+        setQuoteError("");
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          setQuote(null);
+          setQuoteError(err.message || "Không thể tính giá từ máy chủ");
+        }
+      }
+    }, 250);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branch, date, selectedSlots, serviceQuantities, currentUser?.id]);
+
+  const memberDiscount = quote ? Number(quote.discountAmount) || 0 : 0;
+  const hasUnavailableSlot = !!quote && quote.slots.some((q) => !q.available);
+  const totalAmount = quote ? Number(quote.totalPrice) : finalCourtPrice + servicesTotal;
   const currentBranchObj =
     BRANCHES.find((b) => b.code === branch) || BRANCHES[0];
 
@@ -600,14 +701,6 @@ export default function BookingPage({ onNavigate }) {
 
     setIsSubmitting(true);
     try {
-      const addonItemsPayload = Object.entries(serviceQuantities)
-        .filter(([_, qty]) => qty > 0)
-        .map(([id, qty], idx) => ({
-          productId: idx + 1,
-          quantity: qty,
-          serviceCode: id,
-        }));
-
       const payload = {
         branchCode: branch,
         bookingDate: date,
@@ -616,36 +709,27 @@ export default function BookingPage({ onNavigate }) {
         customerEmail: customerEmail.trim(),
         paymentType,
         notes: orderNotes.trim(),
-        totalAmount,
         slotIds: selectedSlots.map((s) => ({
           courtId: s.court.id,
           slotId: s.slot.id,
         })),
-        addonItems: addonItemsPayload,
+        addonItems: buildAddonItems(),
       };
 
-      let result;
-      try {
-        result = await createBooking(payload);
-      } catch (apiErr) {
-        console.warn(
-          "Backend call failed, using mock success for demo:",
-          apiErr,
-        );
-        result = {
-          bookingId: Date.now(),
-          bookingCode: `WAY-${Math.floor(100000 + Math.random() * 900000)}`,
-          status: paymentType === "VIETQR" ? "PENDING" : "CONFIRMED",
-          totalPrice: totalAmount,
-        };
-      }
+      // Lỗi từ máy chủ (slot vừa bị người khác đặt, hết hạn đăng nhập, mất kết nối...) được báo thẳng cho khách,
+      // tuyệt đối không tự dựng đơn "thành công" giả.
+      const result = await createBooking(payload);
 
       setBookingResult({
-        bookingId: result.bookingId || Date.now(),
-        bookingCode:
-          result.bookingCode || `WAY-${Date.now().toString().slice(-6)}`,
-        status: result.status || "PENDING",
-        totalPrice: totalAmount,
+        bookingId: result.bookingId,
+        bookingCode: result.bookingCode,
+        status: result.status,
+        paymentStatus: result.paymentStatus,
+        paymentCode: result.paymentCode,
+        holdExpiresAt: result.holdExpiresAt,
+        originalPrice: Number(result.originalPrice) || 0,
+        discountAmount: Number(result.discountAmount) || 0,
+        totalPrice: Number(result.totalPrice) || 0,
         customerName,
         customerPhone,
         paymentType,
@@ -655,38 +739,23 @@ export default function BookingPage({ onNavigate }) {
         slots: selectedSlots,
       });
 
+      // Cập nhật ngay các ô vừa đặt thành BOOKED màu đỏ và lưu vào cache
       try {
-        const existing = JSON.parse(localStorage.getItem('d2_user_bookings') || '[]');
-        const newBookingRecord = {
-          id: Date.now(),
-          bookingCode: result.bookingCode || `D2-${Date.now().toString().slice(-6)}`,
-          customerName: customerName || 'Khách Đặt Online',
-          customerPhone: customerPhone || '0914977030',
-          branch: { code: branch, name: currentBranchObj.name },
-          branchCode: branch,
-          branchName: currentBranchObj.name,
-          courtName: selectedSlots && selectedSlots.length ? selectedSlots[0].courtName || 'Sân tiêu chuẩn BWF' : 'Sân BWF',
-          bookingDate: date,
-          playDate: date,
-          timeSlotStr: selectedSlots && selectedSlots.length ? `${selectedSlots[0].courtName || 'Sân 1'}: ${selectedSlots.length} ca (${selectedSlots[0].startTime || ''} - ${selectedSlots[selectedSlots.length - 1].endTime || ''})` : '18:00 - 19:30',
-          timeRange: selectedSlots && selectedSlots.length ? `${selectedSlots.length} ca (${selectedSlots[0].startTime || ''} - ${selectedSlots[selectedSlots.length - 1].endTime || ''})` : '18:00 - 19:30',
-          totalAmount: totalAmount,
-          totalPrice: totalAmount,
-          paymentType: paymentType === 'VIETQR' ? 'VietQR MB Bank' : 'Thanh toán tại quầy',
-          status: 'CONFIRMED',
-          createdAt: new Date().toLocaleDateString('vi-VN')
-        };
-        localStorage.setItem('d2_user_bookings', JSON.stringify([newBookingRecord, ...existing]));
-      } catch {
-        // Ignore storage error
-      }
+        const localKey = `d2_booked_slots_${branch}_${date}`;
+        const existingLocal = JSON.parse(localStorage.getItem(localKey) || '{}');
+        selectedSlots.forEach((s) => {
+          existingLocal[`${s.court.id}_${s.slot.id}`] = "BOOKED";
+        });
+        localStorage.setItem(localKey, JSON.stringify(existingLocal));
+        setSlotStatusMap((prev) => ({ ...prev, ...existingLocal }));
+      } catch (_) {}
 
+      if (paymentType === "WALLET") notifyMembershipChanged();
       setCurrentStep("success");
       loadMatrix(branch, date);
     } catch (err) {
-      alert(
-        err.message || "Có lỗi xảy ra khi tạo đơn đặt sân. Vui lòng thử lại!",
-      );
+      showToast("error", "Đặt sân chưa thành công", err.message || "Có lỗi xảy ra khi tạo đơn đặt sân. Vui lòng thử lại!");
+      loadMatrix(branch, date);
     } finally {
       setIsSubmitting(false);
     }
@@ -1592,7 +1661,11 @@ export default function BookingPage({ onNavigate }) {
                                   typeof rawStatus === "object"
                                     ? rawStatus.status
                                     : rawStatus || "AVAILABLE";
-                                const isBooked = baseStatus === "BOOKED";
+                                const isBooked =
+                                  baseStatus === "BOOKED" ||
+                                  baseStatus === "CHECKED_IN" ||
+                                  baseStatus === "COMPLETED" ||
+                                  baseStatus === "PAID";
                                 const isPassWanted =
                                   baseStatus === "PASS_WANTED";
                                 const isSelected = selectedSlots.some(
@@ -1603,16 +1676,16 @@ export default function BookingPage({ onNavigate }) {
 
                                 let cellBg = "#ffffff"; // Khung trắng sạch sẽ
                                 let cellColor = "#0f172a";
-                                let cellContent = ""; // BỎ CHỮ 35K, ĐỂ TRẮNG TINH THEO YÊU CẦU
+                                let cellContent = ""; // Mặc định để trống
 
                                 if (isMaintenance) {
                                   cellBg = "#f1f5f9"; // Màu xám nhạt bảo trì
                                   cellColor = "#94a3b8";
                                   cellContent = "🔧";
                                 } else if (isBooked) {
-                                  cellBg = "#f87171"; // Màu đỏ cam đã đặt
+                                  cellBg = "#ef4444"; // ĐỎ RỰC RỠ BÁO ĐÃ ĐẶT & ĐÃ THANH TOÁN
                                   cellColor = "#ffffff";
-                                  cellContent = "";
+                                  cellContent = cellWidth < 40 ? "✕" : "Đã đặt";
                                 } else if (isPassWanted) {
                                   cellBg = "#c084fc"; // Màu tím cần pass
                                   cellColor = "#ffffff";
@@ -1626,7 +1699,7 @@ export default function BookingPage({ onNavigate }) {
                                 return (
                                   <div
                                     key={slot.id}
-                                    className={`grid-cell-slot ${isSelected ? "is-selected" : ""}`}
+                                    className={`grid-cell-slot ${isSelected ? "is-selected" : ""} ${isBooked ? "is-booked" : ""}`}
                                     style={{
                                       flex: "1 1 0",
                                       minWidth: `${cellWidth}px`,
@@ -1640,20 +1713,24 @@ export default function BookingPage({ onNavigate }) {
                                       display: "flex",
                                       alignItems: "center",
                                       justifyContent: "center",
-                                      fontSize: "11px",
+                                      fontSize: isBooked ? "10px" : "11px",
                                       fontWeight: "800",
                                       userSelect: "none",
                                       boxSizing: "border-box",
-                                      transition: "background-color 0.15s ease",
+                                      transition: "all 0.15s ease",
                                     }}
                                     onClick={() => {
                                       if (isMaintenance) {
                                         showWarning(`⚠️ Sân ${court.name} hiện đang tạm ngưng hoạt động để bảo trì kỹ thuật! Quý khách vui lòng chọn sân khác.`);
                                         return;
                                       }
+                                      if (isBooked) {
+                                        showWarning(`⚠️ Ca ${slot.displayLabel} tại ${court.name} đã được đặt và thanh toán thành công! Quý khách không thể chọn ca này.`);
+                                        return;
+                                      }
                                       handleToggleSlot(court, slot, baseStatus);
                                     }}
-                                    title={isMaintenance ? `${court.name} đang bảo trì kỹ thuật` : `${court.name} | ${slot.displayLabel} | ${isBooked ? "Đã đặt" : `${(slot.price || (slot.isPeakHour ? 60000 : 35000)).toLocaleString("vi-VN")} đ`}`}
+                                    title={isMaintenance ? `${court.name} đang bảo trì kỹ thuật` : `${court.name} | ${slot.displayLabel} | ${isBooked ? "Đã đặt & đã thanh toán" : `${(slot.price || (slot.isPeakHour ? 60000 : 35000)).toLocaleString("vi-VN")} đ`}`}
                                   >
                                     {cellContent}
                                   </div>
@@ -2033,8 +2110,8 @@ export default function BookingPage({ onNavigate }) {
                         <span>Chuyển Khoản VietQR</span>
                       </div>
                       <span className="pay-card-desc">
-                        Quét mã QR tự động điền số tiền, xác nhận tức thì trong
-                        3 giây.
+                        Quét mã QR tự động điền số tiền; đơn được xác nhận thanh toán
+                        sau khi cửa hàng nhận được tiền.
                       </span>
                     </div>
 
@@ -2054,7 +2131,30 @@ export default function BookingPage({ onNavigate }) {
                         (giữ chỗ 15p).
                       </span>
                     </div>
+
+                    <div
+                      className={`payment-method-card ${paymentType === "WALLET" ? "active" : ""}`}
+                      onClick={() => setPaymentType("WALLET")}
+                    >
+                      <div className="pay-card-header">
+                        <i
+                          className="fa-solid fa-wallet"
+                          style={{ color: "#f59e0b" }}
+                        ></i>
+                        <span>Ví Ways Station</span>
+                      </div>
+                      <span className="pay-card-desc">
+                        Trừ trực tiếp từ ví, đơn được xác nhận ngay.
+                        {walletBalance !== null && <> Số dư: <strong>{formatVnd(walletBalance)}</strong>.</>}
+                      </span>
+                    </div>
                   </div>
+
+                  {paymentType === "WALLET" && walletBalance !== null && walletBalance < totalAmount && (
+                    <div style={{ color: "#b91c1c", fontSize: "13px", fontWeight: 700, marginTop: "10px" }}>
+                      Số dư ví ({formatVnd(walletBalance)}) không đủ để thanh toán {formatVnd(totalAmount)}. Hãy nạp thêm ví hoặc chọn cách thanh toán khác.
+                    </div>
+                  )}
                 </div>
 
                 <div className="order-summary-sidebar">
@@ -2109,15 +2209,27 @@ export default function BookingPage({ onNavigate }) {
                         </div>
                       ))}
 
-                      {comboDiscount > 0 && (
+                      {memberDiscount > 0 && (
                         <div
                           className="summary-line-row"
                           style={{ color: "#059669", fontWeight: "700" }}
                         >
-                          <span>Ưu đãi Combo giờ vắng:</span>
                           <span>
-                            -{comboDiscount.toLocaleString("vi-VN")} đ
+                            {quote.membershipName} (-{Number(quote.membershipDiscountPercent)}%):
                           </span>
+                          <span>
+                            -{memberDiscount.toLocaleString("vi-VN")} đ
+                          </span>
+                        </div>
+                      )}
+                      {hasUnavailableSlot && (
+                        <div style={{ color: "#b91c1c", fontSize: "12.5px", fontWeight: 700, marginTop: "6px" }}>
+                          Có khung giờ không còn đặt được (đã có người đặt hoặc đã qua giờ), vui lòng chọn lại.
+                        </div>
+                      )}
+                      {quoteError && (
+                        <div style={{ color: "#b45309", fontSize: "12px", marginTop: "6px" }}>
+                          Chưa tính được giảm giá hội viên ({quoteError}). Số tiền hiển thị là tạm tính.
                         </div>
                       )}
 
@@ -2225,10 +2337,13 @@ export default function BookingPage({ onNavigate }) {
               <div className="success-icon-animated">
                 <i className="fa-solid fa-check"></i>
               </div>
-              <h2 className="success-main-title">Đặt Sân Thành Công!</h2>
+              <h2 className="success-main-title">
+                {bookingResult.status === "CONFIRMED" ? "Đặt Sân Thành Công!" : "Đã Giữ Chỗ, Chờ Thanh Toán"}
+              </h2>
               <p className="success-sub-desc">
-                Thông tin xác nhận đã được lưu vào hệ thống của Ways Station
-                Badminton Club.
+                {bookingResult.status === "CONFIRMED"
+                  ? "Đơn đã được xác nhận và lưu vào hệ thống của Ways Station Badminton Club."
+                  : `Sân được giữ cho bạn${bookingResult.holdExpiresAt ? ` đến ${new Date(bookingResult.holdExpiresAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}` : ""}. Quá giờ này mà chưa thanh toán, đơn sẽ tự hủy.`}
               </p>
 
               <div className="booking-code-pill-box">
@@ -2240,7 +2355,14 @@ export default function BookingPage({ onNavigate }) {
                 </div>
               </div>
 
-              {bookingResult.paymentType === "VIETQR" && (
+              {bookingResult.paymentType === "VIETQR" && bookingResult.status === "CONFIRMED" && (
+                <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "14px", padding: "16px 20px", maxWidth: "380px", margin: "0 auto 20px auto", color: "#166534", textAlign: "center" }}>
+                  <div style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "6px" }}>🎉 ĐÃ THANH TOÁN THÀNH CÔNG!</div>
+                  <div style={{ fontSize: "13px" }}>Hệ thống SePay đã tự động xác nhận giao dịch chuyển khoản ACB.</div>
+                </div>
+              )}
+
+              {bookingResult.paymentType === "VIETQR" && bookingResult.status === "PENDING" && (
                 <div
                   style={{
                     background: "#f0fdf4",
@@ -2263,7 +2385,7 @@ export default function BookingPage({ onNavigate }) {
                     HOÀN TẤT
                   </div>
                   <img
-                    src={`https://api.vietqr.io/image/970422-0889555559-compact2.jpg?amount=${bookingResult.totalPrice}&addInfo=${encodeURIComponent(bookingResult.bookingCode)}&accountName=WAYS%20STATION%20BADMINTON`}
+                    src={buildVietQrUrl(bookingResult.totalPrice, bookingResult.bookingCode)}
                     alt="VietQR Code"
                     style={{
                       width: "210px",
@@ -2282,13 +2404,27 @@ export default function BookingPage({ onNavigate }) {
                       lineHeight: "1.4",
                     }}
                   >
-                    Ngân hàng Quân Đội (MB Bank)
+                    Ngân hàng Á Châu (ACB)
                     <br />
-                    STK: <strong>0889555559</strong> - Tên:{" "}
-                    <strong>WAYS STATION BADMINTON</strong>
+                    STK: <strong>18900291</strong> - Tên:{" "}
+                    <strong>DAO DUY DUNG</strong>
                     <br />
                     Nội dung: <strong>{bookingResult.bookingCode}</strong>
                   </div>
+                  <div style={{ fontSize: "12px", color: "#2563eb", marginTop: "10px", fontWeight: "600" }}>
+                    <i className="fa-solid fa-spinner fa-spin"></i> Đang chờ nhận tiền chuyển khoản tự động...
+                  </div>
+                </div>
+              )}
+
+              {bookingResult.paymentType === "CASH" && bookingResult.status === "PENDING" && (
+                <div style={{ background: "#fffbeb", border: "1.5px solid #fcd34d", borderRadius: "14px", padding: "14px 18px", maxWidth: "380px", margin: "0 auto 20px auto", color: "#92400e", fontSize: "13.5px" }}>
+                  <i className="fa-solid fa-money-bill-wave"></i> Vui lòng thanh toán tại quầy trước giờ giữ chỗ nêu trên, kèm mã đặt sân <strong>{bookingResult.bookingCode}</strong>.
+                </div>
+              )}
+              {bookingResult.paymentType === "WALLET" && bookingResult.status === "CONFIRMED" && (
+                <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "14px", padding: "14px 18px", maxWidth: "380px", margin: "0 auto 20px auto", color: "#166534", fontSize: "13.5px" }}>
+                  <i className="fa-solid fa-wallet"></i> Đã thanh toán {formatVnd(bookingResult.totalPrice)} bằng ví Ways Station.
                 </div>
               )}
 
@@ -2323,6 +2459,22 @@ export default function BookingPage({ onNavigate }) {
                       .join(", ")}
                   </span>
                 </div>
+                {bookingResult.discountAmount > 0 && (
+                  <div className="info-table-row">
+                    <span className="info-table-label">Giảm giá hội viên:</span>
+                    <span className="info-table-value" style={{ color: "#059669" }}>
+                      -{bookingResult.discountAmount.toLocaleString("vi-VN")} đ
+                    </span>
+                  </div>
+                )}
+                {bookingResult.paymentCode && (
+                  <div className="info-table-row">
+                    <span className="info-table-label">Giao dịch:</span>
+                    <span className="info-table-value">
+                      {bookingResult.paymentCode} ({bookingResult.paymentStatus === "PAID" ? "Đã thanh toán" : "Chờ thanh toán"})
+                    </span>
+                  </div>
+                )}
                 <div className="info-table-row">
                   <span className="info-table-label">Tổng thanh toán:</span>
                   <span

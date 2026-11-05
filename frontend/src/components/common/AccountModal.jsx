@@ -1,4 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { fetchMyBookings } from '../../services/api';
+import useMembershipStatus from '../../hooks/useMembershipStatus';
+import PendingMembershipBanner from './PendingMembershipBanner';
+import { formatVnd } from '../../services/payment';
+import AccountWalletTab from './AccountWalletTab';
+import '../../styles/membership.css';
 
 export default function AccountModal({
   isOpen,
@@ -10,40 +16,37 @@ export default function AccountModal({
 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState('');
+  const { membership, pending, balance, refresh: loadAccount } = useMembershipStatus(isOpen ? user : null);
 
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
 
-  useEffect(() => {
-    if (isOpen) {
-      try {
-        const raw = localStorage.getItem('d2_user_bookings');
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          setOrders(Array.isArray(parsed) ? parsed : []);
-        } else {
-          // Default sample demo order if none in localStorage
-          setOrders([
-            {
-              id: 1,
-              bookingCode: 'D2-849201',
-              branchName: 'D2 Shop Nguyễn Văn Lượng - Gò Vấp',
-              courtName: 'Sân 03 (Thảm Taraflex BWF)',
-              playDate: 'Hôm nay',
-              timeRange: '18:00 - 19:30 (3 ca)',
-              totalPrice: 180000,
-              paymentType: 'VIETQR (MB Bank)',
-              status: 'CONFIRMED',
-              createdAt: new Date().toLocaleDateString('vi-VN')
-            }
-          ]);
-        }
-      } catch {
-        setOrders([]);
-      }
+  const userId = user?.id;
+
+  const loadOrders = useCallback(async () => {
+    if (!userId) return;
+    setOrdersLoading(true);
+    setOrdersError('');
+    try {
+      const list = await fetchMyBookings(userId);
+      setOrders(Array.isArray(list) ? list : []);
+    } catch (err) {
+      setOrders([]);
+      setOrdersError(err.message || 'Không thể tải danh sách đơn đặt sân');
+    } finally {
+      setOrdersLoading(false);
     }
-  }, [isOpen]);
+  }, [userId]);
+
+  // Dữ liệu luôn lấy từ máy chủ mỗi lần mở hộp thoại (không dùng dữ liệu mẫu lưu trong trình duyệt)
+  useEffect(() => {
+    if (isOpen && userId) {
+      loadOrders();
+    }
+  }, [isOpen, userId, loadOrders]);
 
   if (!isOpen || !user) return null;
 
@@ -80,7 +83,7 @@ export default function AccountModal({
       >
         {/* Header Tabs */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #f1f5f9' }}>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={() => setActiveTab('profile')}
@@ -123,6 +126,26 @@ export default function AccountModal({
               <span style={{ background: activeTab === 'orders' ? '#009fe3' : '#cbd5e1', color: '#fff', fontSize: '11px', padding: '1px 6px', borderRadius: '10px' }}>
                 {orders.length}
               </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('wallet')}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '10px',
+                border: 'none',
+                background: activeTab === 'wallet' ? '#e0f2fe' : 'transparent',
+                color: activeTab === 'wallet' ? '#009fe3' : '#64748b',
+                fontSize: '13.5px',
+                fontWeight: '800',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <i className="fa-solid fa-wallet"></i>
+              <span>{isVietnamese ? 'Ví & hội viên' : 'Wallet'}</span>
             </button>
           </div>
           <button
@@ -172,6 +195,8 @@ export default function AccountModal({
                 </div>
               </div>
 
+              <PendingMembershipBanner pending={pending} />
+
               {/* Detail Info Fields */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div style={{ padding: '12px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
@@ -185,30 +210,43 @@ export default function AccountModal({
                   <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', textTransform: 'uppercase', fontWeight: '700' }}>
                     {isVietnamese ? 'Số điện thoại' : 'Phone'}
                   </span>
-                  <strong style={{ fontSize: '14px', color: '#0f172a' }}>{user.phoneNumber || user.phone || '0914 977 030'}</strong>
+                  <strong style={{ fontSize: '14px', color: '#0f172a' }}>{user.phoneNumber || user.phone || (isVietnamese ? 'Chưa cập nhật' : 'Not set')}</strong>
                 </div>
 
                 <div style={{ padding: '12px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', gridColumn: 'span 2' }}>
                   <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', textTransform: 'uppercase', fontWeight: '700' }}>
                     Email
                   </span>
-                  <strong style={{ fontSize: '14px', color: '#0f172a', wordBreak: 'break-all' }}>{user.email || `${user.username}@d2shop.vn`}</strong>
+                  <strong style={{ fontSize: '14px', color: '#0f172a', wordBreak: 'break-all' }}>{user.email || (isVietnamese ? 'Chưa cập nhật' : 'Not set')}</strong>
                 </div>
 
                 <div style={{ padding: '12px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
                   <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', textTransform: 'uppercase', fontWeight: '700' }}>
                     {isVietnamese ? 'Hạng thành viên' : 'Membership'}
                   </span>
-                  <strong style={{ fontSize: '14px', color: '#ea580c' }}>
-                    <i className="fa-solid fa-crown" style={{ marginRight: '4px' }}></i> VIP Member
-                  </strong>
+                  {membership ? (
+                    <strong style={{ fontSize: '14px', color: '#ea580c' }}>
+                      <i className="fa-solid fa-crown" style={{ marginRight: '4px' }}></i>
+                      {membership.package?.name}
+                      <small style={{ display: 'block', color: '#64748b', fontWeight: 600 }}>
+                        {isVietnamese ? 'Giảm' : 'Discount'} {Number(membership.discountPercent) || 0}% · {isVietnamese ? 'hết hạn' : 'expires'}{' '}
+                        {membership.expiresAt ? new Date(membership.expiresAt).toLocaleDateString('vi-VN') : ''}
+                      </small>
+                    </strong>
+                  ) : (
+                    <strong style={{ fontSize: '14px', color: '#64748b' }}>
+                      {isVietnamese ? 'Chưa là hội viên' : 'Not a member'}
+                    </strong>
+                  )}
                 </div>
 
                 <div style={{ padding: '12px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
                   <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', textTransform: 'uppercase', fontWeight: '700' }}>
-                    {isVietnamese ? 'Ngày tham gia' : 'Joined'}
+                    {isVietnamese ? 'Số dư ví' : 'Wallet balance'}
                   </span>
-                  <strong style={{ fontSize: '14px', color: '#0f172a' }}>2026-10-28</strong>
+                  <strong style={{ fontSize: '14px', color: '#0f172a' }}>
+                    {balance === null ? '—' : formatVnd(balance)}
+                  </strong>
                 </div>
               </div>
 
@@ -242,10 +280,31 @@ export default function AccountModal({
                 </button>
               )}
             </div>
+          ) : activeTab === 'wallet' ? (
+            /* TAB 3: VÍ & HỘI VIÊN */
+            <AccountWalletTab
+              balance={balance}
+              membership={membership}
+              pending={pending}
+              onChanged={loadAccount}
+              onOpenMembership={() => {
+                onClose();
+                if (onNavigate) onNavigate('home');
+                setTimeout(() => window.dispatchEvent(new Event('d2_open_membership')), 300);
+              }}
+            />
           ) : (
             /* TAB 2: ORDERS / BOOKING HISTORY */
             <div>
-              {orders.length === 0 ? (
+              {ordersLoading ? (
+                <div className="mem-state"><i className="fa-solid fa-spinner fa-spin"></i>{isVietnamese ? 'Đang tải đơn đặt sân...' : 'Loading bookings...'}</div>
+              ) : ordersError ? (
+                <div className="mem-state">
+                  <i className="fa-solid fa-triangle-exclamation"></i>
+                  <p>{ordersError}</p>
+                  <button type="button" className="mem-btn primary" onClick={loadOrders}>{isVietnamese ? 'Thử lại' : 'Retry'}</button>
+                </div>
+              ) : orders.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '36px 16px', color: '#64748b' }}>
                   <i className="fa-solid fa-receipt" style={{ fontSize: '42px', color: '#cbd5e1', marginBottom: '12px' }}></i>
                   <h4 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 6px 0' }}>
@@ -275,56 +334,45 @@ export default function AccountModal({
                   </button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {orders.map((ord, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        background: '#ffffff',
-                        border: '1.5px solid #e2e8f0',
-                        borderRadius: '14px',
-                        padding: '16px',
-                        boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#009fe3', background: '#e0f2fe', padding: '2px 8px', borderRadius: '6px' }}>
-                          <i className="fa-solid fa-ticket" style={{ marginRight: '4px' }}></i>
-                          {ord.bookingCode || `#D2-${100000 + idx}`}
-                        </span>
-                        <span style={{ background: '#ecfdf5', color: '#047857', fontSize: '11px', fontWeight: '800', padding: '3px 8px', borderRadius: '6px' }}>
-                          ✓ {isVietnamese ? 'Đã xác nhận' : 'Confirmed'}
-                        </span>
-                      </div>
-
-                      <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', margin: '0 0 6px 0' }}>
-                        {ord.branchName || 'D2 Shop - Gò Vấp'}
-                      </h4>
-
-                      <div style={{ fontSize: '12.5px', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
-                        <div>
+                <div className="acc-list">
+                  {orders.map((ord) => {
+                    const discount = Number(ord.discountAmount) || 0;
+                    const statusClass = ord.status === 'CONFIRMED' || ord.status === 'COMPLETED' ? 'ok'
+                      : ord.status === 'PENDING' ? 'wait' : 'bad';
+                    return (
+                      <div key={ord.id} style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', gap: '8px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#009fe3', background: '#e0f2fe', padding: '2px 8px', borderRadius: '6px' }}>
+                            <i className="fa-solid fa-ticket" style={{ marginRight: '4px' }}></i>
+                            {ord.bookingCode}
+                          </span>
+                          <span className={`acc-status ${statusClass}`}>{ord.status}</span>
+                        </div>
+                        <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', margin: '0 0 6px 0' }}>
+                          {ord.branch?.name || ''}
+                        </h4>
+                        <div style={{ fontSize: '12.5px', color: '#64748b', marginBottom: '10px' }}>
                           <i className="fa-solid fa-calendar-day" style={{ color: '#009fe3', marginRight: '6px' }}></i>
-                          <strong>{ord.playDate || ord.date || 'Hôm nay'}</strong> • {ord.timeRange || (ord.slots && ord.slots.length ? `${ord.slots.length} ca` : '18:00 - 19:30')}
+                          <strong>{ord.bookingDate ? new Date(ord.bookingDate).toLocaleDateString('vi-VN') : ''}</strong>
+                          {' · '}{ord.totalHours || 0} {isVietnamese ? 'ca' : 'slots'}
                         </div>
-                        <div>
-                          <i className="fa-solid fa-credit-card" style={{ color: '#10b981', marginRight: '6px' }}></i>
-                          {ord.paymentType || 'VietQR MB Bank'}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid #f1f5f9', gap: '8px', flexWrap: 'wrap' }}>
+                          <div>
+                            <span style={{ fontSize: '11px', color: '#94a3b8' }}>{isVietnamese ? 'Tổng tiền' : 'Total'}:</span>
+                            <strong style={{ fontSize: '16px', color: '#ea580c', marginLeft: '6px' }}>{formatVnd(ord.totalPrice)}</strong>
+                            {discount > 0 && (
+                              <small style={{ display: 'block', color: '#059669', fontWeight: 700 }}>
+                                {isVietnamese ? 'Đã giảm hội viên' : 'Member discount'} −{formatVnd(discount)}
+                              </small>
+                            )}
+                          </div>
+                          <span style={{ fontSize: '11.5px', color: '#94a3b8' }}>
+                            {ord.createdAt ? new Date(ord.createdAt).toLocaleDateString('vi-VN') : ''}
+                          </span>
                         </div>
                       </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
-                        <div>
-                          <span style={{ fontSize: '11px', color: '#94a3b8' }}>{isVietnamese ? 'Tổng tiền' : 'Total'}:</span>
-                          <strong style={{ fontSize: '16px', color: '#ea580c', marginLeft: '6px' }}>
-                            {(ord.totalPrice || 180000).toLocaleString('vi-VN')} đ
-                          </strong>
-                        </div>
-                        <span style={{ fontSize: '11.5px', color: '#94a3b8' }}>
-                          {ord.createdAt || new Date().toLocaleDateString('vi-VN')}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

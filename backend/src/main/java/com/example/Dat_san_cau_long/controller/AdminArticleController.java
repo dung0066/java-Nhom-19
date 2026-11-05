@@ -1,9 +1,11 @@
 package com.example.Dat_san_cau_long.controller;
 
 import com.example.Dat_san_cau_long.model.Article;
+import com.example.Dat_san_cau_long.validation.OnCreate;
 import com.example.Dat_san_cau_long.repository.ArticleRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,7 +32,8 @@ public class AdminArticleController {
     }
 
     @PostMapping
-    public ResponseEntity<Article> createArticle(@RequestBody Article article) {
+    public ResponseEntity<Article> createArticle(@Validated(OnCreate.class) @RequestBody Article article) {
+        article.setId(null);
         if (article.getPublished() == null) article.setPublished(true);
         if (article.getAuthor() == null || article.getAuthor().isBlank()) article.setAuthor("D2 Media");
         if (article.getCategory() == null || article.getCategory().isBlank()) article.setCategory("TIN_TUC");
@@ -38,7 +41,7 @@ public class AdminArticleController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Article> updateArticle(@PathVariable Long id, @RequestBody Article article) {
+    public ResponseEntity<Article> updateArticle(@PathVariable Long id, @Validated(OnCreate.class) @RequestBody Article article) {
         return articleRepository.findById(id).map(existing -> {
             existing.setTitle(article.getTitle());
             existing.setSummary(article.getSummary());

@@ -31,7 +31,7 @@ public class BookingDetail {
     @Column(name = "branch_id", nullable = false)
     private Long branchId;
 
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "branch", "courtGroup"})
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "branch"})
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "court_id", nullable = false)
     private Court court;

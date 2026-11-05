@@ -1,6 +1,8 @@
 package com.example.Dat_san_cau_long.model;
 
 import jakarta.persistence.*;
+import com.example.Dat_san_cau_long.validation.OnCreate;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -22,18 +24,29 @@ public class MembershipPackage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(groups = OnCreate.class, message = "Mã gói không được để trống")
+    @Pattern(regexp = "^[A-Za-z0-9_-]{2,30}$", message = "Mã gói chỉ gồm chữ, số, gạch (2-30 ký tự)")
     @Column(nullable = false, unique = true, length = 30)
     private String code;
 
+    @NotBlank(groups = OnCreate.class, message = "Tên gói không được để trống")
+    @Size(max = 100, message = "Tên gói tối đa 100 ký tự")
     @Column(nullable = false, length = 100)
     private String name;
 
+    @NotNull(groups = OnCreate.class, message = "Giá gói không được để trống")
+    @DecimalMin(value = "0", message = "Giá gói không được âm")
     @Column(nullable = false, precision = 12, scale = 0)
     private BigDecimal price;
 
+    @NotNull(groups = OnCreate.class, message = "Thời hạn gói không được để trống")
+    @Min(value = 1, message = "Thời hạn gói tối thiểu 1 ngày")
+    @Max(value = 3650, message = "Thời hạn gói tối đa 3650 ngày")
     @Column(name = "duration_days", nullable = false)
     private Integer durationDays;
 
+    @DecimalMin(value = "0", message = "Phần trăm giảm giá không được âm")
+    @DecimalMax(value = "100", message = "Phần trăm giảm giá tối đa 100%")
     @Column(name = "discount_percent", nullable = false, precision = 5, scale = 2)
     @Builder.Default
     private BigDecimal discountPercent = BigDecimal.ZERO;
@@ -48,6 +61,7 @@ public class MembershipPackage {
     @Builder.Default
     private Boolean studentOnly = false;
 
+    @Size(max = 500, message = "Mô tả tối đa 500 ký tự")
     @Column(length = 500)
     private String description;
 

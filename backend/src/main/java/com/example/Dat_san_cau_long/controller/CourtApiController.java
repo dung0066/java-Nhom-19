@@ -1,5 +1,11 @@
 package com.example.Dat_san_cau_long.controller;
 
+import com.example.Dat_san_cau_long.validation.OnCreate;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 import com.example.Dat_san_cau_long.model.Branch;
 import com.example.Dat_san_cau_long.model.Court;
 import com.example.Dat_san_cau_long.repository.BranchRepository;
@@ -17,9 +23,13 @@ public class CourtApiController {
     private final CourtRepository courtRepository;
     private final BranchRepository branchRepository;
 
-    public CourtApiController(CourtRepository courtRepository, BranchRepository branchRepository) {
+    private final com.example.Dat_san_cau_long.service.CatalogTrashService trashService;
+
+    public CourtApiController(CourtRepository courtRepository, BranchRepository branchRepository,
+                              com.example.Dat_san_cau_long.service.CatalogTrashService trashService) {
         this.courtRepository = courtRepository;
         this.branchRepository = branchRepository;
+        this.trashService = trashService;
     }
 
     @GetMapping
@@ -31,13 +41,13 @@ public class CourtApiController {
         if (branchCode != null && !branchCode.isBlank()) {
             return ResponseEntity.ok(courtRepository.findByBranchCodeOrderByCourtNumberAsc(branchCode));
         }
-        return ResponseEntity.ok(courtRepository.findAll());
+        return ResponseEntity.ok(courtRepository.findByDeletedAtIsNull());
     }
 
     @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<Court> createCourt(@RequestBody CourtRequestDto dto) {
-        Branch branch = branchRepository.findById(dto.getBranchId())
+        Branch branch = branchRepository.findByIdAndDeletedAtIsNull(dto.getBranchId())
                 .orElseThrow(() -> new RuntimeException("Chi nhánh không tồn tại"));
 
         Integer courtNumber = dto.getCourtNumber();
@@ -63,9 +73,9 @@ public class CourtApiController {
     @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Court> updateCourt(@PathVariable Long id, @RequestBody CourtRequestDto dto) {
-        return courtRepository.findById(id).map(court -> {
+        return courtRepository.findByIdAndDeletedAtIsNull(id).map(court -> {
             if (dto.getBranchId() != null) {
-                branchRepository.findById(dto.getBranchId()).ifPresent(court::setBranch);
+                branchRepository.findByIdAndDeletedAtIsNull(dto.getBranchId()).ifPresent(court::setBranch);
             }
             if (dto.getCourtNumber() != null) {
                 court.setCourtNumber(dto.getCourtNumber());
@@ -82,7 +92,7 @@ public class CourtApiController {
     @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PatchMapping("/{id}/toggle")
     public ResponseEntity<Court> toggleActive(@PathVariable Long id) {
-        return courtRepository.findById(id).map(court -> {
+        return courtRepository.findByIdAndDeletedAtIsNull(id).map(court -> {
             court.setActive(!Boolean.TRUE.equals(court.getActive()));
             return ResponseEntity.ok(courtRepository.save(court));
         }).orElse(ResponseEntity.notFound().build());
@@ -91,15 +101,19 @@ public class CourtApiController {
     @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteCourt(@PathVariable Long id) {
-        return courtRepository.findById(id).map(court -> {
-            courtRepository.deleteById(id);
-            return ResponseEntity.ok(Map.of("message", "Đã xóa sân thành công!"));
+        return courtRepository.findByIdAndDeletedAtIsNull(id).map(court -> {
+            String message = trashService.softDeleteCourt(id);
+            return ResponseEntity.ok(Map.of("message", message));
         }).orElse(ResponseEntity.notFound().build());
     }
 
     public static class CourtRequestDto {
+        @NotNull(groups = OnCreate.class, message = "Vui lòng chọn chi nhánh cho sân")
         private Long branchId;
+        @Size(max = 50, message = "Tên sân tối đa 50 ký tự")
         private String name;
+        @Min(value = 1, message = "Số sân phải từ 1 trở lên")
+        @Max(value = 99, message = "Số sân tối đa 99")
         private Integer courtNumber;
         private String courtGroup;
         private Boolean active;

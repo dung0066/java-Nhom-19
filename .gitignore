@@ -8,6 +8,8 @@ dist-ssr/
 frontend/dist/
 backend/target/
 backend/build/
+*.tar.gz
+
 
 # Maven / Gradle
 .mvn/wrapper/maven-wrapper.jar

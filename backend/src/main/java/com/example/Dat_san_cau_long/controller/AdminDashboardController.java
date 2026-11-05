@@ -51,14 +51,15 @@ public class AdminDashboardController {
         long completedBookings = allBookings.stream().filter(b -> b.getStatus() == BookingStatus.COMPLETED).count();
         long cancelledBookings = allBookings.stream().filter(b -> b.getStatus() == BookingStatus.CANCELLED).count();
 
+        // Doanh thu chỉ tính đơn đã được xác nhận thanh toán; đơn đang chờ thanh toán hoặc đã hủy thì chưa tính
         BigDecimal totalRevenue = allBookings.stream()
-                .filter(b -> b.getStatus() != BookingStatus.CANCELLED && b.getTotalPrice() != null)
+                .filter(b -> isRevenueStatus(b.getStatus()) && b.getTotalPrice() != null)
                 .map(Booking::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         long totalUsers = userRepository.count();
-        long totalCourts = courtRepository.count();
-        long totalBranches = branchRepository.count();
+        long totalCourts = courtRepository.countByDeletedAtIsNull();
+        long totalBranches = branchRepository.countByDeletedAtIsNull();
         long totalProducts = productRepository.count();
 
         long pendingPayments = allPayments.stream()
@@ -71,7 +72,7 @@ public class AdminDashboardController {
 
         Map<String, BigDecimal> branchRevenue = new HashMap<>();
         for (Booking b : allBookings) {
-            if (b.getStatus() != BookingStatus.CANCELLED && b.getBranch() != null && b.getTotalPrice() != null) {
+            if (isRevenueStatus(b.getStatus()) && b.getBranch() != null && b.getTotalPrice() != null) {
                 String branchName = b.getBranch().getName();
                 branchRevenue.put(branchName, branchRevenue.getOrDefault(branchName, BigDecimal.ZERO).add(b.getTotalPrice()));
             }
@@ -93,5 +94,9 @@ public class AdminDashboardController {
         stats.put("branchRevenue", branchRevenue);
 
         return ResponseEntity.ok(stats);
+    }
+
+    private static boolean isRevenueStatus(BookingStatus status) {
+        return status == BookingStatus.CONFIRMED || status == BookingStatus.COMPLETED;
     }
 }
