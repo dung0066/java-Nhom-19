@@ -2102,33 +2102,72 @@ export default function BookingPage({ onNavigate }) {
                     <div
                       className={`payment-method-card ${depositOption === "FULL" ? "active" : ""}`}
                       onClick={() => setDepositOption("FULL")}
+                      style={{
+                        border: depositOption === "FULL" ? "2.5px solid #0284c7" : "1.5px solid #e2e8f0",
+                        background: depositOption === "FULL" ? "#f0f9ff" : "#ffffff",
+                        position: "relative",
+                        boxShadow: depositOption === "FULL" ? "0 4px 14px rgba(2, 132, 199, 0.15)" : "none"
+                      }}
                     >
-                      <div className="pay-card-header">
-                        <i
-                          className="fa-solid fa-credit-card"
-                          style={{ color: "#0284c7" }}
-                        ></i>
-                        <span style={{ fontWeight: "700" }}>Thanh Toán Toàn Bộ (100%)</span>
+                      <div className="pay-card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{
+                            width: "18px",
+                            height: "18px",
+                            borderRadius: "50%",
+                            border: depositOption === "FULL" ? "5px solid #0284c7" : "2px solid #cbd5e1",
+                            background: "#ffffff",
+                            display: "inline-block",
+                            flexShrink: 0
+                          }}></span>
+                          <i
+                            className="fa-solid fa-credit-card"
+                            style={{ color: "#0284c7" }}
+                          ></i>
+                          <span style={{ fontWeight: "800", color: "#0f172a" }}>Thanh Toán Toàn Bộ 100%</span>
+                        </div>
+                        <span style={{ background: "#dcfce7", color: "#15803d", fontSize: "11px", fontWeight: "800", padding: "2px 8px", borderRadius: "10px" }}>
+                          KHUYÊN DÙNG
+                        </span>
                       </div>
-                      <span className="pay-card-desc">
-                        Thanh toán toàn bộ <strong>{formatVnd(totalAmount)}</strong> ngay bây giờ. Đến sân chỉ cần check-in và nhận sân.
+                      <span className="pay-card-desc" style={{ marginTop: "4px" }}>
+                        Thanh toán toàn bộ <strong>{formatVnd(totalAmount)}</strong> ngay. Đến sân chỉ cần đọc mã đặt chỗ để vào nhận sân thi đấu ngay.
                       </span>
                     </div>
 
                     <div
                       className={`payment-method-card ${depositOption === "DEPOSIT_50" ? "active" : ""}`}
                       onClick={() => setDepositOption("DEPOSIT_50")}
-                      style={{ border: depositOption === "DEPOSIT_50" ? "2px solid #10b981" : undefined }}
+                      style={{
+                        border: depositOption === "DEPOSIT_50" ? "2.5px solid #10b981" : "1.5px solid #e2e8f0",
+                        background: depositOption === "DEPOSIT_50" ? "#ecfdf5" : "#ffffff",
+                        position: "relative",
+                        boxShadow: depositOption === "DEPOSIT_50" ? "0 4px 14px rgba(16, 185, 129, 0.15)" : "none"
+                      }}
                     >
-                      <div className="pay-card-header">
-                        <i
-                          className="fa-solid fa-percent"
-                          style={{ color: "#10b981" }}
-                        ></i>
-                        <span style={{ fontWeight: "700", color: "#059669" }}>Đặt Cọc 50% Giữ Sân</span>
+                      <div className="pay-card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{
+                            width: "18px",
+                            height: "18px",
+                            borderRadius: "50%",
+                            border: depositOption === "DEPOSIT_50" ? "5px solid #10b981" : "2px solid #cbd5e1",
+                            background: "#ffffff",
+                            display: "inline-block",
+                            flexShrink: 0
+                          }}></span>
+                          <i
+                            className="fa-solid fa-percent"
+                            style={{ color: "#10b981" }}
+                          ></i>
+                          <span style={{ fontWeight: "800", color: "#059669" }}>Đặt Cọc 50% Giữ Sân</span>
+                        </div>
+                        <span style={{ background: "#fef3c7", color: "#b45309", fontSize: "11px", fontWeight: "800", padding: "2px 8px", borderRadius: "10px" }}>
+                          CỌC 50%
+                        </span>
                       </div>
-                      <span className="pay-card-desc">
-                        Chỉ cần thanh toán cọc trước <strong>{formatVnd(depositAmount)}</strong>. Số tiền còn lại <strong>{formatVnd(remainingAmount)}</strong> sẽ thanh toán khi tới nhận sân.
+                      <span className="pay-card-desc" style={{ marginTop: "4px" }}>
+                        Chỉ cần thanh toán cọc trước <strong>{formatVnd(depositAmount)}</strong>. Số tiền còn lại <strong>{formatVnd(remainingAmount)}</strong> sẽ thanh toán tại quầy khi tới nhận sân.
                       </span>
                     </div>
                   </div>
@@ -2141,7 +2180,7 @@ export default function BookingPage({ onNavigate }) {
                       className="fa-solid fa-wallet"
                       style={{ color: "#0284c7" }}
                     ></i>
-                    Phương Thức Thanh Toán {depositOption === "DEPOSIT_50" ? "(Tiền Cọc)" : ""}
+                    Phương Thức Thanh Toán: {depositOption === "DEPOSIT_50" ? "Trả Cọc 50%" : "Thanh Toán Đủ 100%"}
                   </h3>
 
                   <div className="payment-method-selector-grid">
@@ -2329,19 +2368,37 @@ export default function BookingPage({ onNavigate }) {
                       )}
                     </div>
 
-                    {depositOption === "DEPOSIT_50" && (
+                    {depositOption === "FULL" ? (
+                      <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "8px", padding: "10px 12px", marginTop: "12px", fontSize: "12px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                          <span style={{ color: "#0369a1" }}>Hình thức thanh toán:</span>
+                          <span style={{ fontWeight: "700", color: "#0284c7" }}>Thanh toán 100% (Toàn bộ)</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                          <span style={{ color: "#0369a1" }}>Tổng tiền thanh toán:</span>
+                          <span style={{ fontWeight: "800", color: "#0f172a" }}>{formatVnd(totalAmount)}</span>
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#0284c7", marginTop: "2px" }}>
+                          ✓ Không còn công nợ, nhận sân và chơi ngay
+                        </div>
+                      </div>
+                    ) : (
                       <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: "8px", padding: "10px 12px", marginTop: "12px", fontSize: "12px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                          <span style={{ color: "#065f46" }}>Hình thức thanh toán:</span>
+                          <span style={{ fontWeight: "700", color: "#059669" }}>Đặt cọc 50% giữ sân</span>
+                        </div>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
                           <span style={{ color: "#065f46" }}>Tổng giá trị đơn:</span>
                           <span style={{ fontWeight: "600" }}>{formatVnd(totalAmount)}</span>
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", color: "#059669", fontWeight: "700", marginBottom: "4px" }}>
-                          <span>Tiền cọc (50%):</span>
+                          <span>Tiền cọc trả ngay (50%):</span>
                           <span>{formatVnd(depositAmount)}</span>
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", color: "#b45309" }}>
-                          <span>Còn lại khi nhận sân:</span>
-                          <span style={{ fontWeight: "600" }}>{formatVnd(remainingAmount)}</span>
+                          <span>Còn lại thu tại quầy:</span>
+                          <span style={{ fontWeight: "700" }}>{formatVnd(remainingAmount)}</span>
                         </div>
                       </div>
                     )}
@@ -2351,7 +2408,7 @@ export default function BookingPage({ onNavigate }) {
                       style={{ marginTop: "14px" }}
                     >
                       <span className="total-banner-label">
-                        {depositOption === "DEPOSIT_50" ? "Tiền Cọc Cần Trả (50%):" : "Tổng Thanh Toán:"}
+                        {depositOption === "DEPOSIT_50" ? "Tiền Cọc Cần Trả (50%):" : "Tổng Thanh Toán (100%):"}
                       </span>
                       <span className="total-banner-price">
                         {payableAmount.toLocaleString("vi-VN")} đ
@@ -2362,16 +2419,19 @@ export default function BookingPage({ onNavigate }) {
                       type="submit"
                       disabled={isSubmitting}
                       className="btn-step-confirm"
+                      style={{
+                        background: depositOption === "DEPOSIT_50"
+                          ? "linear-gradient(135deg, #059669 0%, #10b981 100%)"
+                          : "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)"
+                      }}
                     >
                       {isSubmitting ? (
                         <>
-                          <i className="fa-solid fa-spinner fa-spin"></i> Đang
-                          xử lý...
+                          <i className="fa-solid fa-spinner fa-spin"></i> Đang xử lý...
                         </>
                       ) : (
                         <>
-                          <i className="fa-solid fa-circle-check"></i> XÁC NHẬN
-                          ĐẶT SÂN
+                          <i className="fa-solid fa-circle-check"></i> {depositOption === "DEPOSIT_50" ? `XÁC NHẬN CỌC 50% (${formatVnd(depositAmount)})` : `XÁC NHẬN THANH TOÁN 100% (${formatVnd(totalAmount)})`}
                         </>
                       )}
                     </button>
@@ -2443,7 +2503,7 @@ export default function BookingPage({ onNavigate }) {
                       marginBottom: "8px",
                     }}
                   >
-                    <i className="fa-solid fa-qrcode"></i> QUÉT MÃ VIETQR ĐỂ {bookingResult.isDeposit ? "THANH TOÁN TIỀN CỌC (50%)" : "HOÀN TẤT"}
+                    <i className="fa-solid fa-qrcode"></i> QUÉT MÃ VIETQR ĐỂ {bookingResult.isDeposit ? "THANH TOÁN TIỀN CỌC (50%)" : "THANH TOÁN TOÀN BỘ (100%)"}
                   </div>
                   <img
                     src={buildVietQrUrl(bookingResult.isDeposit ? (bookingResult.paidAmount || bookingResult.depositAmount) : bookingResult.totalPrice, bookingResult.bookingCode)}
@@ -2482,12 +2542,12 @@ export default function BookingPage({ onNavigate }) {
 
               {bookingResult.paymentType === "CASH" && bookingResult.status === "PENDING" && (
                 <div style={{ background: "#fffbeb", border: "1.5px solid #fcd34d", borderRadius: "14px", padding: "14px 18px", maxWidth: "380px", margin: "0 auto 20px auto", color: "#92400e", fontSize: "13.5px" }}>
-                  <i className="fa-solid fa-money-bill-wave"></i> Vui lòng thanh toán {bookingResult.isDeposit ? "tiền cọc 50%" : ""} tại quầy trước giờ giữ chỗ nêu trên, kèm mã đặt sân <strong>{bookingResult.bookingCode}</strong>.
+                  <i className="fa-solid fa-money-bill-wave"></i> Vui lòng thanh toán {bookingResult.isDeposit ? "tiền cọc 50%" : "toàn bộ 100%"} ({formatVnd(bookingResult.isDeposit ? (bookingResult.paidAmount || bookingResult.depositAmount) : bookingResult.totalPrice)}) tại quầy trước giờ giữ chỗ nêu trên, kèm mã đặt sân <strong>{bookingResult.bookingCode}</strong>.
                 </div>
               )}
               {bookingResult.paymentType === "WALLET" && bookingResult.status === "CONFIRMED" && (
                 <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "14px", padding: "14px 18px", maxWidth: "380px", margin: "0 auto 20px auto", color: "#166534", fontSize: "13.5px" }}>
-                  <i className="fa-solid fa-wallet"></i> Đã thanh toán {formatVnd(bookingResult.isDeposit ? (bookingResult.paidAmount || bookingResult.depositAmount) : bookingResult.totalPrice)} {bookingResult.isDeposit ? "(Cọc 50%)" : ""} bằng ví D2 BadmintonShop.
+                  <i className="fa-solid fa-wallet"></i> Đã thanh toán {formatVnd(bookingResult.isDeposit ? (bookingResult.paidAmount || bookingResult.depositAmount) : bookingResult.totalPrice)} {bookingResult.isDeposit ? "(Cọc 50%)" : "(Toàn bộ 100%)"} bằng ví D2 BadmintonShop.
                 </div>
               )}
 
@@ -2522,6 +2582,12 @@ export default function BookingPage({ onNavigate }) {
                       .join(", ")}
                   </span>
                 </div>
+                <div className="info-table-row">
+                  <span className="info-table-label">Hình thức:</span>
+                  <span className="info-table-value" style={{ color: bookingResult.isDeposit ? "#059669" : "#0284c7", fontWeight: "700" }}>
+                    {bookingResult.isDeposit ? "Đặt cọc 50% giữ sân" : "Thanh toán toàn bộ 100%"}
+                  </span>
+                </div>
                 {bookingResult.discountAmount > 0 && (
                   <div className="info-table-row">
                     <span className="info-table-label">Giảm giá hội viên:</span>
@@ -2547,7 +2613,7 @@ export default function BookingPage({ onNavigate }) {
                     {bookingResult.totalPrice.toLocaleString("vi-VN")} đ
                   </span>
                 </div>
-                {bookingResult.isDeposit && (
+                {bookingResult.isDeposit ? (
                   <>
                     <div className="info-table-row">
                       <span className="info-table-label" style={{ color: "#059669" }}>Tiền cọc (50%):</span>
@@ -2562,6 +2628,13 @@ export default function BookingPage({ onNavigate }) {
                       </span>
                     </div>
                   </>
+                ) : (
+                  <div className="info-table-row">
+                    <span className="info-table-label" style={{ color: "#166534" }}>Tình trạng thanh toán:</span>
+                    <span className="info-table-value" style={{ color: "#166534", fontWeight: "700" }}>
+                      {bookingResult.paymentStatus === "PAID" || bookingResult.status === "CONFIRMED" ? "Đã thanh toán đủ 100%" : `Cần thanh toán đủ 100% (${formatVnd(bookingResult.totalPrice)})`}
+                    </span>
+                  </div>
                 )}
               </div>
 

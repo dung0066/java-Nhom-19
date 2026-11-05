@@ -88,6 +88,7 @@ public class BookingApiController {
         res.put("discountAmount", booking.getDiscountAmount());
         res.put("totalPrice", booking.getTotalPrice());
         res.put("isDeposit", isDepositFlag);
+        res.put("depositOption", isDepositFlag ? "DEPOSIT_50" : "FULL");
         res.put("depositAmount", depositAmount);
         res.put("paidAmount", paidAmount);
         res.put("remainingAmount", isDepositFlag ? remainingAmount : BigDecimal.ZERO);

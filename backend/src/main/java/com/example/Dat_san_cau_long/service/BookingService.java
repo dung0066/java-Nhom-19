@@ -209,6 +209,11 @@ public class BookingService {
             booking.setNotes(booking.getNotes() != null && !booking.getNotes().isBlank()
                     ? depositNote + " | " + booking.getNotes()
                     : depositNote);
+        } else if (total.compareTo(BigDecimal.ZERO) > 0) {
+            String fullNote = "[THANH_TOAN_100%] Đã chọn thanh toán toàn bộ 100%: " + total.toPlainString() + " đ.";
+            booking.setNotes(booking.getNotes() != null && !booking.getNotes().isBlank()
+                    ? fullNote + " | " + booking.getNotes()
+                    : fullNote);
         }
 
         boolean needsPayment = payAmount.compareTo(BigDecimal.ZERO) > 0;

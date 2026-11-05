@@ -113,9 +113,13 @@ export default function BookingLookupModal({ isOpen, onClose }) {
                       <span className={`status-badge ${b.status === 'CANCELLED' ? 'cancelled' : 'confirmed'}`}>
                         {b.status === 'CANCELLED' ? 'ĐÃ HỦY' : 'ĐÃ XÁC NHẬN'}
                       </span>
-                      {(b.isDeposit || (b.paidAmount && b.paidAmount < b.totalPrice)) && (
+                      {b.isDeposit || b.deposit || (b.notes && (b.notes.includes('COC_50%') || b.notes.includes('50%'))) ? (
                         <span style={{ background: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
                           CỌC 50%
+                        </span>
+                      ) : (
+                        <span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
+                          THANH TOÁN 100%
                         </span>
                       )}
                     </div>
@@ -141,9 +145,15 @@ export default function BookingLookupModal({ isOpen, onClose }) {
                     </div>
                   </div>
 
-                  {(b.isDeposit || (b.paidAmount && b.paidAmount < b.totalPrice)) && (
+                  {b.isDeposit || b.deposit || (b.notes && (b.notes.includes('COC_50%') || b.notes.includes('50%'))) ? (
                     <div style={{ marginTop: '8px', padding: '6px 10px', background: '#fffbeb', borderRadius: '6px', color: '#92400e', fontSize: '12px' }}>
-                      Đã đặt cọc: <strong>{formatVND(b.paidAmount || (b.totalPrice * 0.5))}</strong> - Còn thiếu: <strong>{formatVND(b.remainingAmount || (b.totalPrice * 0.5))}</strong> (thanh toán tại quầy khi nhận sân)
+                      Đã đặt cọc 50%: <strong>{formatVND(b.paidAmount || (b.totalPrice * 0.5))}</strong> - Còn thiếu: <strong>{formatVND(b.remainingAmount || (b.totalPrice * 0.5))}</strong> (thanh toán tại quầy khi nhận sân)
+                    </div>
+                  ) : (
+                    <div style={{ marginTop: '8px', padding: '6px 10px', background: '#f0fdf4', borderRadius: '6px', color: '#166534', fontSize: '12px' }}>
+                      {b.status === 'CONFIRMED' || b.status === 'PAID'
+                        ? `✓ Đã thanh toán toàn bộ 100% (${formatVND(b.totalPrice)}). Đến sân quý khách chỉ cần đọc mã đặt chỗ để vào nhận sân.`
+                        : `Thanh toán toàn bộ 100% (${formatVND(b.totalPrice)}) tại quầy khi nhận sân.`}
                     </div>
                   )}
 

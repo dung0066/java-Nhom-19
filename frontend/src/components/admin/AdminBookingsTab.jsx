@@ -257,14 +257,20 @@ export default function AdminBookingsTab({
                         <strong style={{ color: '#0f172a', fontSize: '14px' }}>
                           {(b.totalPrice ?? b.totalAmount ?? 0).toLocaleString('vi-VN')} đ
                         </strong>
-                        {(b.isDeposit || (b.paidAmount && b.paidAmount < (b.totalPrice ?? b.totalAmount ?? 0))) && (
+                        {b.isDeposit || b.deposit || (b.notes && (b.notes.includes('COC_50%') || b.notes.includes('50%'))) ? (
                           <div style={{ marginTop: '3px' }}>
                             <span style={{ background: '#fef3c7', color: '#b45309', padding: '1px 6px', borderRadius: '4px', fontSize: '10.5px', fontWeight: 700, display: 'inline-block' }}>
-                              Đã cọc: {(b.paidAmount || 0).toLocaleString('vi-VN')} đ
+                              Cọc 50%: {(b.paidAmount || ((b.totalPrice ?? b.totalAmount ?? 0) * 0.5)).toLocaleString('vi-VN')} đ
                             </span>
                             <div style={{ fontSize: '11px', color: '#dc2626', fontWeight: 600 }}>
-                              Còn thiếu: {((b.remainingAmount != null ? b.remainingAmount : ((b.totalPrice ?? b.totalAmount ?? 0) - (b.paidAmount || 0)))).toLocaleString('vi-VN')} đ
+                              Thiếu: {((b.remainingAmount != null ? b.remainingAmount : ((b.totalPrice ?? b.totalAmount ?? 0) - (b.paidAmount || 0)))).toLocaleString('vi-VN')} đ
                             </div>
+                          </div>
+                        ) : (
+                          <div style={{ marginTop: '3px' }}>
+                            <span style={{ background: '#dcfce7', color: '#15803d', padding: '1px 6px', borderRadius: '4px', fontSize: '10.5px', fontWeight: 700, display: 'inline-block' }}>
+                              <i className="fa-solid fa-check"></i> Thanh toán 100%
+                            </span>
                           </div>
                         )}
                       </td>
@@ -277,13 +283,13 @@ export default function AdminBookingsTab({
                             <button
                               type="button"
                               className="btn-tbl btn-tbl-success"
-                              title="Duyệt và xác nhận đơn"
+                              title={b.isDeposit || b.deposit || (b.notes && (b.notes.includes('COC_50%') || b.notes.includes('50%'))) ? "Duyệt xác nhận tiền cọc 50%" : "Duyệt xác nhận thanh toán đủ 100%"}
                               onClick={() => onConfirmPayment && onConfirmPayment(b.id)}
                             >
-                              <i className="fa-solid fa-check"></i> Duyệt
+                              <i className="fa-solid fa-check"></i> {b.isDeposit || b.deposit || (b.notes && (b.notes.includes('COC_50%') || b.notes.includes('50%'))) ? 'Duyệt Cọc' : 'Duyệt 100%'}
                             </button>
                           )}
-                          {(b.isDeposit || (b.paidAmount && b.paidAmount < (b.totalPrice ?? b.totalAmount ?? 0))) && b.status !== 'CANCELLED' && ((b.remainingAmount > 0) || ((b.totalPrice ?? b.totalAmount ?? 0) > (b.paidAmount || 0))) && (
+                          {(b.isDeposit || b.deposit || (b.notes && (b.notes.includes('COC_50%') || b.notes.includes('50%')))) && b.status !== 'CANCELLED' && ((b.remainingAmount > 0) || ((b.totalPrice ?? b.totalAmount ?? 0) > (b.paidAmount || 0))) && (
                             <button
                               type="button"
                               className="btn-tbl"
@@ -291,7 +297,7 @@ export default function AdminBookingsTab({
                               title="Khách thanh toán nốt 50% còn lại tại quầy"
                               onClick={() => onPayRemaining && onPayRemaining(b.id, 'CASH')}
                             >
-                              <i className="fa-solid fa-hand-holding-dollar"></i> Thu nốt
+                              <i className="fa-solid fa-hand-holding-dollar"></i> Thu nốt 50%
                             </button>
                           )}
                           {(b.status === 'PAID' || b.status === 'CONFIRMED') && (
