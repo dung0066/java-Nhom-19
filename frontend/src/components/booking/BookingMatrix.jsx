@@ -55,14 +55,6 @@ export default function BookingMatrix({
       return;
     }
 
-    // If slot is pass wanted
-    if (status === 'PASS_WANTED') {
-      if (onClaimPassSlot) {
-        onClaimPassSlot(court, slot);
-      }
-      return;
-    }
-
     // GSAP Spring click animation
     gsap.fromTo(
       e.currentTarget,
@@ -134,9 +126,6 @@ export default function BookingMatrix({
                         if (isSlotBooked) {
                           cellClass = 'status-booked';
                           cellContent = 'Đã đặt';
-                        } else if (baseStatus === 'PASS_WANTED') {
-                          cellClass = 'status-pass-wanted';
-                          cellContent = 'Pass';
                         }
 
                         if (isSelected) {

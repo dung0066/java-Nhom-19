@@ -15,12 +15,10 @@ export default function CourtScheduleMatrix({
   filterPeriod,
   setFilterPeriod,
   selectedBranch,
-  onClaimPassSlot,
   onProceedBooking
 }) {
   const matrixRef = useRef(null);
   const [cellWidth, setCellWidth] = useState(72); // Default zoom cell width
-  const [filterOnlyPass, setFilterOnlyPass] = useState(false);
 
   // Group courts in pairs: (Sân 1+2), (Sân 3+4), (Sân 5+6), (Sân 7)
   const courtBlocks = [];
@@ -95,39 +93,31 @@ export default function CourtScheduleMatrix({
           <div className="time-filter-pills">
             <button
               type="button"
-              onClick={() => { setFilterPeriod('all'); setFilterOnlyPass(false); }}
-              className={`filter-pill-btn ${filterPeriod === 'all' && !filterOnlyPass ? 'active' : ''}`}
+              onClick={() => setFilterPeriod('all')}
+              className={`filter-pill-btn ${filterPeriod === 'all' ? 'active' : ''}`}
             >
               Cả ngày ({timeSlots.length})
             </button>
             <button
               type="button"
-              onClick={() => { setFilterPeriod('morning'); setFilterOnlyPass(false); }}
+              onClick={() => setFilterPeriod('morning')}
               className={`filter-pill-btn ${filterPeriod === 'morning' ? 'active' : ''}`}
             >
               Sáng (4h-12h)
             </button>
             <button
               type="button"
-              onClick={() => { setFilterPeriod('afternoon'); setFilterOnlyPass(false); }}
+              onClick={() => setFilterPeriod('afternoon')}
               className={`filter-pill-btn ${filterPeriod === 'afternoon' ? 'active' : ''}`}
             >
               Chiều (12h-17h)
             </button>
             <button
               type="button"
-              onClick={() => { setFilterPeriod('evening'); setFilterOnlyPass(false); }}
+              onClick={() => setFilterPeriod('evening')}
               className={`filter-pill-btn ${filterPeriod === 'evening' ? 'active' : ''}`}
             >
               Tối vàng 🔥
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterOnlyPass(!filterOnlyPass)}
-              className={`filter-pill-btn pass-toggle ${filterOnlyPass ? 'active-purple' : ''}`}
-            >
-              <Flame size={12} className="text-purple" />
-              <span>Cần Pass</span>
             </button>
           </div>
         </div>
@@ -146,10 +136,6 @@ export default function CourtScheduleMatrix({
         <div className="legend-item">
           <span className="legend-color-box box-red"></span>
           <span>Đã có khách</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color-box box-purple"></span>
-          <span className="text-purple font-bold">Cần Pass (Nhượng ca)</span>
         </div>
         <div className="legend-item">
           <Flame size={12} className="text-amber" />
@@ -200,43 +186,11 @@ export default function CourtScheduleMatrix({
                       const slotKey = `${court.id}_${slot.id}`;
                       const statusInfo = slotStatusMap[slotKey];
                       const isBooked = statusInfo && statusInfo.status === 'BOOKED';
-                      const isPassWanted = statusInfo && statusInfo.status === 'PASS_WANTED';
                       const isSelected = selectedSlots.some((s) => s.key === slotKey);
                       const isPeak = slot.isPeakHour;
                       const price = isPeak ? slot.peakPrice : slot.standardPrice;
 
-                      // 1. Pass Wanted Cell
-                      if (isPassWanted) {
-                        return (
-                          <div
-                            key={slot.id}
-                            className="slot-grid-cell-wrapper"
-                            style={{ width: `${cellWidth}px`, minWidth: `${cellWidth}px` }}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => onClaimPassSlot({
-                                key: slotKey,
-                                courtId: court.id,
-                                courtName: court.name,
-                                slotId: slot.id,
-                                time: slot.displayLabel,
-                                price: statusInfo.price || price,
-                                customerName: statusInfo.customerName,
-                                passContact: statusInfo.passContact,
-                                bookingDetailId: statusInfo.bookingDetailId
-                              })}
-                              className={`slot-box pass-box ${isSelected ? 'selected' : ''}`}
-                              title={`Cần pass: ${statusInfo.customerName} (SĐT: ${statusInfo.passContact || 'Nhận ca'})`}
-                            >
-                              <span className="pass-pill-mini">PASS</span>
-                              <span className="slot-price-txt text-purple">{formatPriceK(statusInfo.price || price)}</span>
-                            </button>
-                          </div>
-                        );
-                      }
-
-                      // 2. Booked Cell
+                      // 1. Booked Cell
                       if (isBooked) {
                         return (
                           <div
@@ -284,7 +238,7 @@ export default function CourtScheduleMatrix({
       </div>
 
       <div className="matrix-instruction-bar">
-        <span>💡 Nhấn giữ <strong>Shift</strong> và lăn chuột để cuộn ngang. Bấm ô màu tím để nhận lại ca cần pass.</span>
+        <span>💡 Nhấn giữ <strong>Shift</strong> và lăn chuột để cuộn ngang bảng lịch sân.</span>
       </div>
     </div>
   );

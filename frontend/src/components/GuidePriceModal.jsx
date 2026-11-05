@@ -62,12 +62,7 @@ export default function GuidePriceModal({ isOpen, onClose }) {
 
             <div className="rule-item">
               <ShieldCheck size={16} className="text-emerald shrink-0" />
-              <span><strong>Quy định hủy & đổi lịch:</strong> Khách hàng được đổi lịch hoặc hủy hoàn tiền trước giờ chơi tối thiểu 4 tiếng qua hotline CSKH.</span>
-            </div>
-
-            <div className="rule-item">
-              <ShieldCheck size={16} className="text-emerald shrink-0" />
-              <span><strong>Nhượng ca (Cần Pass):</strong> Nếu bạn bận đột xuất, hãy dùng tính năng "Đăng tin nhượng ca" để pass lại slot cho cơ thủ khác trên Chợ Pass Sân.</span>
+              <span><strong>Quy định hủy & đổi lịch:</strong> Khách hàng được đổi lịch hoặc hủy hoàn tiền 100% về ví tài khoản dễ dàng ngay trong chi tiết đơn đặt.</span>
             </div>
 
             <div className="rule-item">

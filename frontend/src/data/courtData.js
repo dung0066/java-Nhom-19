@@ -112,7 +112,7 @@ export const DEFAULT_SLOT_STATUS_MAP = {
 
   '2_27': { status: 'BOOKED', customerName: 'Trần Minh Đức', price: 60000, bookingDetailId: 105 },
   '2_28': { status: 'BOOKED', customerName: 'Trần Minh Đức', price: 60000, bookingDetailId: 106 },
-  '2_29': { status: 'PASS_WANTED', customerName: 'Ngô Kiến Huy', passContact: '0908 889 999', price: 60000, bookingDetailId: 107 },
+  '2_29': { status: 'BOOKED', customerName: 'Ngô Kiến Huy', price: 60000, bookingDetailId: 107 },
 
   '3_7': { status: 'BOOKED', customerName: 'Bác Sĩ Quang', price: 35000, bookingDetailId: 108 },
   '3_8': { status: 'BOOKED', customerName: 'Bác Sĩ Quang', price: 35000, bookingDetailId: 109 },
@@ -122,7 +122,7 @@ export const DEFAULT_SLOT_STATUS_MAP = {
   '4_28': { status: 'BOOKED', customerName: 'Lê Hoàng Nam', price: 60000, bookingDetailId: 112 },
   '4_29': { status: 'BOOKED', customerName: 'Lê Hoàng Nam', price: 60000, bookingDetailId: 113 },
 
-  '5_15': { status: 'PASS_WANTED', customerName: 'Đặng Thu Thảo', passContact: '0933 557 799', price: 35000, bookingDetailId: 114 },
+  '5_15': { status: 'BOOKED', customerName: 'Đặng Thu Thảo', price: 35000, bookingDetailId: 114 },
   '5_27': { status: 'BOOKED', customerName: 'Phạm Hải Đăng', price: 60000, bookingDetailId: 115 },
   '5_28': { status: 'BOOKED', customerName: 'Phạm Hải Đăng', price: 60000, bookingDetailId: 116 },
 

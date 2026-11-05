@@ -133,15 +133,6 @@ export default function Header({
 
           <button
             type="button"
-            onClick={() => setCurrentTab('market')}
-            className={`nav-link-btn pass-nav-link ${currentTab === 'market' ? 'active' : ''}`}
-          >
-            <span>Chợ Pass Sân</span>
-            {passCount > 0 && <span className="nav-pass-pill">{passCount}</span>}
-          </button>
-
-          <button
-            type="button"
             onClick={() => setCurrentTab('services')}
             className={`nav-link-btn ${currentTab === 'services' ? 'active' : ''}`}
           >

@@ -23,12 +23,12 @@ const SLIDES = [
     title: 'Cháy Hết Mình Cùng Đam Mê Bất Kể Ngày Đêm',
     desc: 'Hệ thống 4 chi nhánh lớn tại Gò Vấp, Tân Phú, Thủ Đức với hơn 25 sân luôn sẵn sàng chào đón các cơ thủ và câu lạc bộ giao lưu.',
     bg: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=1600&auto=format&fit=crop',
-    ctaPrimary: 'Xem Chợ Pass Sân',
-    targetTab: 'market'
+    ctaPrimary: 'Đặt Sân Thi Đấu Ngay',
+    targetTab: 'booking'
   }
 ];
 
-export default function HomeHero({ onNavigateTab, passSlotsCount = 3 }) {
+export default function HomeHero({ onNavigateTab }) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
@@ -76,17 +76,6 @@ export default function HomeHero({ onNavigateTab, passSlotsCount = 3 }) {
               <CalendarCheck size={16} className="text-emerald" />
               <span>Xem Bảng Lịch Ma Trận</span>
             </button>
-
-            {passSlotsCount > 0 && (
-              <button
-                type="button"
-                onClick={() => onNavigateTab('market')}
-                className="btn-hero-pass"
-              >
-                <Flame size={15} className="text-purple" />
-                <span>Chợ Pass Sân ({passSlotsCount} ca)</span>
-              </button>
-            )}
           </div>
 
           {/* Slide Indicator Dots */}

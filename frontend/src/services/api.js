@@ -428,54 +428,6 @@ export async function cancelBooking(bookingId) {
 }
 
 // ==========================================
-// 4. SLOT TRANSFERS / PASS SÂN APIS (ZERO MOCK FALLBACK)
-// ==========================================
-export async function fetchMarketTransfers(branchId, date) {
-  const params = new URLSearchParams();
-  if (branchId) params.append('branchId', branchId);
-  if (date) params.append('date', date);
-  const query = params.toString() ? `?${params.toString()}` : '';
-  const res = await fetch(`${API_BASE}/transfers/market${query}`, { signal: AbortSignal.timeout(4500) });
-  if (res.ok) {
-    return await res.json();
-  }
-  return [];
-}
-
-export async function listSlotForTransfer({ bookingDetailId, askingPrice, note }) {
-  return await authFetch('/api/transfers/list', {
-    method: 'POST',
-    body: JSON.stringify({ bookingDetailId, askingPrice, note })
-  });
-}
-
-export async function cancelSlotTransfer(transferId) {
-  return await authFetch(`/api/transfers/${transferId}/cancel`, {
-    method: 'POST'
-  });
-}
-
-export async function claimSlotTransfer(transferId) {
-  return await authFetch(`/api/transfers/${transferId}/claim`, {
-    method: 'POST'
-  });
-}
-
-export async function togglePassSlot(detailId, contactPhone) {
-  const params = new URLSearchParams();
-  params.append('detailId', detailId);
-  if (contactPhone) params.append('contactPhone', contactPhone);
-
-  const res = await fetch(`${API_BASE}/booking/pass-slot?${params.toString()}`, {
-    method: 'POST',
-    signal: AbortSignal.timeout(4000)
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Không thể cập nhật trạng thái pass sân');
-  }
-  return await res.json();
-}
 
 // ==========================================
 // 5. MEMBERSHIP & WALLET APIS (ZERO MOCK FALLBACK)

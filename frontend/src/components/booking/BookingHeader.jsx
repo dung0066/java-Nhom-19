@@ -124,10 +124,6 @@ export default function BookingHeader({
                 <span className="legend-color-box box-yellow"></span>
                 <span>{t.booking.selected}</span>
               </div>
-              <div className="legend-cell">
-                <span className="legend-color-box box-purple"></span>
-                <span>{isVietnamese ? 'Cần Pass' : 'Transfer'}</span>
-              </div>
             </div>
           </div>
         </div>

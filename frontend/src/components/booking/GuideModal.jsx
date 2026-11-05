@@ -58,7 +58,6 @@ export default function GuideModal({ isOpen, onClose }) {
           <h4 style={{ marginTop: '16px' }}>2. Hướng dẫn sử dụng</h4>
           <p>• Nhấn vào ô trắng để chọn giờ đặt sân. Ô sẽ chuyển sang màu vàng.</p>
           <p>• Ô màu đỏ là sân đã có người đặt.</p>
-          <p>• Ô màu tím là sân khách hàng bận cần pass lại.</p>
 
           <button
             type="button"
