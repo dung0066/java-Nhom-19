@@ -125,6 +125,7 @@ public class WalletService {
             throw new IllegalArgumentException("Giao dịch không phải là nạp tiền vào ví!");
         }
 
+        // [DŨNG NOTE] Kiểm tra nếu đã PAID thì chặn ngay, không bao giờ cộng tiền 2 lần
         if (payment.getStatus() == PaymentStatus.PAID) {
             throw new IllegalStateException("Giao dịch thanh toán này đã được xác nhận trước đó!");
         }
@@ -133,8 +134,10 @@ public class WalletService {
         }
 
         LocalDateTime now = LocalDateTime.now();
+        // [DŨNG NOTE] Chạy câu lệnh UPDATE có điều kiện ở DB: chỉ update khi status='PENDING' (Atomic chống race condition)
         int rowsUpdated = paymentRepository.markPaidIfPending(payment.getId(), now, providerTxnCode);
         if (rowsUpdated == 1) {
+            // [DŨNG NOTE] Cộng tiền ví trực tiếp trong DB bằng câu lệnh Atomic UPDATE wallets SET balance = balance + :amount
             walletRepository.addBalanceAtomic(payment.getUser().getId(), payment.getAmount());
             payment.setStatus(PaymentStatus.PAID);
             payment.setPaidAt(now);
@@ -143,6 +146,7 @@ public class WalletService {
                     payment.getAmount(), payment.getUser().getId(), payment.getId(), providerTxnCode);
             return payment;
         } else {
+            // [DŨNG NOTE] Nếu luồng khác vừa chạy trước và rowsUpdated=0 -> Chặn đứng ngay
             log.warn("Bỏ qua nạp ví: Payment ID {} đã được luồng khác xử lý trước đó", payment.getId());
             throw new IllegalStateException("Giao dịch thanh toán này đã được xác nhận trước đó!");
         }

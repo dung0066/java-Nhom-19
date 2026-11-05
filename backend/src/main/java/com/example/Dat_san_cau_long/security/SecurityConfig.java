@@ -49,7 +49,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(); // [DŨNG NOTE] Băm mật khẩu 1 chiều bằng BCrypt + Salt ngẫu nhiên, chống lộ mật khẩu gốc
     }
 
     @Bean
@@ -60,6 +60,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+        // [DŨNG NOTE] Whitelist CORS: Chỉ cho phép domain chính thức và localhost truy cập, chặn trang web lạ gọi API
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173",
                 "http://localhost:3000",
@@ -83,17 +84,17 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(AbstractHttpConfigurer::disable) // [DŨNG NOTE] Tắt CSRF vì dùng JWT Stateless qua Header Authorization
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // [DŨNG NOTE] Server không lưu session trong RAM
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler)
                 )
                 .headers(headers -> headers
-                        .contentTypeOptions(Customizer.withDefaults())
-                        .frameOptions(frame -> frame.deny())
+                        .contentTypeOptions(Customizer.withDefaults()) // [DŨNG NOTE] Chống MIME Sniffing tấn công file
+                        .frameOptions(frame -> frame.deny())           // [DŨNG NOTE] Chống Clickjacking: Cấm web khác nhúng iframe
                         .referrerPolicy(ref -> ref.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                        // script-src 'self': chỉ chạy script cùng nguồn (không chạy script nhúng hay từ nguồn lạ); object-src 'none': cấm plugin/flash
+                        // [DŨNG NOTE] CSP: Chỉ cho phép chạy script từ chính nguồn trang web, chống mã độc XSS
                         .contentSecurityPolicy(csp -> csp.policyDirectives(
                                 "script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"))
                 )

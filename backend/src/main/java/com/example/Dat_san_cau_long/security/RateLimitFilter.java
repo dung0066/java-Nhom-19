@@ -17,13 +17,18 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Chống brute force và spam bằng giới hạn số lần gọi theo địa chỉ IP (cửa sổ trượt, lưu trong bộ nhớ):
- *  - Đăng nhập: sau N lần sai liên tiếp thì khóa IP trong thời gian cửa sổ, đăng nhập đúng thì xóa bộ đếm.
- *  - Quên mật khẩu / OTP: tối đa N yêu cầu mỗi cửa sổ (chặn dò mã OTP và spam gửi mail).
- *  - Đăng ký: tối đa N lượt mỗi cửa sổ.
- *  - Tra cứu đơn theo SĐT hoặc mã: tối đa N lượt mỗi cửa sổ (chặn dò thông tin khách).
+ * Chống brute force và spam bằng giới hạn số lần gọi theo địa chỉ IP (cửa sổ
+ * trượt, lưu trong bộ nhớ):
+ * - Đăng nhập: sau N lần sai liên tiếp thì khóa IP trong thời gian cửa sổ, đăng
+ * nhập đúng thì xóa bộ đếm.
+ * - Quên mật khẩu / OTP: tối đa N yêu cầu mỗi cửa sổ (chặn dò mã OTP và spam
+ * gửi mail).
+ * - Đăng ký: tối đa N lượt mỗi cửa sổ.
+ * - Tra cứu đơn theo SĐT hoặc mã: tối đa N lượt mỗi cửa sổ (chặn dò thông tin
+ * khách).
  * Vượt giới hạn thì trả 429 Too Many Requests.
- * Chỉ đọc địa chỉ kết nối thật (getRemoteAddr), không tin header X-Forwarded-For vì client có thể giả mạo.
+ * Chỉ đọc địa chỉ kết nối thật (getRemoteAddr), không tin header
+ * X-Forwarded-For vì client có thể giả mạo.
  */
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
@@ -37,7 +42,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final int lookupMaxRequests;
     private final long lookupWindowMs;
 
-    /** key = loại giới hạn + IP, value = các mốc thời gian (ms) trong cửa sổ hiện tại */
+    /**
+     * key = loại giới hạn + IP, value = các mốc thời gian (ms) trong cửa sổ hiện
+     * tại
+     */
     private final Map<String, Deque<Long>> hits = new ConcurrentHashMap<>();
 
     public RateLimitFilter(
@@ -64,33 +72,39 @@ public class RateLimitFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String path = request.getRequestURI();
         String method = request.getMethod();
-        String ip = request.getRemoteAddr();
+        String ip = request.getRemoteAddr(); // [DŨNG NOTE] Đọc IP thật từ kết nối mạng, tránh dùng X-Forwarded-For vì client có thể fake
 
+        // [DŨNG NOTE] Chống Brute-Force đăng nhập: Sai quá 5 lần trong 15 phút là khóa IP ngay
         if ("POST".equals(method) && path.equals("/api/auth/login")) {
             String key = "login:" + ip;
             if (count(key, loginWindowMs) >= loginMaxFailures) {
-                reject(response, "Bạn đã đăng nhập sai quá nhiều lần. Vui lòng thử lại sau " + (loginWindowMs / 60_000) + " phút!");
+                reject(response, "Bạn đã đăng nhập sai quá nhiều lần. Vui lòng thử lại sau " + (loginWindowMs / 60_000)
+                        + " phút!");
                 return;
             }
             chain.doFilter(request, response);
             if (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
-                record(key);
+                record(key); // [DŨNG NOTE] Đăng nhập sai: Ghi nhận 1 lần thất bại vào bộ nhớ
             } else if (response.getStatus() == HttpServletResponse.SC_OK) {
-                hits.remove(key);
+                hits.remove(key); // [DŨNG NOTE] Đăng nhập đúng: Xóa sạch bộ đếm để khách dùng bình thường
             }
             return;
         }
 
+        // [DŨNG NOTE] Chống spam gửi mã OTP Gmail và dò mật khẩu: Tối đa 5 lần trong 10 phút
         if (path.startsWith("/api/auth/forgot-password") || path.startsWith("/api/auth/otp")) {
             if (tooMany("otp:" + ip, otpMaxRequests, otpWindowMs)) {
-                reject(response, "Bạn gửi yêu cầu quá nhiều lần. Vui lòng thử lại sau " + (otpWindowMs / 60_000) + " phút!");
+                reject(response,
+                        "Bạn gửi yêu cầu quá nhiều lần. Vui lòng thử lại sau " + (otpWindowMs / 60_000) + " phút!");
                 return;
             }
+        // [DŨNG NOTE] Chống bot spam tạo tài khoản rác: Tối đa 10 tài khoản trong 60 phút
         } else if ("POST".equals(method) && path.equals("/api/auth/register")) {
             if (tooMany("register:" + ip, registerMaxRequests, registerWindowMs)) {
                 reject(response, "Bạn đăng ký quá nhiều lần. Vui lòng thử lại sau!");
                 return;
             }
+        // [DŨNG NOTE] Chống quét/dò số điện thoại khách hàng: Tối đa 30 lần tra cứu/phút
         } else if ("GET".equals(method) && path.equals("/api/booking/lookup")) {
             if (tooMany("lookup:" + ip, lookupMaxRequests, lookupWindowMs)) {
                 reject(response, "Bạn tra cứu quá nhanh. Vui lòng thử lại sau ít phút!");

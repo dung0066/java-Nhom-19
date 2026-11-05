@@ -80,12 +80,13 @@ public class SepayWebhookController {
         // 2. Kiểm tra bảo mật API Key
         String expectedAuth = (sepayApiKey != null && !sepayApiKey.isBlank()) ? "Apikey " + sepayApiKey.trim() : null;
 
+        // [DŨNG NOTE] Dùng Regex trích xuất mã PAY-TOPUP-yyyyMMdd-XXXX từ nội dung chuyển khoản ngân hàng
         Pattern walletPattern = Pattern.compile("PAYTOPUP(\\d{8})(\\d{4})");
         Matcher walletMatcher = walletPattern.matcher(normalizedContent);
         boolean isWalletTopup = walletMatcher.find();
 
         if (isWalletTopup) {
-            // Luồng nạp ví: Bắt buộc cấu hình API key và khớp chính xác tuyệt đối
+            // [DŨNG NOTE] Bảo mật: Bắt buộc cấu hình API key bí mật và so khớp chính xác tuyệt đối (equals)
             if (expectedAuth == null) {
                 log.warn("[SePay Webhook] Từ chối nạp ví: app.sepay.api-key chưa được cấu hình");
                 return ResponseEntity.status(401).body(Map.of("success", false, "message", "Sepay API Key chưa được cấu hình"));
@@ -95,7 +96,7 @@ public class SepayWebhookController {
                 return ResponseEntity.status(401).body(Map.of("success", false, "message", "Unauthorized"));
             }
         } else {
-            // Luồng đặt sân: Nếu có API key cấu hình thì phải khớp chính xác (loại bỏ contains)
+            // [DŨNG NOTE] Luồng đặt sân: Nếu có API key cấu hình thì phải khớp chính xác (loại bỏ contains)
             if (expectedAuth != null) {
                 if (authHeader == null || !expectedAuth.equals(authHeader.trim())) {
                     log.warn("[SePay Webhook] Từ chối đặt sân: Sai Authorization token");
@@ -111,6 +112,7 @@ public class SepayWebhookController {
             String paymentCode = "PAY-TOPUP-" + extractedDate + "-" + extractedSeq;
             log.info("[SePay Webhook] Nhận diện mã nạp ví: {}", paymentCode);
 
+            // [DŨNG NOTE] Truy vấn trực tiếp theo mã indexed O(1), không load toàn bộ bảng vào RAM
             Optional<Payment> optPayment = paymentRepository.findByPaymentCode(paymentCode);
             if (optPayment.isPresent()) {
                 Payment payment = optPayment.get();
@@ -119,7 +121,7 @@ public class SepayWebhookController {
                             ? payload.getReferenceCode().trim()
                             : String.valueOf(payload.getId());
 
-                    // Chống lặp giao dịch (Idempotency)
+                    // [DŨNG NOTE] Chống cộng 2 lần (Idempotency): Nếu đã PAID thì trả về thành công ngay, không cộng thêm
                     if (payment.getStatus() == PaymentStatus.PAID) {
                         log.info("[SePay Webhook] Giao dịch nạp ví {} đã ở trạng thái PAID trước đó", paymentCode);
                         return ResponseEntity.ok(Map.of(
@@ -129,6 +131,7 @@ public class SepayWebhookController {
                         ));
                     }
 
+                    // [DŨNG NOTE] Chống trùng mã giao dịch ngân hàng (providerTxnCode)
                     if (paymentRepository.existsByProviderTxnCode(providerTxnCode)) {
                         log.info("[SePay Webhook] Giao dịch với providerTxnCode={} đã tồn tại", providerTxnCode);
                         return ResponseEntity.ok(Map.of(
@@ -138,7 +141,7 @@ public class SepayWebhookController {
                         ));
                     }
 
-                    // Kiểm tra số tiền chuyển khoản
+                    // [DŨNG NOTE] Kiểm tra số tiền: Chuyển thiếu hoặc lệch thì không cộng ví, để admin tra soát
                     if (transferAmount.compareTo(payment.getAmount()) != 0) {
                         log.warn("[SePay Webhook] Sai lệch số tiền nạp ví {}: Cần={}, Thực nhận={}",
                                 paymentCode, payment.getAmount(), transferAmount);
@@ -148,7 +151,7 @@ public class SepayWebhookController {
                         ));
                     }
 
-                    // Tự động cộng tiền vào ví người dùng
+                    // [DŨNG NOTE] Tự động cộng tiền ví bằng câu lệnh Atomic UPDATE trong Database
                     try {
                         Payment updated = walletService.creditTopup(payment, providerTxnCode);
                         log.info("[SePay Webhook] Tự động cộng {} VNĐ vào ví user {} thành công!",
