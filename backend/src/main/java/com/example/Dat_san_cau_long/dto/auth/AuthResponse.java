@@ -24,6 +24,11 @@ public class AuthResponse {
     private LocalDateTime membershipExpiresAt;
     private Double discountPercent;
 
+    // Managed Branch (cho ROLE_STAFF / Quản lý cửa hàng)
+    private Long managedBranchId;
+    private String managedBranchName;
+    private String managedBranchCode;
+
     public AuthResponse() {
     }
 
@@ -81,9 +86,20 @@ public class AuthResponse {
         public AuthResponseBuilder membershipPackage(MembershipPackage membershipPackage) { this.membershipPackage = membershipPackage; return this; }
         public AuthResponseBuilder membershipExpiresAt(LocalDateTime membershipExpiresAt) { this.membershipExpiresAt = membershipExpiresAt; return this; }
         public AuthResponseBuilder discountPercent(Double discountPercent) { this.discountPercent = discountPercent; return this; }
+        public AuthResponseBuilder managedBranchId(Long managedBranchId) { this.managedBranchId = managedBranchId; return this; }
+        public AuthResponseBuilder managedBranchName(String managedBranchName) { this.managedBranchName = managedBranchName; return this; }
+        public AuthResponseBuilder managedBranchCode(String managedBranchCode) { this.managedBranchCode = managedBranchCode; return this; }
+
+        private Long managedBranchId;
+        private String managedBranchName;
+        private String managedBranchCode;
 
         public AuthResponse build() {
-            return new AuthResponse(success, message, token, id, username, fullName, email, phone, role, walletBalance, avatar, isMember, membershipPackage, membershipExpiresAt, discountPercent);
+            AuthResponse resp = new AuthResponse(success, message, token, id, username, fullName, email, phone, role, walletBalance, avatar, isMember, membershipPackage, membershipExpiresAt, discountPercent);
+            resp.setManagedBranchId(managedBranchId);
+            resp.setManagedBranchName(managedBranchName);
+            resp.setManagedBranchCode(managedBranchCode);
+            return resp;
         }
     }
 
@@ -131,4 +147,13 @@ public class AuthResponse {
 
     public Double getDiscountPercent() { return discountPercent; }
     public void setDiscountPercent(Double discountPercent) { this.discountPercent = discountPercent; }
+
+    public Long getManagedBranchId() { return managedBranchId; }
+    public void setManagedBranchId(Long managedBranchId) { this.managedBranchId = managedBranchId; }
+
+    public String getManagedBranchName() { return managedBranchName; }
+    public void setManagedBranchName(String managedBranchName) { this.managedBranchName = managedBranchName; }
+
+    public String getManagedBranchCode() { return managedBranchCode; }
+    public void setManagedBranchCode(String managedBranchCode) { this.managedBranchCode = managedBranchCode; }
 }

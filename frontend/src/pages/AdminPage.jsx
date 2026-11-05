@@ -44,7 +44,11 @@ import {
   createAdminArticle,
   updateAdminArticle,
   toggleAdminArticle,
-  deleteAdminArticle
+  deleteAdminArticle,
+  payRemainingBookingAdmin,
+  fetchBranchDelegations,
+  assignBranchManager,
+  revokeBranchManager
 } from '../services/api';
 
 import { BRANCHES as DEFAULT_BRANCHES, COURTS_NVL, DEFAULT_D2_PRODUCTS } from '../data/courtData';
@@ -183,6 +187,7 @@ export default function AdminPage({ onNavigate }) {
     return DEFAULT_D2_PRODUCTS;
   });
   const [branches, setBranches] = useState(D2_BRANCHES);
+  const [delegations, setDelegations] = useState([]);
   const [courts, setCourts] = useState(INITIAL_MULTI_COURTS);
   const [users, setUsers] = useState(INITIAL_USERS);
   const [articles, setArticles] = useState([]);
@@ -261,13 +266,14 @@ export default function AdminPage({ onNavigate }) {
     setIsLoading(true);
     try {
       // Gọi song song các API quản trị từ Spring Boot Backend
-      const [bRes, pList, brList, cList, uList, aList] = await Promise.all([
+      const [bRes, pList, brList, cList, uList, aList, delList] = await Promise.all([
         fetchAllAdminBookingPages().catch(() => fetchAllBookings().catch(() => null)),
         fetchProducts().catch(() => null),
         fetchBranches().catch(() => null),
         fetchAdminCourts().catch(() => null),
         fetchAdminUsers().catch(() => null),
-        fetchAdminArticles().catch(() => null)
+        fetchAdminArticles().catch(() => null),
+        fetchBranchDelegations().catch(() => [])
       ]);
 
       // 1. Xử lý Đơn đặt sân (Bookings)
@@ -292,9 +298,12 @@ export default function AdminPage({ onNavigate }) {
       }
       setBookings(mergedBookings);
 
-      // 2. Xử lý Chi nhánh (Branches)
+      // 2. Xử lý Chi nhánh & Ủy quyền Quản lý cửa hàng (Branches & Delegations)
       if (brList && brList.length > 0) {
         setBranches(brList);
+      }
+      if (delList && Array.isArray(delList)) {
+        setDelegations(delList);
       }
 
       // 3. Xử lý Sân đấu (Courts)
@@ -542,12 +551,51 @@ export default function AdminPage({ onNavigate }) {
     const reason = window.prompt(`Nhập lý do hủy đơn #${id}:`, 'Khách yêu cầu dời lịch / hủy');
     if (reason === null) return;
     try {
-      await cancelBookingAdmin(id, reason);
-      alert(`Đã hủy đơn #${id} thành công!`);
+      const res = await cancelBookingAdmin(id, reason);
+      const refunded = res?.refundedAmount;
+      if (refunded && refunded > 0) {
+        alert(`Đã hủy đơn #${id} thành công! Hệ thống đã hoàn trả ${refunded.toLocaleString('vi-VN')} đ trực tiếp vào ví của khách hàng.`);
+      } else {
+        alert(res?.message || `Đã hủy đơn #${id} thành công!`);
+      }
     } catch (err) {
       alert(`Không thể hủy đơn: ${err.message}`);
     } finally {
       loadData();
+    }
+  };
+
+  const handlePayRemaining = async (id, method = 'CASH') => {
+    if (!window.confirm(`Xác nhận thu nốt 50% số tiền còn lại của đơn #${id} bằng ${method === 'CASH' ? 'tiền mặt' : method}?`)) return;
+    try {
+      await payRemainingBookingAdmin(id, method);
+      alert(`Đã thu nốt số tiền còn lại cho đơn #${id} thành công!`);
+    } catch (err) {
+      alert(`Không thể thu nốt: ${err.message}`);
+    } finally {
+      loadData();
+    }
+  };
+
+  const handleAssignBranchManager = async (branchId, userId) => {
+    try {
+      await assignBranchManager(branchId, userId);
+      alert('Đã ủy quyền Quản lý cửa hàng (Store Manager) thành công!');
+      loadData();
+    } catch (err) {
+      alert(`Không thể ủy quyền: ${err.message}`);
+      throw err;
+    }
+  };
+
+  const handleRevokeBranchManager = async (branchId, userId) => {
+    try {
+      await revokeBranchManager(branchId, userId);
+      alert('Đã thu hồi quyền Quản lý cửa hàng!');
+      loadData();
+    } catch (err) {
+      alert(`Không thể thu hồi: ${err.message}`);
+      throw err;
     }
   };
 
@@ -1011,8 +1059,13 @@ export default function AdminPage({ onNavigate }) {
             <h2 style={{ fontSize: '18px', fontWeight: 800, margin: 0, letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <i className="fa-solid fa-shield-halved"></i> BẢNG ĐIỀU KHIỂN QUẢN TRỊ HỆ THỐNG D2 SHOP
             </h2>
-            <p style={{ fontSize: '12px', opacity: 0.9, margin: '4px 0 0 0' }}>
-              Xin chào, <strong>{currentUser.fullName || currentUser.username}</strong> ({currentUser.role || 'ROLE_ADMIN'})
+            <p style={{ fontSize: '12px', opacity: 0.9, margin: '4px 0 0 0', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span>Xin chào, <strong>{currentUser.fullName || currentUser.username}</strong> ({currentUser.role || 'ROLE_ADMIN'})</span>
+              {currentUser?.managedBranchName && (
+                <span style={{ background: '#f59e0b', color: '#1e293b', padding: '2px 10px', borderRadius: '6px', fontWeight: 800, fontSize: '11.5px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                  <i className="fa-solid fa-shop"></i> Quản Lý Cửa Hàng: {currentUser.managedBranchName} ({currentUser.managedBranchCode})
+                </span>
+              )}
             </p>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -1108,6 +1161,7 @@ export default function AdminPage({ onNavigate }) {
               onRefresh={loadData}
               onConfirmPayment={handleConfirmPayment}
               onCheckinBooking={handleCheckinBooking}
+              onPayRemaining={handlePayRemaining}
               onCancelBooking={handleCancelBooking}
               isLoading={isLoading}
             />
@@ -1117,6 +1171,8 @@ export default function AdminPage({ onNavigate }) {
             <AdminBranchesTab
               branches={branches}
               courts={courts}
+              delegations={delegations}
+              users={users}
               onOpenAddBranch={handleOpenAddBranch}
               onEditBranch={handleEditBranch}
               onOpenAddCourt={handleOpenAddCourt}
@@ -1124,6 +1180,8 @@ export default function AdminPage({ onNavigate }) {
               onToggleCourtActive={handleToggleCourtActive}
               onDeleteBranch={handleDeleteBranch}
               onDeleteCourt={handleDeleteCourt}
+              onAssignManager={handleAssignBranchManager}
+              onRevokeManager={handleRevokeBranchManager}
               onRefresh={loadData}
             />
           )}
@@ -1143,6 +1201,8 @@ export default function AdminPage({ onNavigate }) {
             <AdminProductsTab
               products={products}
               trashedProducts={trashedProducts}
+              branches={branches}
+              currentUser={currentUser}
               onOpenAddModal={handleOpenAddProduct}
               onEditProduct={handleEditProduct}
               onToggleActive={handleToggleProductActive}

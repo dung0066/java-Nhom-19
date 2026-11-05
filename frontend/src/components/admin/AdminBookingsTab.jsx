@@ -6,6 +6,7 @@ export default function AdminBookingsTab({
   onRefresh,
   onConfirmPayment,
   onCheckinBooking,
+  onPayRemaining,
   onCancelBooking,
   isLoading
 }) {
@@ -253,9 +254,19 @@ export default function AdminBookingsTab({
                       <td>{b.bookingDate || 'Hôm nay'}</td>
                       <td style={{ fontSize: '12px', lineHeight: 1.4, maxWidth: '200px' }}>{slotsStr}</td>
                       <td>
-                        <strong style={{ color: '#ea580c', fontSize: '14px' }}>
+                        <strong style={{ color: '#0f172a', fontSize: '14px' }}>
                           {(b.totalPrice ?? b.totalAmount ?? 0).toLocaleString('vi-VN')} đ
                         </strong>
+                        {(b.isDeposit || (b.paidAmount && b.paidAmount < (b.totalPrice ?? b.totalAmount ?? 0))) && (
+                          <div style={{ marginTop: '3px' }}>
+                            <span style={{ background: '#fef3c7', color: '#b45309', padding: '1px 6px', borderRadius: '4px', fontSize: '10.5px', fontWeight: 700, display: 'inline-block' }}>
+                              Đã cọc: {(b.paidAmount || 0).toLocaleString('vi-VN')} đ
+                            </span>
+                            <div style={{ fontSize: '11px', color: '#dc2626', fontWeight: 600 }}>
+                              Còn thiếu: {((b.remainingAmount != null ? b.remainingAmount : ((b.totalPrice ?? b.totalAmount ?? 0) - (b.paidAmount || 0)))).toLocaleString('vi-VN')} đ
+                            </div>
+                          </div>
+                        )}
                       </td>
                       <td>
                         <span className={`badge-status ${badgeClass}`}>{statusText}</span>
@@ -270,6 +281,17 @@ export default function AdminBookingsTab({
                               onClick={() => onConfirmPayment && onConfirmPayment(b.id)}
                             >
                               <i className="fa-solid fa-check"></i> Duyệt
+                            </button>
+                          )}
+                          {(b.isDeposit || (b.paidAmount && b.paidAmount < (b.totalPrice ?? b.totalAmount ?? 0))) && b.status !== 'CANCELLED' && ((b.remainingAmount > 0) || ((b.totalPrice ?? b.totalAmount ?? 0) > (b.paidAmount || 0))) && (
+                            <button
+                              type="button"
+                              className="btn-tbl"
+                              style={{ background: '#10b981', color: '#fff', border: 'none' }}
+                              title="Khách thanh toán nốt 50% còn lại tại quầy"
+                              onClick={() => onPayRemaining && onPayRemaining(b.id, 'CASH')}
+                            >
+                              <i className="fa-solid fa-hand-holding-dollar"></i> Thu nốt
                             </button>
                           )}
                           {(b.status === 'PAID' || b.status === 'CONFIRMED') && (
@@ -287,7 +309,7 @@ export default function AdminBookingsTab({
                             <button
                               type="button"
                               className="btn-tbl btn-tbl-delete"
-                              title="Hủy đơn đặt sân"
+                              title="Hủy đơn đặt sân (hoàn tiền về ví khách hàng)"
                               onClick={() => onCancelBooking && onCancelBooking(b.id)}
                             >
                               <i className="fa-solid fa-xmark"></i> Hủy

@@ -25,21 +25,34 @@ public class AdminBookingController {
 
     private final BookingRepository bookingRepository;
     private final BookingService bookingService;
+    private final com.example.Dat_san_cau_long.repository.StaffBranchRepository staffBranchRepository;
 
-    public AdminBookingController(BookingRepository bookingRepository, BookingService bookingService) {
+    public AdminBookingController(BookingRepository bookingRepository,
+                                  BookingService bookingService,
+                                  com.example.Dat_san_cau_long.repository.StaffBranchRepository staffBranchRepository) {
         this.bookingRepository = bookingRepository;
         this.bookingService = bookingService;
+        this.staffBranchRepository = staffBranchRepository;
     }
 
     @GetMapping
     public ResponseEntity<?> getBookings(@RequestParam(required = false) Long branchId,
                                          @RequestParam(required = false) String status,
                                          @RequestParam(defaultValue = "0") int page,
-                                         @RequestParam(defaultValue = "20") int size) {
+                                         @RequestParam(defaultValue = "20") int size,
+                                         @org.springframework.security.core.annotation.AuthenticationPrincipal com.example.Dat_san_cau_long.security.CustomUserDetails principal) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        if (branchId != null) {
-            Page<Booking> res = bookingRepository.findByBranchIdOrderByCreatedAtDesc(branchId, pageable);
+        Long targetBranchId = branchId;
+        // Nếu là ROLE_STAFF (Quản lý cửa hàng), chỉ cho xem đơn thuộc chi nhánh được ủy quyền
+        if (principal != null && principal.getUser().getRole() == com.example.Dat_san_cau_long.model.enums.UserRole.ROLE_STAFF) {
+            targetBranchId = staffBranchRepository.findFirstByIdUserId(principal.getId())
+                    .map(sb -> sb.getId().getBranchId())
+                    .orElse(targetBranchId);
+        }
+
+        if (targetBranchId != null) {
+            Page<Booking> res = bookingRepository.findByBranchIdOrderByCreatedAtDesc(targetBranchId, pageable);
             return ResponseEntity.ok(res);
         }
 
@@ -84,14 +97,36 @@ public class AdminBookingController {
         return ResponseEntity.ok(res);
     }
 
-    @PostMapping("/{id}/cancel")
-    public ResponseEntity<Map<String, Object>> cancelBooking(@PathVariable Long id,
+    @PostMapping("/{id}/pay-remaining")
+    public ResponseEntity<Map<String, Object>> payRemaining(@PathVariable Long id,
                                                             @RequestBody(required = false) Map<String, String> body) {
-        bookingService.cancelBooking(id);
+        String methodStr = body != null ? body.get("paymentMethod") : "CASH";
+        com.example.Dat_san_cau_long.model.enums.PaymentMethod method =
+                com.example.Dat_san_cau_long.model.enums.PaymentMethod.fromStringOrDefault(methodStr);
+
+        com.example.Dat_san_cau_long.model.Payment payment = bookingService.payRemainingBooking(id, method);
 
         Map<String, Object> res = new HashMap<>();
         res.put("success", true);
-        res.put("message", "Đã hủy đơn đặt sân và hoàn trả tồn kho thành công!");
+        res.put("message", "Đã thu nốt số tiền " + payment.getAmount().toPlainString() + " đ thành công!");
+        res.put("paymentCode", payment.getPaymentCode());
+        res.put("amount", payment.getAmount());
+        return ResponseEntity.ok(res);
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<Map<String, Object>> cancelBooking(@PathVariable Long id,
+                                                             @RequestBody(required = false) Map<String, String> body) {
+        java.math.BigDecimal refunded = bookingService.cancelBooking(id);
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", true);
+        res.put("refundedAmount", refunded);
+        if (refunded != null && refunded.compareTo(java.math.BigDecimal.ZERO) > 0) {
+            res.put("message", "Đã hủy đơn đặt sân và hoàn trả " + refunded.toPlainString() + " đ về ví khách hàng thành công!");
+        } else {
+            res.put("message", "Đã hủy đơn đặt sân và hoàn trả tồn kho thành công!");
+        }
         return ResponseEntity.ok(res);
     }
 }

@@ -12,6 +12,8 @@ public class BookingRequestDto {
     private String paymentMethod;
     private String notes;
     private List<SlotItemDto> selectedSlots;
+    private Boolean isDeposit;
+    private String depositOption; // "DEPOSIT_50" or "FULL"
 
     public BookingRequestDto() {
     }
@@ -53,6 +55,19 @@ public class BookingRequestDto {
         if (this.paymentMethod == null) {
             this.paymentMethod = paymentType;
         }
+    }
+
+    public Boolean getIsDeposit() { return isDeposit; }
+    public void setIsDeposit(Boolean isDeposit) { this.isDeposit = isDeposit; }
+
+    public String getDepositOption() { return depositOption; }
+    public void setDepositOption(String depositOption) { this.depositOption = depositOption; }
+
+    public boolean isDeposit50() {
+        return Boolean.TRUE.equals(isDeposit)
+                || "DEPOSIT_50".equalsIgnoreCase(depositOption)
+                || "DEPOSIT".equalsIgnoreCase(depositOption)
+                || "50%".equalsIgnoreCase(depositOption);
     }
 
     private List<AddonItemDto> addonItems;

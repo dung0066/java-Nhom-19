@@ -198,6 +198,7 @@ export default function BookingPage({ onNavigate }) {
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
+  const [depositOption, setDepositOption] = useState("FULL");
   const [paymentType, setPaymentType] = useState("VIETQR");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -685,6 +686,9 @@ export default function BookingPage({ onNavigate }) {
   const memberDiscount = quote ? Number(quote.discountAmount) || 0 : 0;
   const hasUnavailableSlot = !!quote && quote.slots.some((q) => !q.available);
   const totalAmount = quote ? Number(quote.totalPrice) : finalCourtPrice + servicesTotal;
+  const depositAmount = Math.round(totalAmount * 0.5);
+  const remainingAmount = totalAmount - depositAmount;
+  const payableAmount = depositOption === "DEPOSIT_50" ? depositAmount : totalAmount;
   const currentBranchObj =
     BRANCHES.find((b) => b.code === branch) || BRANCHES[0];
 
@@ -714,6 +718,8 @@ export default function BookingPage({ onNavigate }) {
           slotId: s.slot.id,
         })),
         addonItems: buildAddonItems(),
+        isDeposit: depositOption === "DEPOSIT_50",
+        depositOption: depositOption,
       };
 
       // Lỗi từ máy chủ (slot vừa bị người khác đặt, hết hạn đăng nhập, mất kết nối...) được báo thẳng cho khách,
@@ -730,6 +736,10 @@ export default function BookingPage({ onNavigate }) {
         originalPrice: Number(result.originalPrice) || 0,
         discountAmount: Number(result.discountAmount) || 0,
         totalPrice: Number(result.totalPrice) || 0,
+        isDeposit: result.isDeposit || depositOption === "DEPOSIT_50",
+        depositAmount: Number(result.depositAmount) || depositAmount,
+        paidAmount: Number(result.paidAmount) || (depositOption === "DEPOSIT_50" ? depositAmount : totalAmount),
+        remainingAmount: Number(result.remainingAmount) || (depositOption === "DEPOSIT_50" ? remainingAmount : 0),
         customerName,
         customerPhone,
         paymentType,
@@ -765,6 +775,7 @@ export default function BookingPage({ onNavigate }) {
     setSelectedSlots([]);
     setAppliedCombo(null);
     setServiceQuantities({});
+    setDepositOption("FULL");
     setBookingResult(null);
     setCurrentStep(1);
   };
@@ -2091,10 +2102,56 @@ export default function BookingPage({ onNavigate }) {
                     style={{ marginTop: "20px" }}
                   >
                     <i
+                      className="fa-solid fa-coins"
+                      style={{ color: "#f59e0b" }}
+                    ></i>
+                    Hình Thức Thanh Toán / Đặt Cọc
+                  </h3>
+
+                  <div className="payment-method-selector-grid" style={{ marginBottom: "16px" }}>
+                    <div
+                      className={`payment-method-card ${depositOption === "FULL" ? "active" : ""}`}
+                      onClick={() => setDepositOption("FULL")}
+                    >
+                      <div className="pay-card-header">
+                        <i
+                          className="fa-solid fa-credit-card"
+                          style={{ color: "#0284c7" }}
+                        ></i>
+                        <span style={{ fontWeight: "700" }}>Thanh Toán Toàn Bộ (100%)</span>
+                      </div>
+                      <span className="pay-card-desc">
+                        Thanh toán toàn bộ <strong>{formatVnd(totalAmount)}</strong> ngay bây giờ. Đến sân chỉ cần check-in và nhận sân.
+                      </span>
+                    </div>
+
+                    <div
+                      className={`payment-method-card ${depositOption === "DEPOSIT_50" ? "active" : ""}`}
+                      onClick={() => setDepositOption("DEPOSIT_50")}
+                      style={{ border: depositOption === "DEPOSIT_50" ? "2px solid #10b981" : undefined }}
+                    >
+                      <div className="pay-card-header">
+                        <i
+                          className="fa-solid fa-percent"
+                          style={{ color: "#10b981" }}
+                        ></i>
+                        <span style={{ fontWeight: "700", color: "#059669" }}>Đặt Cọc 50% Giữ Sân</span>
+                      </div>
+                      <span className="pay-card-desc">
+                        Chỉ cần thanh toán cọc trước <strong>{formatVnd(depositAmount)}</strong>. Số tiền còn lại <strong>{formatVnd(remainingAmount)}</strong> sẽ thanh toán khi tới nhận sân.
+                      </span>
+                    </div>
+                  </div>
+
+                  <h3
+                    className="checkout-card-title"
+                    style={{ marginTop: "16px" }}
+                  >
+                    <i
                       className="fa-solid fa-wallet"
                       style={{ color: "#0284c7" }}
                     ></i>
-                    Phương Thức Thanh Toán
+                    Phương Thức Thanh Toán {depositOption === "DEPOSIT_50" ? "(Tiền Cọc)" : ""}
                   </h3>
 
                   <div className="payment-method-selector-grid">
@@ -2110,8 +2167,7 @@ export default function BookingPage({ onNavigate }) {
                         <span>Chuyển Khoản VietQR</span>
                       </div>
                       <span className="pay-card-desc">
-                        Quét mã QR tự động điền số tiền; đơn được xác nhận thanh toán
-                        sau khi cửa hàng nhận được tiền.
+                        Quét mã QR tự động điền đúng số tiền {formatVnd(payableAmount)}; đơn được xác nhận ngay sau khi nhận tiền.
                       </span>
                     </div>
 
@@ -2127,8 +2183,7 @@ export default function BookingPage({ onNavigate }) {
                         <span>Thanh Toán Tại Quầy</span>
                       </div>
                       <span className="pay-card-desc">
-                        Thanh toán tiền mặt hoặc quẹt thẻ POS khi đến nhận sân
-                        (giữ chỗ 15p).
+                        Thanh toán tiền mặt hoặc POS khi đến nhận sân (giữ chỗ 15p).
                       </span>
                     </div>
 
@@ -2150,9 +2205,9 @@ export default function BookingPage({ onNavigate }) {
                     </div>
                   </div>
 
-                  {paymentType === "WALLET" && walletBalance !== null && walletBalance < totalAmount && (
+                  {paymentType === "WALLET" && walletBalance !== null && walletBalance < payableAmount && (
                     <div style={{ color: "#b91c1c", fontSize: "13px", fontWeight: 700, marginTop: "10px" }}>
-                      Số dư ví ({formatVnd(walletBalance)}) không đủ để thanh toán {formatVnd(totalAmount)}. Hãy nạp thêm ví hoặc chọn cách thanh toán khác.
+                      Số dư ví ({formatVnd(walletBalance)}) không đủ để thanh toán {formatVnd(payableAmount)}. Hãy nạp thêm ví hoặc chọn cách thanh toán khác.
                     </div>
                   )}
                 </div>
@@ -2284,15 +2339,32 @@ export default function BookingPage({ onNavigate }) {
                       )}
                     </div>
 
+                    {depositOption === "DEPOSIT_50" && (
+                      <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: "8px", padding: "10px 12px", marginTop: "12px", fontSize: "12px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                          <span style={{ color: "#065f46" }}>Tổng giá trị đơn:</span>
+                          <span style={{ fontWeight: "600" }}>{formatVnd(totalAmount)}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", color: "#059669", fontWeight: "700", marginBottom: "4px" }}>
+                          <span>Tiền cọc (50%):</span>
+                          <span>{formatVnd(depositAmount)}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", color: "#b45309" }}>
+                          <span>Còn lại khi nhận sân:</span>
+                          <span style={{ fontWeight: "600" }}>{formatVnd(remainingAmount)}</span>
+                        </div>
+                      </div>
+                    )}
+
                     <div
                       className="summary-total-banner"
                       style={{ marginTop: "14px" }}
                     >
                       <span className="total-banner-label">
-                        Tổng Thanh Toán:
+                        {depositOption === "DEPOSIT_50" ? "Tiền Cọc Cần Trả (50%):" : "Tổng Thanh Toán:"}
                       </span>
                       <span className="total-banner-price">
-                        {totalAmount.toLocaleString("vi-VN")} đ
+                        {payableAmount.toLocaleString("vi-VN")} đ
                       </span>
                     </div>
 
@@ -2381,11 +2453,10 @@ export default function BookingPage({ onNavigate }) {
                       marginBottom: "8px",
                     }}
                   >
-                    <i className="fa-solid fa-qrcode"></i> QUÉT MÃ VIETQR ĐỂ
-                    HOÀN TẤT
+                    <i className="fa-solid fa-qrcode"></i> QUÉT MÃ VIETQR ĐỂ {bookingResult.isDeposit ? "THANH TOÁN TIỀN CỌC (50%)" : "HOÀN TẤT"}
                   </div>
                   <img
-                    src={buildVietQrUrl(bookingResult.totalPrice, bookingResult.bookingCode)}
+                    src={buildVietQrUrl(bookingResult.isDeposit ? (bookingResult.paidAmount || bookingResult.depositAmount) : bookingResult.totalPrice, bookingResult.bookingCode)}
                     alt="VietQR Code"
                     style={{
                       width: "210px",
@@ -2410,6 +2481,8 @@ export default function BookingPage({ onNavigate }) {
                     <strong>DAO DUY DUNG</strong>
                     <br />
                     Nội dung: <strong>{bookingResult.bookingCode}</strong>
+                    <br />
+                    Số tiền: <strong>{formatVnd(bookingResult.isDeposit ? (bookingResult.paidAmount || bookingResult.depositAmount) : bookingResult.totalPrice)}</strong>
                   </div>
                   <div style={{ fontSize: "12px", color: "#2563eb", marginTop: "10px", fontWeight: "600" }}>
                     <i className="fa-solid fa-spinner fa-spin"></i> Đang chờ nhận tiền chuyển khoản tự động...
@@ -2419,12 +2492,12 @@ export default function BookingPage({ onNavigate }) {
 
               {bookingResult.paymentType === "CASH" && bookingResult.status === "PENDING" && (
                 <div style={{ background: "#fffbeb", border: "1.5px solid #fcd34d", borderRadius: "14px", padding: "14px 18px", maxWidth: "380px", margin: "0 auto 20px auto", color: "#92400e", fontSize: "13.5px" }}>
-                  <i className="fa-solid fa-money-bill-wave"></i> Vui lòng thanh toán tại quầy trước giờ giữ chỗ nêu trên, kèm mã đặt sân <strong>{bookingResult.bookingCode}</strong>.
+                  <i className="fa-solid fa-money-bill-wave"></i> Vui lòng thanh toán {bookingResult.isDeposit ? "tiền cọc 50%" : ""} tại quầy trước giờ giữ chỗ nêu trên, kèm mã đặt sân <strong>{bookingResult.bookingCode}</strong>.
                 </div>
               )}
               {bookingResult.paymentType === "WALLET" && bookingResult.status === "CONFIRMED" && (
                 <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "14px", padding: "14px 18px", maxWidth: "380px", margin: "0 auto 20px auto", color: "#166534", fontSize: "13.5px" }}>
-                  <i className="fa-solid fa-wallet"></i> Đã thanh toán {formatVnd(bookingResult.totalPrice)} bằng ví Ways Station.
+                  <i className="fa-solid fa-wallet"></i> Đã thanh toán {formatVnd(bookingResult.isDeposit ? (bookingResult.paidAmount || bookingResult.depositAmount) : bookingResult.totalPrice)} {bookingResult.isDeposit ? "(Cọc 50%)" : ""} bằng ví Ways Station.
                 </div>
               )}
 
@@ -2476,14 +2549,30 @@ export default function BookingPage({ onNavigate }) {
                   </div>
                 )}
                 <div className="info-table-row">
-                  <span className="info-table-label">Tổng thanh toán:</span>
+                  <span className="info-table-label">Tổng giá trị đơn:</span>
                   <span
                     className="info-table-value"
-                    style={{ color: "#ea580c", fontSize: "16px" }}
+                    style={{ color: "#0f172a", fontSize: "15px", fontWeight: "700" }}
                   >
                     {bookingResult.totalPrice.toLocaleString("vi-VN")} đ
                   </span>
                 </div>
+                {bookingResult.isDeposit && (
+                  <>
+                    <div className="info-table-row">
+                      <span className="info-table-label" style={{ color: "#059669" }}>Tiền cọc (50%):</span>
+                      <span className="info-table-value" style={{ color: "#059669", fontWeight: "700" }}>
+                        {(bookingResult.paidAmount || bookingResult.depositAmount).toLocaleString("vi-VN")} đ ({bookingResult.paymentStatus === "PAID" || bookingResult.status === "CONFIRMED" ? "Đã thanh toán" : "Cần thanh toán"})
+                      </span>
+                    </div>
+                    <div className="info-table-row">
+                      <span className="info-table-label" style={{ color: "#ea580c" }}>Còn lại thu tại quầy:</span>
+                      <span className="info-table-value" style={{ color: "#ea580c", fontWeight: "700" }}>
+                        {(bookingResult.remainingAmount || (bookingResult.totalPrice - (bookingResult.paidAmount || bookingResult.depositAmount))).toLocaleString("vi-VN")} đ
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="success-actions-row">

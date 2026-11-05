@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { PaginationBar } from './Pagination';
 import { usePagination } from './usePagination';
 import AdminTrashModal from './AdminTrashModal';
+import AssignBranchManagerModal from './AssignBranchManagerModal';
 
 export default function AdminBranchesTab({
   branches = [],
   courts = [],
+  delegations = [],
+  users = [],
   onOpenAddBranch,
   onEditBranch,
   onOpenAddCourt,
@@ -13,6 +16,8 @@ export default function AdminBranchesTab({
   onToggleCourtActive,
   onDeleteBranch,
   onDeleteCourt,
+  onAssignManager,
+  onRevokeManager,
   onRefresh
 }) {
   // Thùng rác đang mở: 'branches' | 'courts' | null
@@ -20,6 +25,9 @@ export default function AdminBranchesTab({
   const [selectedBranchCode, setSelectedBranchCode] = useState(
     branches[0]?.code || 'NVL'
   );
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedBranchForAssign, setSelectedBranchForAssign] = useState(null);
+  const [currentManagerForAssign, setCurrentManagerForAssign] = useState(null);
 
   // Lọc sân theo chi nhánh được chọn (hỗ trợ cả Spring Boot SQL & Mock data)
   const filteredCourts = courts.filter((c) => {
@@ -74,52 +82,101 @@ export default function AdminBranchesTab({
                 <th>Địa Chỉ Cơ Sở</th>
                 <th>Hotline</th>
                 <th>Quy Mô Sân</th>
+                <th>Quản Lý Cửa Hàng (Store Manager)</th>
                 <th>Thao Tác</th>
               </tr>
             </thead>
             <tbody>
               {branches.length === 0 ? (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>
                     Chưa có chi nhánh nào trong hệ thống.
                   </td>
                 </tr>
               ) : (
-                branchPg.pageItems.map((b) => (
-                  <tr key={b.id || b.code}>
-                    <td>
-                      <strong style={{ color: '#0284c7' }}>{b.code}</strong>
-                    </td>
-                    <td>
-                      <strong>{b.name}</strong>
-                    </td>
-                    <td>{b.address}</td>
-                    <td>{b.phone || '0914977030'}</td>
-                    <td>
-                      <strong>{b.totalCourts || (b.courts ? b.courts.length : 7)} Sân Thi Đấu</strong>
-                    </td>
-                    <td>
-                      <div className="action-btn-group">
-                        <button
-                          type="button"
-                          className="btn-tbl btn-tbl-edit"
-                          title="Chỉnh sửa thông tin chi nhánh"
-                          onClick={() => onEditBranch && onEditBranch(b)}
-                        >
-                          <i className="fa-solid fa-pen-to-square"></i> Sửa
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-tbl btn-tbl-delete"
-                          title="Chuyển chi nhánh này vào thùng rác (khôi phục được)"
-                          onClick={() => onDeleteBranch && onDeleteBranch(b.id || b.code)}
-                        >
-                          <i className="fa-solid fa-trash"></i> Xóa
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                branchPg.pageItems.map((b) => {
+                  const del = delegations.find((d) => (d.branchId && (d.branchId === b.id)) || (d.branchCode && (d.branchCode === b.code)));
+                  const manager = del ? del.manager : null;
+                  return (
+                    <tr key={b.id || b.code}>
+                      <td>
+                        <strong style={{ color: '#0284c7' }}>{b.code}</strong>
+                      </td>
+                      <td>
+                        <strong>{b.name}</strong>
+                      </td>
+                      <td>{b.address}</td>
+                      <td>{b.phone || '0914977030'}</td>
+                      <td>
+                        <strong>{b.totalCourts || (b.courts ? b.courts.length : 7)} Sân Thi Đấu</strong>
+                      </td>
+                      <td>
+                        {manager ? (
+                          <div style={{ lineHeight: 1.4 }}>
+                            <strong style={{ color: '#0f172a', fontSize: '13px' }}>
+                              <i className="fa-solid fa-user-shield" style={{ color: '#059669', marginRight: '5px' }}></i>
+                              {manager.fullName || manager.username}
+                            </strong>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>
+                              {manager.phone || manager.email || manager.username}
+                            </div>
+                            <button
+                              type="button"
+                              className="btn-tbl btn-tbl-edit"
+                              style={{ marginTop: '4px', padding: '2px 8px', fontSize: '11px' }}
+                              title="Thay đổi tài khoản quản lý"
+                              onClick={() => {
+                                setSelectedBranchForAssign(b);
+                                setCurrentManagerForAssign(manager);
+                                setIsAssignModalOpen(true);
+                              }}
+                            >
+                              <i className="fa-solid fa-user-pen"></i> Đổi quản lý
+                            </button>
+                          </div>
+                        ) : (
+                          <div>
+                            <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '12px' }}>Chưa ủy quyền</span>
+                            <br />
+                            <button
+                              type="button"
+                              className="btn-tbl btn-tbl-primary"
+                              style={{ marginTop: '4px', padding: '3px 8px', fontSize: '11px', background: '#0284c7', color: '#fff', border: 'none' }}
+                              title="Ủy quyền cho một tài khoản quản lý chi nhánh này"
+                              onClick={() => {
+                                setSelectedBranchForAssign(b);
+                                setCurrentManagerForAssign(null);
+                                setIsAssignModalOpen(true);
+                              }}
+                            >
+                              <i className="fa-solid fa-user-plus"></i> Ủy quyền QL
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <div className="action-btn-group">
+                          <button
+                            type="button"
+                            className="btn-tbl btn-tbl-edit"
+                            title="Chỉnh sửa thông tin chi nhánh"
+                            onClick={() => onEditBranch && onEditBranch(b)}
+                          >
+                            <i className="fa-solid fa-pen-to-square"></i> Sửa
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-tbl btn-tbl-delete"
+                            title="Chuyển chi nhánh này vào thùng rác (khôi phục được)"
+                            onClick={() => onDeleteBranch && onDeleteBranch(b.id || b.code)}
+                          >
+                            <i className="fa-solid fa-trash"></i> Xóa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -272,6 +329,20 @@ export default function AdminBranchesTab({
       {trashType && (
         <AdminTrashModal type={trashType} onClose={() => setTrashType(null)} onChanged={onRefresh} />
       )}
+
+      <AssignBranchManagerModal
+        isOpen={isAssignModalOpen}
+        onClose={() => {
+          setIsAssignModalOpen(false);
+          setSelectedBranchForAssign(null);
+          setCurrentManagerForAssign(null);
+        }}
+        branch={selectedBranchForAssign}
+        users={users}
+        currentManager={currentManagerForAssign}
+        onAssign={onAssignManager}
+        onRevoke={onRevokeManager}
+      />
     </section>
   );
 }

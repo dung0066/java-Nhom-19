@@ -572,11 +572,42 @@ export async function deleteAdminProduct(productId) {
   });
 }
 
-export async function updateAdminInventory(branchId, productId, quantity, lowStockThreshold) {
-  const params = new URLSearchParams({ branchId, productId, quantity });
-  if (lowStockThreshold !== undefined) params.append('lowStockThreshold', lowStockThreshold);
-  return await authFetch(`/api/admin/products/inventory?${params.toString()}`, {
-    method: 'PUT'
+export async function payRemainingBookingAdmin(bookingId, paymentMethod = 'CASH') {
+  return await authFetch(`/api/admin/bookings/${bookingId}/pay-remaining`, {
+    method: 'POST',
+    body: JSON.stringify({ paymentMethod })
+  });
+}
+
+export async function fetchBranchInventory(branchId) {
+  return await authFetch(`/api/admin/products/inventory/branch/${branchId}`);
+}
+
+export async function updateProductStock(productId, branchId, stockQuantity) {
+  return await authFetch(`/api/admin/products/${productId}/inventory`, {
+    method: 'PUT',
+    body: JSON.stringify({ branchId, stockQuantity: parseInt(stockQuantity, 10) })
+  });
+}
+
+export async function updateAdminInventory(branchId, productId, quantity) {
+  return updateProductStock(productId, branchId, quantity);
+}
+
+export async function fetchBranchDelegations() {
+  return await authFetch('/api/admin/branches/delegations');
+}
+
+export async function assignBranchManager(branchId, userId) {
+  return await authFetch(`/api/admin/branches/${branchId}/assign-manager`, {
+    method: 'POST',
+    body: JSON.stringify({ userId: parseInt(userId, 10) })
+  });
+}
+
+export async function revokeBranchManager(branchId, userId) {
+  return await authFetch(`/api/admin/branches/${branchId}/revoke-manager/${userId}`, {
+    method: 'DELETE'
   });
 }
 

@@ -58,6 +58,7 @@ public class BookingService {
     private final PaymentRepository paymentRepository;
     private final WalletRepository walletRepository;
     private final EmailService emailService;
+    private final RefundRepository refundRepository;
 
     public BookingService(BranchRepository branchRepository,
                           CourtRepository courtRepository,
@@ -72,7 +73,8 @@ public class BookingService {
                           PricingService pricingService,
                           PaymentRepository paymentRepository,
                           WalletRepository walletRepository,
-                          EmailService emailService) {
+                          EmailService emailService,
+                          RefundRepository refundRepository) {
         this.branchRepository = branchRepository;
         this.courtRepository = courtRepository;
         this.timeSlotRepository = timeSlotRepository;
@@ -87,6 +89,7 @@ public class BookingService {
         this.paymentRepository = paymentRepository;
         this.walletRepository = walletRepository;
         this.emailService = emailService;
+        this.refundRepository = refundRepository;
     }
 
     // ==================== MA TRẬN LỊCH SÂN ====================
@@ -197,7 +200,18 @@ public class BookingService {
         activeMembership.ifPresent(booking::setAppliedMembership);
 
         BigDecimal total = booking.getTotalPrice();
-        boolean needsPayment = total.compareTo(BigDecimal.ZERO) > 0;
+        boolean isDeposit = req.isDeposit50();
+        BigDecimal payAmount = total;
+        if (isDeposit && total.compareTo(BigDecimal.ZERO) > 0) {
+            payAmount = total.multiply(new BigDecimal("0.5")).setScale(0, java.math.RoundingMode.HALF_UP);
+            BigDecimal remaining = total.subtract(payAmount);
+            String depositNote = "[COC_50%] Đã chọn đặt cọc 50%: " + payAmount.toPlainString() + " đ. Số tiền còn lại tại quầy: " + remaining.toPlainString() + " đ.";
+            booking.setNotes(booking.getNotes() != null && !booking.getNotes().isBlank()
+                    ? depositNote + " | " + booking.getNotes()
+                    : depositNote);
+        }
+
+        boolean needsPayment = payAmount.compareTo(BigDecimal.ZERO) > 0;
         boolean paidNow = false;
         if (!needsPayment) {
             // Đơn 0 đồng (giảm giá toàn phần) không cần thanh toán nên xác nhận luôn
@@ -205,9 +219,9 @@ public class BookingService {
             booking.setHoldExpiresAt(null);
         } else if (method == PaymentMethod.WALLET) {
             // Trừ ví bằng một câu UPDATE atomic; không đủ số dư thì cả transaction (kể cả giữ chỗ) bị hoàn tác
-            if (walletRepository.deductBalanceAtomic(user.getId(), total) == 0) {
-                throw new IllegalStateException("Số dư ví không đủ để thanh toán " + total.toPlainString()
-                        + " đ. Hãy nạp thêm hoặc chọn cách thanh toán khác!");
+            if (walletRepository.deductBalanceAtomic(user.getId(), payAmount) == 0) {
+                throw new IllegalStateException("Số dư ví không đủ để thanh toán " + (isDeposit ? "tiền cọc 50% (" : "") + payAmount.toPlainString()
+                        + " đ" + (isDeposit ? ")" : "") + ". Hãy nạp thêm hoặc chọn cách thanh toán khác!");
             }
             booking.setStatus(BookingStatus.CONFIRMED);
             booking.setHoldExpiresAt(null);
@@ -217,16 +231,20 @@ public class BookingService {
         Booking saved = bookingRepository.save(booking);
 
         if (needsPayment) {
-            paymentRepository.save(Payment.builder()
+            Payment savedPayment = paymentRepository.save(Payment.builder()
                     .paymentCode(generateBookingPaymentCode(date))
                     .purpose(PaymentPurpose.BOOKING)
                     .user(user)
                     .booking(saved)
-                    .amount(total)
+                    .amount(payAmount)
                     .method(method)
                     .status(paidNow ? PaymentStatus.PAID : PaymentStatus.PENDING)
                     .paidAt(paidNow ? LocalDateTime.now() : null)
                     .build());
+            if (saved.getPayments() == null) {
+                saved.setPayments(new ArrayList<>());
+            }
+            saved.getPayments().add(savedPayment);
         }
 
         if (paidNow) {
@@ -323,6 +341,8 @@ public class BookingService {
 
         BigDecimal original = courtAmount.add(itemsAmount);
         BigDecimal total = original.subtract(discountAmount).max(BigDecimal.ZERO);
+        BigDecimal depositAmount = total.multiply(new BigDecimal("0.5")).setScale(0, java.math.RoundingMode.HALF_UP);
+        BigDecimal remainingAmount = total.subtract(depositAmount);
 
         return BookingQuoteDto.builder()
                 .slots(slotQuotes)
@@ -331,6 +351,8 @@ public class BookingService {
                 .originalPrice(original)
                 .discountAmount(discountAmount)
                 .totalPrice(total)
+                .depositAmount(depositAmount)
+                .remainingAmount(remainingAmount)
                 .membershipName(membership.map(m -> m.getMembershipPackage().getName()).orElse(null))
                 .membershipDiscountPercent(membership.map(m -> m.getMembershipPackage().getDiscountPercent()).orElse(null))
                 .build();
@@ -482,19 +504,74 @@ public class BookingService {
         bookingDetailRepository.save(detail);
     }
 
-    /** Hủy đơn: giao dịch đang chờ thành FAILED; đơn đã trả bằng ví được hoàn lại vào ví khách. */
-    private void settlePaymentsOfCancelledBooking(Long bookingId) {
-        for (Payment payment : paymentRepository.findByBookingId(bookingId)) {
+    /**
+     * Hủy đơn:
+     * - Các giao dịch PENDING chuyển thành FAILED.
+     * - Đặc biệt luồng hoàn tiền về Ví: Mọi giao dịch đã thanh toán (PAID) - bao gồm cọc 50% hoặc thanh toán 100%,
+     *   bằng WALLET, VIETQR, BANK_TRANSFER, hoặc CASH - đều được hoàn trả tự động vào Ví điện tử (wallets.balance)
+     *   của khách hàng, ghi nhận chi tiết vào bảng refunds với trạng thái DONE.
+     */
+    private BigDecimal settlePaymentsOfCancelledBooking(Booking booking) {
+        BigDecimal totalRefunded = BigDecimal.ZERO;
+        List<Payment> payments = paymentRepository.findByBookingId(booking.getId());
+
+        Long bookingUserId = null;
+        if (booking.getUser() != null) {
+            try {
+                bookingUserId = booking.getUser().getId();
+            } catch (Exception ignored) {}
+        }
+        if (bookingUserId == null && booking.getCustomerPhone() != null) {
+            bookingUserId = userRepository.findByPhone(booking.getCustomerPhone()).map(User::getId).orElse(null);
+        }
+        if (bookingUserId == null && booking.getCustomerEmail() != null && !booking.getCustomerEmail().isBlank()) {
+            bookingUserId = userRepository.findByEmail(booking.getCustomerEmail()).map(User::getId).orElse(null);
+        }
+
+        for (Payment payment : payments) {
             if (payment.getStatus() == PaymentStatus.PENDING) {
                 payment.setStatus(PaymentStatus.FAILED);
                 paymentRepository.save(payment);
-            } else if (payment.getStatus() == PaymentStatus.PAID
-                    && payment.getMethod() == PaymentMethod.WALLET && payment.getUser() != null) {
-                walletRepository.addBalanceAtomic(payment.getUser().getId(), payment.getAmount());
+            } else if (payment.getStatus() == PaymentStatus.PAID) {
+                Long refundUserId = null;
+                if (payment.getUser() != null) {
+                    try {
+                        refundUserId = payment.getUser().getId();
+                    } catch (Exception ignored) {}
+                }
+                if (refundUserId == null) {
+                    refundUserId = bookingUserId;
+                }
+
+                if (refundUserId != null) {
+                    final Long finalRefundUserId = refundUserId;
+                    User refundUser = userRepository.findById(finalRefundUserId).orElse(null);
+                    if (refundUser != null) {
+                        // Đảm bảo user có ví
+                        walletRepository.findById(finalRefundUserId).orElseGet(() ->
+                                walletRepository.save(Wallet.builder().user(refundUser).userId(finalRefundUserId).balance(BigDecimal.ZERO).build())
+                        );
+                        // Hoàn tiền nguyên tử vào ví
+                        walletRepository.addBalanceAtomic(finalRefundUserId, payment.getAmount());
+                        totalRefunded = totalRefunded.add(payment.getAmount());
+                        log.info(">>> Đã hoàn trả {} đ vào ví của user {} ({}) khi hủy đơn {}",
+                                payment.getAmount(), refundUser.getUsername(), finalRefundUserId, booking.getBookingCode());
+                    }
+                }
+
+                // Ghi nhận bảng refunds
+                refundRepository.save(Refund.builder()
+                        .payment(payment)
+                        .amount(payment.getAmount())
+                        .reason(booking.getCancelReason() != null ? booking.getCancelReason() : "Hoàn trả về ví khi hủy đơn " + booking.getBookingCode())
+                        .status(RefundStatus.DONE)
+                        .build());
+
                 payment.setStatus(PaymentStatus.REFUNDED);
                 paymentRepository.save(payment);
             }
         }
+        return totalRefunded;
     }
 
     /** Admin xác nhận đã nhận tiền cho đơn: đơn thành CONFIRMED và các giao dịch đang chờ thành PAID. */
@@ -530,12 +607,17 @@ public class BookingService {
 
     /** Người dùng chỉ được hủy đơn của chính mình; nhân viên và admin hủy được mọi đơn. */
     @Transactional
-    public void cancelBooking(Long bookingId, CustomUserDetails requester) {
+    public BigDecimal cancelBooking(Long bookingId, CustomUserDetails requester) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn đặt sân!"));
-        Long ownerId = booking.getUser() != null ? booking.getUser().getId() : null;
+        Long ownerId = null;
+        if (booking.getUser() != null) {
+            try {
+                ownerId = booking.getUser().getId();
+            } catch (Exception ignored) {}
+        }
         AccessChecks.requireSelfOrStaff(requester, ownerId);
-        cancelBooking(bookingId);
+        return cancelBookingInternal(booking);
     }
 
     /**
@@ -554,13 +636,17 @@ public class BookingService {
         return bookingRepository.findByCustomerPhone(phone);
     }
 
-    /** Hủy đơn: đánh dấu hủy đơn và các slot, đồng thời hoàn lại tồn kho cho sản phẩm mua kèm. */
+    /** Hủy đơn: đánh dấu hủy đơn và các slot, đồng thời hoàn lại tồn kho cho sản phẩm mua kèm và hoàn tiền vào ví. */
     @Transactional
-    public void cancelBooking(Long bookingId) {
+    public BigDecimal cancelBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn đặt sân!"));
+        return cancelBookingInternal(booking);
+    }
+
+    private BigDecimal cancelBookingInternal(Booking booking) {
         if (booking.getStatus() == BookingStatus.CANCELLED) {
-            return; // hủy lần hai không được hoàn kho hay hoàn tiền thêm lần nữa
+            return BigDecimal.ZERO; // hủy lần hai không được hoàn kho hay hoàn tiền thêm lần nữa
         }
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancelledAt(LocalDateTime.now());
@@ -580,8 +666,46 @@ public class BookingService {
             }
         }
         bookingRepository.save(booking);
-        // Xử lý giao dịch sau khi đã lưu đơn: câu UPDATE hoàn ví xóa bộ nhớ đệm của phiên nên không được chạy trước khi đọc xong dữ liệu đơn
-        settlePaymentsOfCancelledBooking(bookingId);
+        // Xử lý giao dịch sau khi đã lưu đơn: hoàn tiền vào ví khách hàng và lưu bảng refunds
+        return settlePaymentsOfCancelledBooking(booking);
+    }
+
+    /**
+     * Thu phần tiền còn lại (cho đơn đặt cọc 50%) khi khách nhận sân hoặc thanh toán tiếp.
+     */
+    @Transactional
+    public Payment payRemainingBooking(Long bookingId, PaymentMethod method) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn đặt sân ID: " + bookingId));
+        if (booking.getStatus() == BookingStatus.CANCELLED || booking.getStatus() == BookingStatus.EXPIRED) {
+            throw new IllegalStateException("Đơn đặt sân này đã bị hủy hoặc hết hạn!");
+        }
+        BigDecimal remaining = booking.getRemainingAmount();
+        if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalStateException("Đơn đặt sân này đã thanh toán đủ 100%!");
+        }
+        PaymentMethod payMethod = method != null ? method : PaymentMethod.CASH;
+        if (payMethod == PaymentMethod.WALLET && booking.getUser() != null) {
+            if (walletRepository.deductBalanceAtomic(booking.getUser().getId(), remaining) == 0) {
+                throw new IllegalStateException("Số dư ví không đủ để thanh toán phần còn lại " + remaining.toPlainString() + " đ!");
+            }
+        }
+        LocalDate date = booking.getBookingDate() != null ? booking.getBookingDate() : LocalDate.now();
+        Payment payment = Payment.builder()
+                .paymentCode("PAY-REM-" + date.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-" + (100000 + new Random().nextInt(900000)))
+                .purpose(PaymentPurpose.BOOKING)
+                .user(booking.getUser())
+                .booking(booking)
+                .amount(remaining)
+                .method(payMethod)
+                .status(PaymentStatus.PAID)
+                .paidAt(LocalDateTime.now())
+                .build();
+        Payment saved = paymentRepository.save(payment);
+        booking.setStatus(BookingStatus.CONFIRMED);
+        bookingRepository.save(booking);
+        log.info("Đã thanh toán nốt phần còn lại {} đ cho đơn {}", remaining, booking.getBookingCode());
+        return saved;
     }
 
     public List<Booking> getAllBookings() {

@@ -33,17 +33,20 @@ public class AuthService {
     private final UserMembershipRepository userMembershipRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final com.example.Dat_san_cau_long.repository.StaffBranchRepository staffBranchRepository;
 
     public AuthService(UserRepository userRepository,
                        WalletRepository walletRepository,
                        UserMembershipRepository userMembershipRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtTokenProvider jwtTokenProvider) {
+                       JwtTokenProvider jwtTokenProvider,
+                       com.example.Dat_san_cau_long.repository.StaffBranchRepository staffBranchRepository) {
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
         this.userMembershipRepository = userMembershipRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.staffBranchRepository = staffBranchRepository;
     }
 
     @Transactional
@@ -190,6 +193,20 @@ public class AuthService {
 
         Optional<UserMembership> activeMembership = userMembershipRepository.findActiveMembershipForUser(user.getId(), LocalDateTime.now());
 
+        Long managedBranchId = null;
+        String managedBranchName = null;
+        String managedBranchCode = null;
+
+        if (user.getRole() == com.example.Dat_san_cau_long.model.enums.UserRole.ROLE_STAFF) {
+            var staffBranchOpt = staffBranchRepository.findFirstByIdUserId(user.getId());
+            if (staffBranchOpt.isPresent() && staffBranchOpt.get().getBranch() != null) {
+                var b = staffBranchOpt.get().getBranch();
+                managedBranchId = b.getId();
+                managedBranchName = b.getName();
+                managedBranchCode = b.getCode();
+            }
+        }
+
         return AuthResponse.builder()
                 .success(true)
                 .message(message)
@@ -206,6 +223,9 @@ public class AuthService {
                 .membershipPackage(activeMembership.map(UserMembership::getMembershipPackage).orElse(null))
                 .membershipExpiresAt(activeMembership.map(UserMembership::getEndDate).orElse(null))
                 .discountPercent(activeMembership.map(um -> um.getMembershipPackage().getDiscountPercent().doubleValue()).orElse(0.0))
+                .managedBranchId(managedBranchId)
+                .managedBranchName(managedBranchName)
+                .managedBranchCode(managedBranchCode)
                 .build();
     }
 }

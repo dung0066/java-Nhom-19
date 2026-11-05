@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -71,12 +72,25 @@ public class BookingApiController {
         res.put("status", booking.getStatus() != null ? booking.getStatus().name() : "PENDING");
         res.put("holdExpiresAt", booking.getHoldExpiresAt() != null ? booking.getHoldExpiresAt().toString() : null);
         Payment payment = bookingService.findLatestPayment(booking.getId());
+        BigDecimal paidAmount = booking.getPaidAmount();
+        if (payment != null && payment.getStatus() == com.example.Dat_san_cau_long.model.enums.PaymentStatus.PAID && paidAmount.compareTo(BigDecimal.ZERO) == 0) {
+            paidAmount = payment.getAmount();
+        }
+        boolean isDepositFlag = booking.isDeposit() || request.isDeposit50();
+        BigDecimal depositAmount = payment != null ? payment.getAmount() : (isDepositFlag ? booking.getTotalPrice().divide(BigDecimal.valueOf(2), 0, java.math.RoundingMode.HALF_UP) : booking.getTotalPrice());
+        BigDecimal remainingAmount = booking.getTotalPrice().subtract(paidAmount);
+        if (remainingAmount.compareTo(BigDecimal.ZERO) < 0) remainingAmount = BigDecimal.ZERO;
+
         res.put("paymentCode", payment != null ? payment.getPaymentCode() : null);
         res.put("paymentMethod", payment != null ? payment.getMethod().name() : null);
         res.put("paymentStatus", payment != null ? payment.getStatus().name() : "NOT_REQUIRED");
         res.put("originalPrice", booking.getOriginalPrice());
         res.put("discountAmount", booking.getDiscountAmount());
         res.put("totalPrice", booking.getTotalPrice());
+        res.put("isDeposit", isDepositFlag);
+        res.put("depositAmount", depositAmount);
+        res.put("paidAmount", paidAmount);
+        res.put("remainingAmount", isDepositFlag ? remainingAmount : BigDecimal.ZERO);
         res.put("totalHours", booking.getTotalHours());
         res.put("customerName", booking.getCustomerName());
         res.put("bookingDate", booking.getBookingDate() != null ? booking.getBookingDate().toString() : null);
@@ -119,7 +133,15 @@ public class BookingApiController {
     @DeleteMapping("/cancel/{id}")
     public ResponseEntity<Map<String, Object>> cancelBooking(@PathVariable Long id,
                                                              @AuthenticationPrincipal CustomUserDetails principal) {
-        bookingService.cancelBooking(id, principal);
-        return ResponseEntity.ok(Map.of("success", true, "message", "Đã hủy đơn đặt sân thành công!"));
+        java.math.BigDecimal refunded = bookingService.cancelBooking(id, principal);
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", true);
+        res.put("refundedAmount", refunded);
+        if (refunded != null && refunded.compareTo(java.math.BigDecimal.ZERO) > 0) {
+            res.put("message", "Đã hủy đơn đặt sân thành công! Số tiền " + refunded.toPlainString() + " đ đã được hoàn trả trực tiếp về ví của bạn.");
+        } else {
+            res.put("message", "Đã hủy đơn đặt sân thành công!");
+        }
+        return ResponseEntity.ok(res);
     }
 }

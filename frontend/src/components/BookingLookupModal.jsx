@@ -30,10 +30,14 @@ export default function BookingLookupModal({ isOpen, onClose }) {
   };
 
   const handleCancelBooking = async (bookingId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn hủy đơn đặt sân này không?')) return;
+    if (!window.confirm('Quý khách có chắc chắn muốn hủy đơn đặt sân này không?\n\nLƯU Ý: Toàn bộ số tiền quý khách đã thanh toán (bao gồm cả tiền đặt cọc 50%) sẽ được hoàn trả 100% trực tiếp vào Ví Ways Station ngay lập tức!')) return;
     try {
-      await cancelBooking(bookingId);
-      setCancelMsg('Đã hủy đơn đặt sân thành công!');
+      const res = await cancelBooking(bookingId);
+      const refunded = res?.refundedAmount;
+      const msg = refunded && refunded > 0
+        ? `Đã hủy đơn thành công! Hệ thống đã hoàn trả ${formatVND(refunded)} về Ví Ways Station của bạn.`
+        : (res?.message || 'Đã hủy đơn đặt sân thành công! Tiền thanh toán đã được hoàn về ví.');
+      setCancelMsg(msg);
       setSearchResults((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: 'CANCELLED' } : b)));
     } catch (err) {
       setCancelMsg('');
@@ -81,7 +85,7 @@ export default function BookingLookupModal({ isOpen, onClose }) {
         )}
 
         {cancelMsg && (
-          <div className="lookup-alert-success">
+          <div className="lookup-alert-success" style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0' }}>
             <CheckCircle2 size={15} />
             <span>{cancelMsg}</span>
           </div>
@@ -109,6 +113,11 @@ export default function BookingLookupModal({ isOpen, onClose }) {
                       <span className={`status-badge ${b.status === 'CANCELLED' ? 'cancelled' : 'confirmed'}`}>
                         {b.status === 'CANCELLED' ? 'ĐÃ HỦY' : 'ĐÃ XÁC NHẬN'}
                       </span>
+                      {(b.isDeposit || (b.paidAmount && b.paidAmount < b.totalPrice)) && (
+                        <span style={{ background: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
+                          CỌC 50%
+                        </span>
+                      )}
                     </div>
                     <div className="total-tag">{formatVND(b.totalPrice)}</div>
                   </div>
@@ -132,6 +141,19 @@ export default function BookingLookupModal({ isOpen, onClose }) {
                     </div>
                   </div>
 
+                  {(b.isDeposit || (b.paidAmount && b.paidAmount < b.totalPrice)) && (
+                    <div style={{ marginTop: '8px', padding: '6px 10px', background: '#fffbeb', borderRadius: '6px', color: '#92400e', fontSize: '12px' }}>
+                      Đã đặt cọc: <strong>{formatVND(b.paidAmount || (b.totalPrice * 0.5))}</strong> - Còn thiếu: <strong>{formatVND(b.remainingAmount || (b.totalPrice * 0.5))}</strong> (thanh toán tại quầy khi nhận sân)
+                    </div>
+                  )}
+
+                  {b.status === 'CANCELLED' && (
+                    <div style={{ marginTop: '8px', padding: '6px 10px', background: '#ecfdf5', borderRadius: '6px', color: '#065f46', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <CheckCircle2 size={13} />
+                      <span>Đơn đã hủy - Toàn bộ tiền đã thanh toán được hoàn về Ví Ways Station</span>
+                    </div>
+                  )}
+
                   {b.status !== 'CANCELLED' && (
                     <div className="card-actions-row">
                       <button
@@ -140,7 +162,7 @@ export default function BookingLookupModal({ isOpen, onClose }) {
                         className="btn-cancel-order"
                       >
                         <Trash2 size={13} />
-                        <span>Hủy đơn đặt sân này</span>
+                        <span>Hủy đơn & hoàn tiền về Ví</span>
                       </button>
                     </div>
                   )}

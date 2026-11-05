@@ -17,6 +17,8 @@ public class BookingQuoteDto {
     private final BigDecimal originalPrice;
     private final BigDecimal discountAmount;
     private final BigDecimal totalPrice;
+    private final BigDecimal depositAmount;
+    private final BigDecimal remainingAmount;
 
     /** Tên và % giảm của gói hội viên đang dùng; null nếu khách chưa đăng nhập hoặc chưa là hội viên. */
     private final String membershipName;

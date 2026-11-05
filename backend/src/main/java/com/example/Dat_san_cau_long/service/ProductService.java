@@ -126,4 +126,39 @@ public class ProductService {
         inv.setStockQuantity(newStock);
         return productInventoryRepository.save(inv);
     }
+
+    /** Lấy danh sách toàn bộ sản phẩm kèm số lượng tồn kho tại một chi nhánh cụ thể. */
+    public List<java.util.Map<String, Object>> getBranchInventory(Long branchId) {
+        Branch branch = branchRepository.findById(branchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chi nhánh ID: " + branchId));
+        List<Product> products = productRepository.findAll();
+        List<ProductInventory> inventories = productInventoryRepository.findByBranchId(branchId);
+        java.util.Map<Long, Integer> stockMap = new java.util.HashMap<>();
+        for (ProductInventory inv : inventories) {
+            if (inv.getProduct() != null) {
+                stockMap.put(inv.getProduct().getId(), inv.getStockQuantity());
+            }
+        }
+
+        List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+        for (Product p : products) {
+            java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+            map.put("productId", p.getId());
+            map.put("productName", p.getName());
+            map.put("brand", p.getBrand());
+            map.put("category", p.getCategory() != null ? p.getCategory().getCode() : "RACKET");
+            map.put("price", p.getPrice());
+            map.put("priceUnit", p.getPriceUnit());
+            map.put("imageUrl", p.getImageUrl());
+            map.put("active", p.getActive());
+            map.put("spec1", p.getSpec1());
+            map.put("spec2", p.getSpec2());
+            map.put("branchId", branchId);
+            map.put("branchName", branch.getName());
+            map.put("branchCode", branch.getCode());
+            map.put("stockQuantity", stockMap.getOrDefault(p.getId(), 0));
+            result.add(map);
+        }
+        return result;
+    }
 }

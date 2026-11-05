@@ -94,6 +94,11 @@ public class Booking {
     @Builder.Default
     private List<BookingItem> items = new ArrayList<>();
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Payment> payments = new ArrayList<>();
+
     @Transient
     public LocalDate getBookingDate() {
         if (details == null || details.isEmpty()) return null;
@@ -138,5 +143,33 @@ public class Booking {
         BigDecimal disc = discountAmount != null ? discountAmount : BigDecimal.ZERO;
         BigDecimal total = orig.subtract(disc);
         return total.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : total;
+    }
+
+    @Transient
+    public BigDecimal getPaidAmount() {
+        if (payments == null || payments.isEmpty()) return BigDecimal.ZERO;
+        return payments.stream()
+                .filter(p -> p.getStatus() == com.example.Dat_san_cau_long.model.enums.PaymentStatus.PAID)
+                .map(Payment::getAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Transient
+    public BigDecimal getRemainingAmount() {
+        BigDecimal total = getTotalPrice();
+        BigDecimal paid = getPaidAmount();
+        BigDecimal remaining = total.subtract(paid);
+        return remaining.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : remaining;
+    }
+
+    @Transient
+    public boolean isDeposit() {
+        if (notes != null && (notes.contains("Đặt cọc 50%") || notes.contains("[COC_50%]"))) {
+            return true;
+        }
+        BigDecimal total = getTotalPrice();
+        BigDecimal paid = getPaidAmount();
+        return paid.compareTo(BigDecimal.ZERO) > 0 && paid.compareTo(total) < 0;
     }
 }
