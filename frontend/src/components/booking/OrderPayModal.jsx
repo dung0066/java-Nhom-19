@@ -8,6 +8,44 @@ export default function OrderPayModal({ isOpen, onClose, booking, currentUser, o
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [timeLeftStr, setTimeLeftStr] = useState('');
+  const [isExpired, setIsExpired] = useState(false);
+
+  // Đếm ngược thời gian giữ chỗ (10 phút) cho đơn PENDING
+  useEffect(() => {
+    if (!isOpen || !booking || booking.status !== 'PENDING') {
+      setTimeLeftStr('');
+      setIsExpired(false);
+      return;
+    }
+
+    let expiresAt = null;
+    if (booking.holdExpiresAt) {
+      expiresAt = new Date(booking.holdExpiresAt).getTime();
+    } else if (booking.createdAt) {
+      expiresAt = new Date(booking.createdAt).getTime() + 10 * 60 * 1000;
+    } else {
+      expiresAt = Date.now() + 10 * 60 * 1000;
+    }
+
+    const updateCountdown = () => {
+      const now = Date.now();
+      const diffMs = expiresAt - now;
+      if (diffMs <= 0) {
+        setTimeLeftStr('Đã hết hạn giữ chỗ');
+        setIsExpired(true);
+      } else {
+        const mins = Math.floor(diffMs / 60000);
+        const secs = Math.floor((diffMs % 60000) / 1000);
+        setTimeLeftStr(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+        setIsExpired(false);
+      }
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, [isOpen, booking]);
 
   useEffect(() => {
     if (!isOpen || !booking) return;
@@ -186,6 +224,62 @@ export default function OrderPayModal({ isOpen, onClose, booking, currentUser, o
               <span style={{ fontSize: '13px', color: '#0f172a', fontWeight: '600' }}>{formatVnd(booking.totalPrice)}</span>
             </div>
           </div>
+
+          {/* Banner đếm ngược 10 phút giữ chỗ cho đơn PENDING */}
+          {booking.status === 'PENDING' && (
+            <div
+              style={{
+                marginBottom: '16px',
+                padding: '10px 14px',
+                borderRadius: '12px',
+                background: isExpired ? '#fef2f2' : '#fffbeb',
+                border: isExpired ? '1px solid #fecaca' : '1px solid #fde68a',
+                color: isExpired ? '#b91c1c' : '#b45309',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: '12.5px',
+                fontWeight: '600'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <i className={`fa-solid ${isExpired ? 'fa-triangle-exclamation' : 'fa-stopwatch'} ${isExpired ? '' : 'fa-beat'}`} style={{ fontSize: '15px' }}></i>
+                <span>{isExpired ? 'Đã hết hạn giữ chỗ (10 phút)' : 'Thời gian giữ chỗ còn lại:'}</span>
+              </div>
+              <span
+                style={{
+                  fontSize: '14.5px',
+                  fontWeight: '800',
+                  color: isExpired ? '#dc2626' : '#d97706',
+                  fontFamily: 'monospace'
+                }}
+              >
+                {timeLeftStr || '10:00'}
+              </span>
+            </div>
+          )}
+
+          {/* Banner thông báo cho đơn đã cọc 50% */}
+          {isDeposited && (
+            <div
+              style={{
+                marginBottom: '16px',
+                padding: '10px 14px',
+                borderRadius: '12px',
+                background: '#ecfdf5',
+                border: '1px solid #a7f3d0',
+                color: '#065f46',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '12.5px',
+                fontWeight: '600'
+              }}
+            >
+              <i className="fa-solid fa-shield-halved" style={{ fontSize: '15px', color: '#059669' }}></i>
+              <span>Đơn đã cọc 50% thành công. Quét mã VietQR bên dưới để thanh toán nốt 50% online trước giờ chơi.</span>
+            </div>
+          )}
 
           {/* Payment Method Switcher */}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
