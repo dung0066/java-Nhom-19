@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { fetchMyBookings } from '../../services/api';
+import { fetchMyBookings, cancelBooking } from '../../services/api';
 import useMembershipStatus from '../../hooks/useMembershipStatus';
 import PendingMembershipBanner from './PendingMembershipBanner';
 import { formatVnd } from '../../services/payment';
@@ -42,6 +42,23 @@ export default function AccountModal({
       setOrdersLoading(false);
     }
   }, [userId]);
+
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('Quý khách có chắc chắn muốn hủy đơn đặt sân này không?\n\nToàn bộ số tiền quý khách đã thanh toán (bao gồm cả tiền đặt cọc 50%) sẽ được hoàn trả 100% trực tiếp vào Ví D2 BadmintonShop của quý khách ngay lập tức!')) {
+      return;
+    }
+    try {
+      const res = await cancelBooking(orderId);
+      const refunded = res?.refundedAmount;
+      alert(refunded && refunded > 0
+        ? `Đã hủy đơn thành công! Hệ thống đã hoàn trả ${formatVnd(refunded)} về Ví D2 BadmintonShop của bạn.`
+        : (res?.message || 'Đã hủy đơn đặt sân thành công! Tiền thanh toán đã được hoàn về ví.'));
+      if (userId) loadOrders();
+      if (loadAccount) loadAccount();
+    } catch (err) {
+      alert(`Lỗi khi hủy đơn: ${err.message || 'Không thể hủy đơn lúc này.'}`);
+    }
+  };
 
   // Dữ liệu luôn lấy từ máy chủ mỗi lần mở hộp thoại (không dùng dữ liệu mẫu lưu trong trình duyệt)
   useEffect(() => {
@@ -408,64 +425,91 @@ export default function AccountModal({
                           </span>
                         </div>
 
-                        {/* Nút tiếp tục thanh toán trực tiếp từ lịch sử đơn hàng */}
-                        {ord.status === 'PENDING' && (
-                          <button
-                            type="button"
-                            onClick={() => setPayingBooking(ord)}
-                            style={{
-                              marginTop: '12px',
-                              width: '100%',
-                              padding: '11px 16px',
-                              borderRadius: '10px',
-                              border: 'none',
-                              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-                              color: '#ffffff',
-                              fontSize: '13px',
-                              fontWeight: '800',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '8px',
-                              boxShadow: '0 4px 12px rgba(2, 132, 199, 0.25)'
-                            }}
-                          >
-                            <i className="fa-solid fa-qrcode" style={{ fontSize: '15px' }}></i>
-                            <span>
-                              {isDepositOrder
-                                ? `Tiếp tục thanh toán cọc 50% (${formatVnd(ord.depositAmount || (ord.totalPrice * 0.5))})`
-                                : `Tiếp tục thanh toán (${formatVnd(ord.totalPrice)})`}
-                            </span>
-                          </button>
-                        )}
+                        {/* Hàng nút hành động: Thanh toán tiếp & Hủy đơn */}
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+                          {ord.status === 'PENDING' && (
+                            <button
+                              type="button"
+                              onClick={() => setPayingBooking(ord)}
+                              style={{
+                                flex: 1,
+                                minWidth: '180px',
+                                padding: '10px 14px',
+                                borderRadius: '10px',
+                                border: 'none',
+                                background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                                color: '#ffffff',
+                                fontSize: '12.5px',
+                                fontWeight: '800',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                                boxShadow: '0 4px 12px rgba(2, 132, 199, 0.25)'
+                              }}
+                            >
+                              <i className="fa-solid fa-qrcode" style={{ fontSize: '14px' }}></i>
+                              <span>
+                                {isDepositOrder
+                                  ? `Tiếp tục cọc 50% (${formatVnd(ord.depositAmount || (ord.totalPrice * 0.5))})`
+                                  : `Thanh toán (${formatVnd(ord.totalPrice)})`}
+                              </span>
+                            </button>
+                          )}
 
-                        {ord.status === 'DEPOSITED' && (
-                          <button
-                            type="button"
-                            onClick={() => setPayingBooking(ord)}
-                            style={{
-                              marginTop: '12px',
-                              width: '100%',
-                              padding: '11px 16px',
-                              borderRadius: '10px',
-                              border: 'none',
-                              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                              color: '#ffffff',
-                              fontSize: '13px',
-                              fontWeight: '800',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '8px',
-                              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)'
-                            }}
-                          >
-                            <i className="fa-solid fa-qrcode" style={{ fontSize: '15px' }}></i>
-                            <span>Tiếp tục thanh toán nốt 50% online ({formatVnd(ord.remainingAmount || (ord.totalPrice * 0.5))})</span>
-                          </button>
-                        )}
+                          {ord.status === 'DEPOSITED' && (
+                            <button
+                              type="button"
+                              onClick={() => setPayingBooking(ord)}
+                              style={{
+                                flex: 1,
+                                minWidth: '180px',
+                                padding: '10px 14px',
+                                borderRadius: '10px',
+                                border: 'none',
+                                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                                color: '#ffffff',
+                                fontSize: '12.5px',
+                                fontWeight: '800',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                                boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)'
+                              }}
+                            >
+                              <i className="fa-solid fa-qrcode" style={{ fontSize: '14px' }}></i>
+                              <span>Thanh toán nốt 50% ({formatVnd(ord.remainingAmount || (ord.totalPrice * 0.5))})</span>
+                            </button>
+                          )}
+
+                          {ord.status !== 'CANCELLED' && ord.status !== 'COMPLETED' && (
+                            <button
+                              type="button"
+                              onClick={() => handleCancelOrder(ord.id)}
+                              style={{
+                                padding: '10px 14px',
+                                borderRadius: '10px',
+                                border: '1.5px solid #fecaca',
+                                background: '#fff5f5',
+                                color: '#dc2626',
+                                fontSize: '12.5px',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px'
+                              }}
+                              title="Hủy đơn đặt sân và hoàn tiền 100% về ví"
+                            >
+                              <i className="fa-solid fa-ban"></i>
+                              <span>Hủy đơn</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
