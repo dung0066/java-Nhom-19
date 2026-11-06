@@ -118,7 +118,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/slot-transfers/market").permitAll()
 
                         // ---- Đặt sân: khách vãng lai được tạo đơn và tra cứu theo mã; xem tất cả đơn chỉ dành cho nhân viên ----
-                        .requestMatchers(HttpMethod.POST, "/api/booking/create", "/api/booking/quote", "/api/payment/sepay-webhook").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/booking/create", "/api/booking/quote", "/api/payment/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/booking/code/**", "/api/booking/lookup").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/booking/all").hasAnyAuthority("ROLE_ADMIN", "ROLE_STAFF")
                         .requestMatchers("/api/booking/**").authenticated()
