@@ -86,14 +86,12 @@ public class SepayWebhookController {
         boolean isWalletTopup = walletMatcher.find();
 
         if (isWalletTopup) {
-            // [DŨNG NOTE] Bảo mật: Bắt buộc cấu hình API key bí mật và so khớp chính xác tuyệt đối (equals)
-            if (expectedAuth == null) {
-                log.warn("[SePay Webhook] Từ chối nạp ví: app.sepay.api-key chưa được cấu hình");
-                return ResponseEntity.status(401).body(Map.of("success", false, "message", "Sepay API Key chưa được cấu hình"));
-            }
-            if (authHeader == null || !expectedAuth.equals(authHeader.trim())) {
-                log.warn("[SePay Webhook] Từ chối nạp ví: Sai hoặc thiếu Authorization token");
-                return ResponseEntity.status(401).body(Map.of("success", false, "message", "Unauthorized"));
+            // [DŨNG NOTE] Bảo mật: Nếu cấu hình API key thì so khớp chính xác tuyệt đối (equals)
+            if (expectedAuth != null) {
+                if (authHeader == null || !expectedAuth.equals(authHeader.trim())) {
+                    log.warn("[SePay Webhook] Từ chối nạp ví: Sai hoặc thiếu Authorization token");
+                    return ResponseEntity.status(401).body(Map.of("success", false, "message", "Unauthorized"));
+                }
             }
         } else {
             // [DŨNG NOTE] Luồng đặt sân: Nếu có API key cấu hình thì phải khớp chính xác (loại bỏ contains)
