@@ -462,6 +462,10 @@ export async function topupWallet(amount, paymentMethod = 'VIETQR') {
   });
 }
 
+export async function fetchTopupStatus(paymentCode) {
+  return await authFetch(`/api/wallet/topup/${encodeURIComponent(paymentCode)}/status`);
+}
+
 /** Lịch sử giao dịch thanh toán của ví (nạp ví, mua gói, thanh toán đơn). */
 export async function fetchMyWalletTransactions() {
   return await authFetch('/api/wallet/transactions');

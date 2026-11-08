@@ -3,6 +3,7 @@ package com.example.Dat_san_cau_long.service;
 import com.example.Dat_san_cau_long.model.Booking;
 import com.example.Dat_san_cau_long.model.BookingDetail;
 import com.example.Dat_san_cau_long.model.BookingItem;
+import com.example.Dat_san_cau_long.model.Payment;
 import com.example.Dat_san_cau_long.model.enums.BookingDetailStatus;
 import com.example.Dat_san_cau_long.model.enums.BookingItemStatus;
 import com.example.Dat_san_cau_long.model.enums.BookingStatus;
@@ -111,6 +112,23 @@ public class BookingExpirationScheduler {
         int expiredCount = slotTransferRepository.expirePastSlotTransfersAtomic(now.toLocalDate(), now.toLocalTime());
         if (expiredCount > 0) {
             log.info("Đã chuyển {} slot transfer quá hạn sang trạng thái EXPIRED", expiredCount);
+        }
+    }
+
+    /** Lệnh nạp tiền vào ví PENDING quá 15 phút chưa thanh toán thì tự động chuyển sang FAILED. */
+    @Scheduled(fixedRate = 60000)
+    @Transactional
+    public void cancelExpiredWalletTopups() {
+        LocalDateTime threshold = LocalDateTime.now().minusMinutes(15);
+        List<Payment> expired = paymentRepository.findByPurposeAndStatusAndCreatedAtBefore(
+                com.example.Dat_san_cau_long.model.enums.PaymentPurpose.WALLET_TOPUP,
+                PaymentStatus.PENDING,
+                threshold
+        );
+        for (Payment p : expired) {
+            p.setStatus(PaymentStatus.FAILED);
+            paymentRepository.save(p);
+            log.info("Lệnh nạp ví {} quá 15 phút chưa thanh toán, tự động chuyển sang FAILED", p.getPaymentCode());
         }
     }
 }
